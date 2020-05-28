@@ -15,27 +15,31 @@
             left: 0;
             top: 0;
         }
-       /* #Codeval{
+        #Codeval{
             display: none;
-        }*/
+        }
+        #DATAUI{
+            justify-content: center;
+            border-style: solid;
+            border-color:#E0E0E0 #FFFFFF #E0E0E0 #FFFFFF
+        }
     </style>
 </head>
 
 <body>
 <!-- Div to show the scanner -->
 <div id="scanner-container"></div>
-<!--<input type="button" id="btn" value="Start/Stop the scanner" />-->
-<div data-spy="scroll" data-target="#DATAUI" data-offset="0" style="height:150px;overflow:auto; position: relative;margin-top: 50px;">
-    <div class="table-responsive" id="DATAUI">
-        <table class="table" style="table-layout: fixed;text-align: center">
-            <thead  class="theadtitle"  style=" font-size: 3.5vmin;">
-            <th style=" padding-bottom: 5px !important">血袋號碼</th>
-            </thead>
-            <tbody style=" font-size: 3.5vmin;" id="DATAList">
+<nav id="DATAUI" class="navbar navbar-default navbar-static" role="navigation" >
+    <div style="font-weight: bolder">血袋號碼</div>
+</nav>
 
-            </tbody>
-        </table>
-    </div>
+<div data-spy="scroll" data-target="#navbar-example" data-offset="0"
+     style="height:200px;overflow:auto; position: relative;margin-top: 50px;">
+    <table class="table" style="table-layout: fixed;text-align: center">
+        <tbody style=" font-size: 3.5vmin;" id="DATAList">
+
+        </tbody>
+    </table>
 </div>
 <textarea id="Codeval" ></textarea>
 <!-- Include the image-diff library -->
@@ -167,6 +171,8 @@
         startScanner();
     }
 </script>
+
+
 </body>
 
 </html>
