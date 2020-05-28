@@ -1,16 +1,3 @@
-<?php
-$page=$_GET['page'];
-/*title*/
-$title="";
-switch ($page){
-    case "B":
-        $title="領血掃描";
-        break;
-    case "C":
-        $title="輸血掃描";
-        break;
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,37 +8,19 @@ switch ($page){
     <script  type="text/javascript" src="../instascan.min.js"></script>
     <script type="text/javascript" src="../jquery.min.js"></script>
     <style>
-        .wrap{
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        .box1{
-            width: 100%;
-            z-index: 2 ;
-            height: 100px;
-            text-align: center;
-        }
         .box2{
             height: 200px;
             text-align: center;
             margin-top: 5rem;
         }
-        /*#wrapper{
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            opacity: 0.5;
-            z-index: -1;
+        #DATAUI{
+            justify-content: center;
+            border-style: solid;
+            border-color:#E0E0E0 #FFFFFF #E0E0E0 #FFFFFF
         }
-*/
     </style>
 </head>
 <script>
-    /*if($("#page").val()=="B"){
-        $("#titleTxt").append()
-    }*/
-
     var constraints={video:{ width: 200, height: 200 }};
     navigator.mediaDevices.getUserMedia(constraints).then(function (mediaStream) {
         var video=document.querySelector('video');
@@ -101,57 +70,25 @@ switch ($page){
     }).catch(function (e) {
         console.error(e);
     });
-
-      /*  window.onload = function(){
-            var Scanform = document.getElementById('Scanform');
-            Scanform.onsubmit = function() {
-                var page=document.getElementById("page").value;
-                var callbackData = {
-                    B_ID:arr2,
-                    PAGE:page
-                };
-                console.log(callbackData);
-                var aesdata = JSON.stringify(callbackData);
-                window.Scancallback(aesdata);
-                return false
-            }
-
-        }*/
-
 </script>
 
 <body>
-<input type="text" value="<?php  echo $page ?>" style="display: none" id="page">
+
 <div class="box2">
     <video id="preview" autoplay playsinline ></video>
 </div>
-<textarea id="QR_Codeval"></textarea>
-<div data-spy="scroll" data-target="#DATAUI" data-offset="0" style="height:150px;overflow:auto; position: relative;margin-top: 50px;">
-    <div class="table-responsive" id="DATAUI">
-        <table class="table" style="table-layout: fixed;text-align: center">
-            <thead  class="theadtitle"  style=" font-size: 3.5vmin;">
-            <th style=" padding-bottom: 5px !important">血袋號碼</th>
-            </thead>
-            <tbody style=" font-size: 3.5vmin;" id="DATAList">
+<textarea id="QR_Codeval" style="display: none"></textarea>
+<nav id="DATAUI" class="navbar navbar-default navbar-static" role="navigation" >
+    <div style="font-weight: bolder">血袋號碼</div>
+</nav>
 
-            </tbody>
-        </table>
-    </div>
+<div data-spy="scroll" data-target="#navbar-example" data-offset="0"
+     style="height:200px;overflow:auto; position: relative;">
+    <table class="table" style="table-layout: fixed;text-align: center">
+        <tbody style=" font-size: 3.5vmin;" id="DATAList">
+
+        </tbody>
+    </table>
 </div>
-<!--<form id="Scanform" target="_parent" method="post" >
-    <div id="wrapper"></div>
-    <div class="wrap">
-        <div class="box1" id="titleTxt">
-            <h1 style="background-color: whitesmoke"><?php /*echo $title*/?></h1>
-        </div>
-        <div class="box2" style="margin-top: -50px">
-            <div style="margin-top: -30px">
-                <video id="preview" autoplay playsinline ></video>
-            </div>
-        </div>
-
-
-    </div>
-</form>-->
 </body>
 </html>
