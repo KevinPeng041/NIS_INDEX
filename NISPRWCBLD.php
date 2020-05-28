@@ -482,6 +482,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       function Scancallback(data) {
 
           var json=JSON.parse(data);
+          console.log(json);
           var page=json.PAGE;
           var BIDArr=json.B_ID;
           if(BIDArr.length >0){
@@ -517,7 +518,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   return false;
                   break;
               case "true":
-                  y=window.open("/test/CamScanQrcode.php?page=B","領血掃描",'width=350px,height=450px,scrollbars=yes,resizable=no');
+                  y=window.open("/NISSCANCHOOSEMODE.php?page=B","領血掃描",'width=500px,height=750px,scrollbars=yes,resizable=no');
                  /* 自動keyin*/
                  break;
           }
@@ -533,7 +534,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   return false;
                   break;
               case "true":
-                  z=window.open("/test/CamScanQrcode.php?page=C","領血掃描",'width=350px,height=450px,scrollbars=yes,resizable=no');
+                  z=window.open("/NISSCANCHOOSEMODE.php?page=C","領血掃描",'width=500px,height=750px,scrollbars=yes,resizable=no');
                   /* 自動keyin*/
                   break;
           }
