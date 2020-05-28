@@ -34,6 +34,7 @@ switch ($page){
         .box2{
             height: 200px;
             text-align: center;
+            margin-top: 5rem;
         }
         /*#wrapper{
             position: absolute;
@@ -73,19 +74,21 @@ switch ($page){
     var arr2=[];
     scanner.addListener('scan', function (content) {
         if(content){
-            var arr1=[];
-            console.log(content);
-            arr1.push(content);
-            arr2.push(content);
-           $.each(arr1,function (index) {
-               $("#DATAList").append(
-                   "<tr>"+
-                   "<td>"+
-                   arr1[index]+
-                   "</td>"
-                   +"</tr>"
-               );
-           })
+            if(arr2.indexOf(content)<0){
+                arr2.push(content);
+                $("#DATAList").children().remove();
+                $.each(arr2,function (index) {
+                    $("#DATAList").append(
+                        "<tr>"+
+                        "<td>"+
+                        arr2[index]+
+                        "</td>"
+                        +"</tr>"
+                    );
+                });
+                $("#QR_Codeval").val(arr2);
+                console.log(arr2);
+            }
         }
     });
     /*搜尋鏡頭*/
@@ -99,55 +102,56 @@ switch ($page){
         console.error(e);
     });
 
+      /*  window.onload = function(){
+            var Scanform = document.getElementById('Scanform');
+            Scanform.onsubmit = function() {
+                var page=document.getElementById("page").value;
+                var callbackData = {
+                    B_ID:arr2,
+                    PAGE:page
+                };
+                console.log(callbackData);
+                var aesdata = JSON.stringify(callbackData);
+                window.Scancallback(aesdata);
+                return false
+            }
 
-    window.onload = function(){
-        var Scanform = document.getElementById('Scanform');
-        Scanform.onsubmit = function() {
-            var page=document.getElementById("page").value;
-            var callbackData = {
-                B_ID:arr2,
-                PAGE:page
-            };
-            console.log(callbackData);
-            var aesdata = JSON.stringify(callbackData);
-            window.Scancallback(aesdata);
-            return false
-        }
-
-    }
-
-
+        }*/
 
 </script>
 
 <body>
 <input type="text" value="<?php  echo $page ?>" style="display: none" id="page">
-<form id="Scanform" target="_parent" method="post" >
+<div class="box2">
+    <video id="preview" autoplay playsinline ></video>
+</div>
+<textarea id="QR_Codeval"></textarea>
+<div data-spy="scroll" data-target="#DATAUI" data-offset="0" style="height:150px;overflow:auto; position: relative;margin-top: 50px;">
+    <div class="table-responsive" id="DATAUI">
+        <table class="table" style="table-layout: fixed;text-align: center">
+            <thead  class="theadtitle"  style=" font-size: 3.5vmin;">
+            <th style=" padding-bottom: 5px !important">血袋號碼</th>
+            </thead>
+            <tbody style=" font-size: 3.5vmin;" id="DATAList">
+
+            </tbody>
+        </table>
+    </div>
+</div>
+<!--<form id="Scanform" target="_parent" method="post" >
     <div id="wrapper"></div>
     <div class="wrap">
         <div class="box1" id="titleTxt">
-            <h1 style="background-color: whitesmoke"><?php echo $title?></h1>
+            <h1 style="background-color: whitesmoke"><?php /*echo $title*/?></h1>
         </div>
         <div class="box2" style="margin-top: -50px">
-        <!--    <img src="../img/ScanBorder.png" style="width:245px ;z-index: 2 ;">-->
             <div style="margin-top: -30px">
                 <video id="preview" autoplay playsinline ></video>
             </div>
         </div>
 
-        <div data-spy="scroll" data-target="#DATAUI" data-offset="0" style="height:150px;overflow:auto; position: relative;margin-top: 50px;">
-            <div class="table-responsive" id="DATAUI">
-                <table class="table" style="table-layout: fixed;text-align: center">
-                    <thead  class="theadtitle"  style=" font-size: 3.5vmin;">
-                    <th style=" padding-bottom: 5px !important">血袋號碼<input type="submit" value="傳送"></th>
-                    </thead>
-                    <tbody style=" font-size: 3.5vmin;" id="DATAList">
 
-                    </tbody>
-                </table>
-            </div>
-        </div>
     </div>
-</form>
+</form>-->
 </body>
 </html>
