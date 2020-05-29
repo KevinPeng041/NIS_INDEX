@@ -386,9 +386,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
   $(document).ready(function () {
       $("#B").prop("disabled" ,true);
       $("#C").prop("disabled" ,true);
-      /*條碼監測(手動keyin)*/
+      /*********************條碼監測(手動keyin)**************************************************************************************/
       var arr1=[];var arr2=[];
       $('#code1').bind("input propertychange",function(){
+          //領血
           var Bval1= $('#code1').val();
           console.log(Bval1);
           if(Bval1 !="" && Bval1 !=null){
@@ -408,8 +409,12 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
               }
           }
       });
+
+
+
       var arr3=[];var arr4=[];
       $('#code2').bind("input propertychange",function(){
+          //發血
           var Cval2= $('#code2').val();
           if(Cval2 !="" && Cval2 !=null){
               if($("#IN"+Cval2).length > 0){
@@ -429,7 +434,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           }
 
       });
-
+/**********************************************************************************************************************************************************************************************/
       function reset() {
           $("#PUTbld").hide();
           $("#SetGETbldVal").hide();
@@ -446,23 +451,29 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           reset();
           $("#"+$("#PageVal").val()).css({'background-color' : '', 'opacity' : '','color':'white'});
       });
-      /*責任床位ws*/
+
       function bedcallback(data)
       {
+          /*責任床位ws*/
           var str=AESDeCode(data);
           var datastr=JSON.parse(JSON.stringify(str).replace(/\u0000/g, '').replace(/\\u0000/g, ""));
           var dataObj=JSON.parse(datastr);
 
           reset();
-          if(dataObj){
-              $("#DataTxt").val(dataObj.DataTxt);
-              $("#DA_idpt").val(dataObj.IDPT);
-              $("#DA_idinpt").val(dataObj.IDINPT);
-              $("#DA_sBed").val(dataObj.SBED);
-              $("#clickTime").val(0);
-              $("#PageVal").val('A');
-              TimerRdo();
+          try {
+              if(dataObj){
+                  $("#DataTxt").val(dataObj.DataTxt);
+                  $("#DA_idpt").val(dataObj.IDPT);
+                  $("#DA_idinpt").val(dataObj.IDINPT);
+                  $("#DA_sBed").val(dataObj.SBED);
+                  $("#clickTime").val(0);
+                  $("#PageVal").val('A');
+                  TimerRdo();
+              }
+          }catch (e) {
+              alert(e);
           }
+
       }
 
       var btn=document.getElementById("sbed");
@@ -479,8 +490,9 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           }
           x.bedcallback=bedcallback;
       };
-      function Scancallback(data) {
 
+
+      function Scancallback(data) {
           var json=JSON.parse(data);
           console.log(json);
           var page=json.PAGE;
@@ -511,7 +523,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       var scan=document.getElementById("scan1");
       var y;
        scan.onclick=function(){
-          var ip='localhost';
           switch (checkBEDwindow()) {
               case "false":
                   errorModal("掃描視窗已開啟");
@@ -544,6 +555,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
 
       function _GetINIjson() {
+          //歷次發血表單資料
           $("#wrapper").show();
           console.log("http://localhost"+'/webservice/NISPWSTRAINI.PHP?str='+AESEnCode('sFm=CBLD&idPt='+$("#DA_idpt").val()+'&INPt='+$("#DA_idinpt").val()+'&sUr=<?php echo $Account?>'));
           $.ajax({
@@ -566,6 +578,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       var ST_DATAB='';
       var ST_DATAC='';
       function LoadPageData(sfm,sTraID,Page) {
+          //表單資料
           if(Page=='A'){
               if($("#PBList").children().length >0){
                   return false;
@@ -685,7 +698,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           });
       }
 
-  /* 及時檢核
+      /* 及時檢核
      /!*領血覆核帳號*!/
       $('#B_CUR').blur(function () {
           $.ajax({
@@ -838,7 +851,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
        }
 
       function InsertWSST(sTraID,page,json) {
+/*
           console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CBLD&sTraID='+sTraID+'&sPg='+page+'&sData='+json));
+*/
+            console.log(json);
           $.ajax({
               'url':'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CBLD&sTraID='+sTraID+'&sPg='+page+'&sData='+json),
               type:"POST",
@@ -858,7 +874,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
           });
       }
-     /*------------------------------------全選------------------------------------*/
+     /*------------------------------------全選BUTTON------------------------------------*/
 
      $("#B_ALLCHECK").click(function () {
             $.each(ST_DATAB,function (index) {
@@ -871,20 +887,20 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           });
       });
       /*---------------------------------------------------------------------------*/
-      var DATABarr=[];
+     /* var DATABarr=[];
       var JsonB='';
       $('#GTList').on("change","input[type='checkbox']",function(){
           var val=this.value;
           if(val){
               DATABarr.push(val);
               var DATAB=DATABarr.filter(function (el, i, arr) {
-                  /*刪除重複值*/
+                  /!*刪除重複值*!/
                   return arr.indexOf(el)===i;
               });
               $.each(DATAB,function (index) {
                   if(DATAB[index]){
                       var B_ID=DATAB[index].split("@",1)[0];
-                      /*是否有勾選*/
+                      /!*是否有勾選*!/
                       if(!$("#GT"+B_ID).is(":checked")){
                           var i=DATAB.indexOf(DATAB[index]);
                           if(i>-1){
@@ -895,7 +911,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                           }
                       }
                   }
-                  /*重整新的json*/
+                  /!*重整新的json*!/
                   if(DATAB.length > 0){
                       var Json_DATAB=[];
                       $.each(DATAB,function (index) {
@@ -926,13 +942,13 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           if(val){
               DATACarr.push(val);
               var DATAC=DATACarr.filter(function (el, i, arr) {
-                  /*刪除重複值*/
+                  /!*刪除重複值*!/
                   return arr.indexOf(el)===i;
               });
               $.each(DATAC,function (index) {
                   if(DATAC[index]){
                       var C_ID=DATAC[index].split("@",1)[0];
-                      /*是否有勾選*/
+                      /!*是否有勾選*!/
                       if(!$("#IN"+C_ID).is(":checked")){
                           var i=DATAC.indexOf(DATAC[index]);
                           if(i>-1){
@@ -943,7 +959,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                           }
                       }
                   }
-                  /*重整新的json*/
+                  /!*重整新的json*!/
                   if(DATAC.length > 0){
                       var Json_DATAC=[];
                       $.each(DATAC,function (index) {
@@ -964,7 +980,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
               });
           }
 
-      });
+      });*/
 
       $('button[name=click]').click(function (){
           var page=this.id;
@@ -998,12 +1014,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   $("#SetINbldVal").hide();
                   $("#GETbldUI").show();
                   $("#INbldUI").hide();
+                  var CCKVal=GetCheckVal('C');
 
                   InsertWSST($("#sTraID").val(),'A',JSON.stringify(GETNEWSTDATA()));
-
-                  if(JsonC.length > 0){
-                      InsertWSST($("#sTraID").val(),'C',JSON.stringify(GetCheckVal('C')));
-                  }
+                  InsertWSST($("#sTraID").val(),'C',JSON.stringify(CCKVal));
                   LoadPageData('CBLD',$('#sTraID').val(),'B');
 
 
@@ -1016,11 +1030,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   $("#SetINbldVal").show();
                   $("#GETbldUI").hide();
                   $("#INbldUI").show();
-                  InsertWSST($("#sTraID").val(),'A',JSON.stringify(GETNEWSTDATA()));
+                  var BCKVal=GetCheckVal('B');
 
-                  if(JsonB.length >0){
-                      InsertWSST($("#sTraID").val(),'B',JSON.stringify(GetCheckVal('B')));
-                  }
+                  InsertWSST($("#sTraID").val(),'A',JSON.stringify(GETNEWSTDATA()));
+                  InsertWSST($("#sTraID").val(),'B',JSON.stringify(BCKVal));
                   LoadPageData('CBLD',$('#sTraID').val(),'C');
 
 
@@ -1036,11 +1049,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       $('#PBList').on('change',CheckBOXChang);/*歷次發血選擇*/
 
       $("#form1").submit(function () {
-
             var json='';
             var page=$('#PageVal').val();
 
             console.log(checkAcount(page,'00FUZZY'));
+
             switch (page) {
                 case 'B':
                     json=GetCheckVal('B');
@@ -1049,13 +1062,47 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     json=GetCheckVal('C');
                     break;
             }
-         /*   $("#loading").show();
-            $("#wrapper").show();*/
-
-
+            console.log(json);
+            $("#loading").show();
+            $("#wrapper").show();
+           $.ajax({
+               url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CBLD' +
+                   '&sTraID=' + $('#sTraID').val() +
+                   '&sPg=' + $("#PageVal").val() +
+                   '&sDt=' + $("#DateVal").val() +
+                   '&sTm=' + $("#TimeVal").val()) +
+                   '&PASSWD=<?php echo $passwd?>' +
+                   '&USER=<?php echo $sUr?>',
+               type: 'POST',
+               beforeSend: InsertWSST($('#sTraID').val(), $("#PageVal").val(), JSON.stringify(json)),
+               dataType: 'text',
+               success: function (data) {
+                   try {
+                       $("#loading").hide();
+                       $("#wrapper").hide();
+                       var json = JSON.parse(AESDeCode(data));
+                       console.log(AESDeCode(data));
+                       console.log(json);
+                       var result = json.response;
+                       var message = json.message;
+                       if (result == "success") {
+                           alert("儲存成功");
+                           window.location.reload(true);
+                       } else {
+                           errorModal(message);
+                       }
+                   } catch (e) {
+                       alert("發生錯誤,請再重新操作一次");
+                       console.log(e);
+                   }
+               }
+           });
             return false;
         });
+
+
       function GetCheckVal(page) {
+          //取checkbox的值
           var cbxVehicle = new Array();
           var Json=[];
           switch (page) {
@@ -1101,9 +1148,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   }
                   break;
           }
+
           return Json;
       }
       function checkBEDwindow() {
+
           if(!x){
               console.log("not open");
               return "true";
@@ -1118,6 +1167,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           }
       }
       function checkAcount(page,Acount) {
+          //帳號認證
           var a=[];
           $.ajax({
               url:'/webservice/NISPWSCKUSR.php?str='+AESEnCode('sIdUser='+paddingLeft((Acount).toUpperCase(),7)),
@@ -1137,7 +1187,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           });
             return a;
       }
-
       function errorModal(str) {
           $('#Errormodal').modal('show');
           document.getElementById('ErrorText').innerText=str;
@@ -1154,6 +1203,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             $("#TimeVal").val(h+m);
       }
       TimerRdo();
+
   });
 
 
