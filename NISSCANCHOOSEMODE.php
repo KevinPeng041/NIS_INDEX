@@ -52,6 +52,7 @@ if ($page=='C'){
                 "<iframe src='BARCODESCANNER.html' id='iframe1' width='500' height='700' frameborder='0'>"+"</iframe>"
             );
             $("#ScanMode").val('Bar');
+            $("#QRCODE").hide();
         });
         $("#QRCODE").on('click',function () {
             $("#scan").children().remove();
@@ -59,6 +60,7 @@ if ($page=='C'){
                 "<iframe src='test/CamScanQrcode.php' id='iframe2' width='500' height='700' frameborder='0'>"+"</iframe>"
             );
             $("#ScanMode").val('Qr');
+            $("#BARCODE").hide();
         });
 
 
