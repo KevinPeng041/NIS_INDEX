@@ -50,7 +50,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
         },500);
 
-    /*    window.onbeforeunload = function(e) { return '確定離開此頁嗎?'; }*/
 
         /*ajax Transitions img*/
         function isload(t) {
@@ -149,20 +148,20 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             <!--掃描條碼Bar-->
             <div class="container" id="SetGETbldVal" style="display: none;background-color:#bee5eb;margin-top: 5px; ">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" >
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >
                         <div>
                             <div class="input-group" style="margin-top: 5px;margin-bottom: 2px;">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text" id="">血袋</span>
                                 </div>
-                                <input type="text" id="NumB" class="form-control" placeholder="輸入條碼" maxlength="10">
+                                <input type="text" id="NumB" class="form-control" placeholder="輸入條碼">
                                 <div class="input-group-append">
-                                    <input type="button" value="掃描" id="scanB" class="btn btn-outline-primary ">
+                                    <input  style="display: none" type="button" value="掃描" id="scanB" class="btn btn-outline-primary ">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" >
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >
                         <div class="input-group" style="margin-top: 5px;margin-bottom: 2px;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text" id="">領血核對</span>
@@ -172,12 +171,12 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             <input type="password" class="form-control" placeholder="密碼" id="B_PWD"  value="<?php echo $passwd?>" readonly>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" >
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >
                         <div class="input-group" style="margin-top: 5px;margin-bottom: 2px;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text" id="">領血覆核</span>
                             </div>
-                            <input type="text" class="form-control" placeholder="帳號" value="" id="B_CUR" maxlength="7">
+                            <input type="text" class="form-control" placeholder="帳號" value="" id="B_CUR" maxlength="7" autocomplete="off">
                             <input type="password" class="form-control" placeholder="密碼" value="" id="B_CPWD">
                             <input type="text" style="display: none;background-color: #00FF00"  placeholder="覆核人員" value="" id="B_CNAME">
                         </div>
@@ -186,7 +185,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             </div>
             <!--內容-->
             <div id="GETbldUI" style="display: none;">
-                    <table class="table" style="table-layout: fixed;text-align: center">
+                    <table class="table" style="table-layout: fixed;text-align: center;margin-bottom: 0rem;">
                         <thead  class="theadtitle"  style=" font-size: 3.5vmin;">
                         <th> <button type="button" class="btn btn-success" style="font-size: 3vmin" id="B_ALLCHECK">全選</button></th>
                         <th style=" padding-bottom: 5px !important">血袋號碼</th>
@@ -214,13 +213,13 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             <!--掃描條碼Bar-->
             <div class="container" id="SetINbldVal" style="display: none;background-color:#bee5eb;margin-top: 5px; ">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" >
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >
                         <div>
                             <div class="input-group" style="margin-top: 5px">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text" id="">血袋</span>
                                 </div>
-                                <input type="text" id="NumC" class="form-control" placeholder="輸入條碼" maxlength="10">
+                                <input type="text" id="NumC" class="form-control" placeholder="輸入條碼">
                                 <div class="input-group-append">
                                     <input type="button" value="掃描" id="scanC" class="btn btn-outline-primary">
                                 </div>
@@ -228,7 +227,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" >
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >
                         <div class="input-group" style="margin-top: 5px;margin-bottom: 2px;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text" id="">輸血核對</span>
@@ -239,12 +238,12 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
                         </div>
                     </div>
-                    <div class="col-lg-4 col-md-4 col-sm-12 col-xs-12" >
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12" >
                         <div class="input-group" style="margin-top: 5px;margin-bottom: 2px;">
                             <div class="input-group-prepend">
                                 <span class="input-group-text" id="">輸血覆核</span>
                             </div>
-                            <input type="text" class="form-control" placeholder="帳號" value="" id="C_CUR" maxlength="7">
+                            <input type="text" class="form-control" placeholder="帳號" value="" id="C_CUR" maxlength="7" autocomplete="off">
                             <input type="password" class="form-control" placeholder="密碼" value="" id="C_CPWD">
                             <input type="text" style="display: none;background-color: #00FF00" placeholder="覆核人員" value="" id="C_CNAME">
                         </div>
@@ -253,16 +252,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             </div>
             <!--內容-->
             <div id="INbldUI" style="display: none;">
-                <table class="table" style="table-layout: fixed;text-align: center">
-                    <thead  class="theadtitle" style=" font-size: 3.5vmin;">
-                        <th> <button type="button" class="btn btn-success" style="font-size: 3vmin" id="C_ALLCHECK">全選</button></th>
-                        <th style=" padding-bottom: 5px !important">血袋號碼</th>
-                        <th style=" padding-bottom: 5px !important">血品名稱</th>
-                        <th style="text-align: center ;padding-bottom: 5px !important">血型</th>
-                        <th style="display: none">領血核對<br>領血覆核</th>
-                        <th >輸血核對<br>輸血覆核</th>
-                    </thead>
-                </table>
+
+
                 <div id="scrC" data-spy="scroll" data-target="#IBUI" data-offset="0" style="height:300px;overflow:auto; position: relative;">
                     <div class="table-responsive" id="IBUI">
                         <table class="table" style="table-layout: fixed;text-align: center">
@@ -317,11 +308,14 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
   $(document).ready(function () {
       $(window).on('beforeunload', reloadmsg);
-
-
       function  reloadmsg() {
           return '確認要重新整理嗎?';
       }
+      $(document).on("keydown", "form", function(event) {
+          return event.key != "Enter";
+      });
+
+
 
       /*************************************************預設初始值********************************************************************/
       TimerDefault();
@@ -331,67 +325,92 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
       $('#NumB').bind("input propertychange",function(){
           //領血
-          NumBind('B','GT');
+          NumBind('B');
       });
 
 
       $('#NumC').bind("input propertychange",function(){
           //發血
-          NumBind('C','IN');
+          NumBind('C');
 
       });
-      function NumBind(page,pagNam){
+
+      function NumBind(page){
           var Cval2= $('#Num'+page).val();
           var arr3=[],arr4=[];
           var CheckBoxID='';
-          var color='';
-          if(page=='B'){
-              CheckBoxID=pagNam+Cval2;
-              color="#BBFF00";
+          var color=page=="B"?"#BBFF00":"#7D7DFF";
+          var pagNam=page=="B"?"GT":"IN";
+          if(Cval2.length<10)
+          {
+              //字數不符
+              return false
+          }
 
-          }
-          if(page=='C'){
-              CheckBoxID=pagNam+Cval2;
-              color="#7D7DFF";
-          }
-          if(Cval2 !="" && Cval2 !=null){
-              if($("#"+CheckBoxID).length > 0){
-                  arr3.push(Cval2);
-                  arr4.push(Cval2);
-                  var nowval=arr3.pop();
-                  $.each(arr4,function (index) {
-                      $("#"+pagNam+arr4[index]).parent().parent().css({"background-color":""});
-                  });
-                  $("#"+pagNam+nowval).parent().parent().css({"background-color":color});
-                  $("#"+pagNam+nowval).prop("checked",true);
-                  $('#Num'+page).val('');
-                  var top=($("#"+pagNam+nowval).offset()).top-500;
-                  $("#scr"+page).scrollTop(top);
+
+          if(Cval2.indexOf(',')>-1){
+                //長字串連接
+
+              var arr=Cval2.split(',');
+              var errNum=[];
+              $.each(arr,function (index,bid) {
+                  $("#"+pagNam+bid).parent().parent().css({"background-color":color});
+                  $("#"+pagNam+bid).prop("checked",true);
+                  if($("#"+pagNam+bid).length > 0){
+                      $('#Num'+page).val('');
+                  }else {
+                      errNum.push(bid);
+                  }
+
+              });
+              if(errNum.length>0){
+                  alert("血袋號碼:"+errNum.join()+",請確認血袋是否正確");
+              }
+
+          }else {
+              if(Cval2 !="" && Cval2 !=null){
+                  CheckBoxID=pagNam+Cval2;
+                  if($("#"+CheckBoxID).length > 0){
+                      arr3.push(Cval2);
+                      arr4.push(Cval2);
+                      var nowval=arr3.pop();
+                      $.each(arr4,function (index,bid) {
+                          $("#"+pagNam+bid).parent().parent().css({"background-color":""});
+                      });
+                      $("#"+pagNam+nowval).parent().parent().css({"background-color":color});
+                      $("#"+pagNam+nowval).prop("checked",true);
+                      $('#Num'+page).val('');
+                      var top=($("#"+pagNam+nowval).offset()).top-500;
+                      $("#scr"+page).scrollTop(top);
+                  }else {
+                      alert("血袋號碼:"+Cval2+"請確認血袋是否正確");
+                  }
               }
           }
+
       }
     /********************************************監測手動勾選***************************************************************************************/
 
-    $('#GTList').on('change','input[type=checkbox]',function () {
 
-        if($(this).prop("checked")==true){
-            $(this).parent().parent().css({'background-color':'#BBFF00'});
-        }else {
-            $(this).parent().parent().css({'background-color':'#FFFFFF'});
+    $(document).on('change', 'input[type=checkbox]', function() {
+        var checkbox = $(this);
+        var page=$("#PageVal").val();
+        if (checkbox.is(':checked')==true)
+        {
+            switch (page) {
+                case "B":
+                    checkbox.parent().parent().css({'background-color':'#BBFF00'});
+                    break;
+                case "C":
+                    checkbox.parent().parent().css({'background-color':'#7D7DFF'});
+                    break
+            }
+
+        }else
+        {
+            checkbox.parent().parent().css({'background-color':'#FFFFFF'});
         }
-
     });
-
-    $("#INList").on('change','input[type=checkbox]',function () {
-        if($(this).prop("checked")==true){
-            $(this).parent().parent().css({'background-color':'#7D7DFF'});
-        }else {
-            $(this).parent().parent().css({'background-color':'#FFFFFF'});
-        }
-
-    });
-
-
 
 /**********************************************************************************************************************************************************************************************/
       function reset() {
@@ -533,7 +552,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           $("#wrapper").show();
           console.log("http://localhost"+'/webservice/NISPWSTRAINI.PHP?str='+AESEnCode('sFm=CBLD&idPt='+$("#DA_idpt").val()+'&INPt='+$("#DA_idinpt").val()+'&sUr=<?php echo $Account?>'));
           $.ajax({
-              'url':'/webservice/NISPWSTRAINI.PHP?str='+AESEnCode('sFm=CBLD&idPt='+$("#DA_idpt").val()+'&INPt='+$("#DA_idinpt").val()+'&sUr=<?php echo $Account?>'),
+              url:'/webservice/NISPWSTRAINI.PHP?str='+AESEnCode('sFm=CBLD&idPt='+$("#DA_idpt").val()+'&INPt='+$("#DA_idinpt").val()+'&sUr=<?php echo $Account?>'),
               type:"POST",
               dataType:"text",
               success:function(data){
@@ -571,7 +590,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           }
           /*console.log("http://localhost"+'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+sfm+'&sTraID='+sTraID+'&sPg='+Page));*/
           $.ajax({
-              'url':'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+sfm+'&sTraID='+sTraID+'&sPg='+Page),
+              url:'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+sfm+'&sTraID='+sTraID+'&sPg='+Page),
               type:"POST",
               dataType:"text",
               success:function(data){
@@ -616,7 +635,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
                                   $("#GTList").append(
                                       "<tr class='list-item'>"+
-                                      "<td>"+"<input type='checkbox' name='GTckbox' class='form-check-input' id='GT"+B_ID+"' value='"+B_ID+"@"+B_NUM+"@"+B_TP+"@"+B_UR+"@"+B_CUR+"@"+B_DTSEQ+"@"+B_BKD+"@"+B_INDNO+"'>"+"</td>"+
+
+                                  "<td>"+"<input type='checkbox'  name='GTckbox' class='form-check-input' id='GT"+B_ID+"' value='"+B_ID+"@"+B_NUM+"@"+B_TP+"@"+B_UR+"@"+B_CUR+"@"+B_DTSEQ+"@"+B_BKD+"@"+B_INDNO+"'>"+"</td>"+
                                       "<td>"+B_ID+"</td>"+
                                       "<td>"+B_NUM+"</td>"+
                                       "<td>"+B_TP+"</td>"+
@@ -728,13 +748,15 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
      /*******************************************全選BUTTON***********************************************/
 
       $("#B_ALLCHECK").click(function () {
-            $.each(ST_DATAB,function (index) {
-                $("#GT"+ST_DATAB[index].B_ID).prop('checked',true);
+            $.each(ST_DATAB,function (index,BID) {
+                $("#GT"+BID).prop('checked',true);
+                $("#GT"+BID).parent().parent().css({"background-color":'#BBFF00'});
             });
       });
       $("#C_ALLCHECK").click(function () {
-          $.each(ST_DATAC,function (index) {
-              $("#IN"+ST_DATAC[index].C_ID).prop('checked',true);
+          $.each(ST_DATAC,function (index,BID) {
+              $("#IN"+BID).prop('checked',true);
+              $("#IN"+BID).parent().parent().css({"background-color":'#7D7DFF'});
           });
       });
       /******************************************頁簽選擇**************************************************/
@@ -872,12 +894,12 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       $("#Del").click(function() {
           var del_ip='/webservice/NISPWSDELILSG.php';
 
-/*
+
                     console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CBLD'+"&sTraID="+$('#sTraID').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#B_UR").val()));
-*/
+          var sPg=$("#PageVal").val();
 
           $.ajax({
-              url:del_ip+"?str="+AESEnCode("sFm="+'CBLD'+"&sTraID="+$('#sTraID').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#B_UR").val()),
+              url:del_ip+"?str="+AESEnCode("sFm="+'CBLD'+"&sTraID="+$('#sTraID').val()+"&sPg="+sPg+"&sCidFlag=D"+"&sUr="+$("#"+sPg+"_CUR").val()),
               type:'POST',
               dataType:'text',
               success:function (json) {
@@ -921,6 +943,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           $("#A").prop('disabled',true);
           $("#B").prop('disabled',true);
           $("#C").prop('disabled',true);
+          /*$('#NumB').prop('disabled',true);
+          $('#NumC').prop('disabled',true);*/
           if(page=="B"){
               $('input[name="GTckbox"]').prop('disabled',true);
           }
@@ -928,6 +952,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
               $('input[name="INckbox"]').prop('disabled',true);
 
           }
+
 
           $.each(obj,function (index) {
               var BCK_BAGENO=obj[index].BCK_BAGENO;       //血袋號碼
@@ -951,7 +976,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   $('#TimeVal').val(BCK_GETTIME);
                   $('#BCUR'+Getindex('B',BCK_BAGENO)).html(BCK_OPIDNM);
                   $("#GT"+BCK_BAGENO).prop('checked',true);
-                  $("#GT"+BCK_BAGENO).parent().parent().css({"background-color":"#9393FF"});
+                  $("#GT"+BCK_BAGENO).parent().parent().css({"background-color":"#BBFF00"});
 
               }
               if(page=='C'){
@@ -975,10 +1000,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       var y;
       Serch_btn.onclick=function ()
       {
-          console.log("http://localhost"+"/webservice/NISPWSLKQRY.php?str="+
-              AESEnCode("sFm=CBLD&PageVal="+$("#PageVal").val()+"&DA_idpt="+
-                  $('#DA_idpt').val()+"&DA_idinpt="+$('#DA_idinpt').val()+
-                  "&sUser="+$('#sUser').val()+"&NM_PATIENT="+$('#DataTxt').val()));
+
           if(($("#DataTxt").val()).trim()=='')
           {
               errorModal("請選擇須查詢的病人");
@@ -990,10 +1012,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   return false;
                   break;
               case "true":
+                  var sPg=$("#PageVal").val();
                   y=window.open("/webservice/NISPWSLKQRY.php?str="+
-                      AESEnCode("sFm=CBLD&PageVal="+$("#PageVal").val()+"&DA_idpt="+
+                      AESEnCode("sFm=CBLD&PageVal="+sPg+"&DA_idpt="+
                           $('#DA_idpt').val()+"&DA_idinpt="+$('#DA_idinpt').val()+
-                          "&sUser="+$('#B_UR').val()+"&NM_PATIENT="+$('#DataTxt').val())
+                          "&sUser="+$('#'+sPg+'_UR').val()+"&NM_PATIENT="+$('#DataTxt').val())
                       ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
                   break;
           }
