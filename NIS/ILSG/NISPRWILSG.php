@@ -64,16 +64,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
         t=window.setInterval(function(){
             isload(t);
         },700);
-        function BloodRdo() {
-            var obj1 = document.getElementsByName("IDGP");
-            for (var i = 0; i < obj1.length; i++) {
-                if (obj1[i].type == "radio") {
-                    if (obj1[i].checked) {
-                        console.log(obj1[i].value);
-                    }
-                }
-            }
-        }
+
 
 
 
@@ -451,36 +442,38 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     $("#ISLN").prop("disabled", false);
                     $("#Inhibit").prop("disabled", false);
                     $("#Part").prop("disabled", true);
-                    document.getElementById('SubmitBtn').disabled=false;
+                    $("#SubmitBtn").prop('disabled',false);
 
-                    document.getElementById("DataTxt").value = dataObj[0].DataTxt;
-                    document.getElementById("DA_idpt").value = dataObj[0].IDPT;
-                    document.getElementById("DA_idinpt").value = dataObj[0].IDINPT;
-                    document.getElementById("DA_sBed").value=dataObj[0].SBED;
-                    document.getElementById('clickTime').value=0;
-                    document.getElementById('PageVal').value='A';
-                    document.getElementById('BSData').style.display = "none";
-                    document.getElementById('isuling').style.display = "none";
-                    document.getElementById('Imgisuling').style.display = "none";
-                    document.getElementById('NO_isuling').style.display = "none";
 
-                    document.getElementById("Del").disabled = true;
-                    document.getElementById("ISSG").disabled = false;
-                    document.getElementById("ISLN").disabled = false;
-                    document.getElementById("Inhibit").disabled = false;
-                    document.getElementById("DELMENU").disabled = true;
+                    $("#DataTxt").val(dataObj[0].DataTxt);
+                    $("#DA_idpt").val(dataObj[0].IDPT);
+                    $("#DA_idinpt").val(dataObj[0].IDINPT);
+                    $("#DA_sBed").val(dataObj[0].SBED);
+                    $("#clickTime").val(0);
+                    $("#PageVal").val('A');
+                    $("#BSData").css({"display": "none"});
+                    $("#isuling").css({"display": "none"});
+                    $("#Imgisuling").css({"display": "none"});
+                    $("#NO_isuling").css({"display": "none"});
 
-                    document.getElementById('FORMSEQANCE').value='';
-                    document.getElementById('DT_EXE').value='';
-                    document.getElementById('TM_EXE').value='';
-                    document.getElementById('sSave').value='';
 
-                    document.getElementById('STDATA_FORMWT').value='';
-                    document.getElementById('STDATA_JID_NSRANK').value='';
-                    document.getElementById('STDATB_idFrm').value='';
-                    document.getElementById('transKEY').value='';
-                    document.getElementById('SER_TM').value='';
-                    document.getElementById('SER_DT').value='';
+                    $("#Del").prop('disabled',true);
+                    $("#ISSG").prop('disabled',false);
+                    $("#ISLN").prop('disabled',false);
+                    $("#Inhibit").prop('disabled',false);
+                    $("#DELMENU").prop('disabled',true);
+
+                    $("#FORMSEQANCE").val('');
+                    $("#DT_EXE").val('');
+                    $("#TM_EXE").val('');
+                    $("#sSave").val('');
+
+                    $("#STDATA_FORMWT").val('');
+                    $("#STDATA_JID_NSRANK").val('');
+                    $("#STDATB_idFrm").val('');
+                    $("#transKEY").val('');
+                    $("#SER_TM").val('');
+                    $("#SER_DT").val('');
 
                     /*時間格式化*/
                     var sRdoD= document.getElementsByName('sRdoDateTime');
@@ -582,11 +575,17 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
             $("#ISLN").prop("disabled", true);
             $("#Inhibit").prop("disabled", true);
             $("#Part").prop("disabled", true);
-            $(document).ready(function () {
-                $(window).on('beforeunload', function (e) {
-                    return '確認要重新整理嗎?';
-                });
 
+
+
+            $(document).ready(function () {
+                $(document).on("keydown", "form", function(event) {
+                    return event.key != "Enter";
+                });
+                $(window).on('beforeunload', reloadmsg);
+                function  reloadmsg() {
+                    return '確認要重新整理嗎?';
+                }
                 $('#Part').click(function () {
                     $('#Serch').prop('disabled',true);
                 });
@@ -854,6 +853,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                                 $('#Serch').prop('disabled',false);
                                 $("#Part").prop('disabled',false);
                                 $("#Inhibit").prop('disabled',false);
+                            }else {
+                                $('#DELMENU').prop('disabled',false);
                             }
 
                             if($("#clickTime").val()=='0'){
@@ -973,6 +974,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                 }
                 /*存檔ws*/
                 $('#form1').submit(function () {
+                    $(window).off('beforeunload', reloadmsg);
                     var timeRadioButton=$("input[name=sRdoDateTime]:checked").val();
                     var Dateinput=$("#timer").val();
                     var TIMER=$("#timetxt").val();
@@ -1229,7 +1231,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
 
                     }
                     console.log("http://localhost"+submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+$("#PageVal").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
-
+                    console.log(json);
                     $("#loading").show();
                     $("#wrapper").show();
                     $.ajax({
@@ -1238,7 +1240,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                         beforeSend: UPDATEDATA(spg, JSON.stringify(json)),
                         dataType:'text',
                         success:function (json) {
-                           try {
+                            try {
                                var data= JSON.parse(AESDeCode(json));
                                console.log(data);
                                $("#loading").hide();
@@ -1445,27 +1447,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                             document.getElementById(region).style.color='black';
                         }
                     });
+                    $('.ImgTable').css({"background-color":"","color":""});
 
-                    $.each(td_obj,function (index) {
-                        for(var i=0;i<8;i++){
-                            document.getElementById(((((td_obj.Region)[0]).A)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[0]).A)[i]).TD).style.color='';
-                            document.getElementById(((((td_obj.Region)[1]).B)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[1]).B)[i]).TD).style.color='';
-                            document.getElementById(((((td_obj.Region)[2]).C)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[2]).C)[i]).TD).style.color='';
-                            document.getElementById(((((td_obj.Region)[3]).D)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[3]).D)[i]).TD).style.color='';
-                            document.getElementById(((((td_obj.Region)[4]).E)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[4]).E)[i]).TD).style.color='';
-                            document.getElementById(((((td_obj.Region)[5]).F)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[5]).F)[i]).TD).style.color='';
-                            document.getElementById(((((td_obj.Region)[6]).G)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[6]).G)[i]).TD).style.color='';
-                            document.getElementById(((((td_obj.Region)[7]).H)[i]).TD).style.backgroundColor='';
-                            document.getElementById(((((td_obj.Region)[7]).H)[i]).TD).style.color='';
-                        }
-                    });
                     $.each(FORBIDArrary,function (index) {
                         document.getElementById(FORBIDArrary[index].REGION).style.backgroundColor='red';
                         document.getElementById(FORBIDArrary[index].REGION).style.color='white';
@@ -1581,12 +1564,13 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
 
                 var Serch_btn=document.getElementById('Serch');
                 function Serchcallback(AESdata){
-                    var page=$("#PageVal").val();
+                   var page=$("#PageVal").val();
                     var str=AESDeCode(AESdata);
                     var datastr=JSON.parse(JSON.stringify(str).replace(/\u0000/g, '').replace(/\\u0000/g, ""));
                     var data=JSON.parse(datastr);
+                    console.log(AESdata);
                     console.log(data);
-                    if(data){
+                 if(data){
                         document.getElementById("DELMENU").disabled= false;
                         document.getElementById("Del").disabled= false;
                         document.getElementById("timer").readonly= true;
@@ -1594,7 +1578,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                         document.getElementById('STVALval').value='';
                         document.getElementById('sPress').value='';
                         $("input[name=sRdoDateTime]").prop("disabled",true);
-                        //$("input[name=sPressure]").prop("disabled",true);
 
                         var STVALval=document.getElementById('STVALval');
                         STVALval.onpropertychange=function(){
@@ -1701,7 +1684,9 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                                document.getElementById('Inhibit').disabled=true;
                                 $("#SERCH_Click").val("2");
 
-                                var json=data.ISLN;
+                                var json=data;
+                                // var json=data.ISLN;
+                                console.log(json);
                                 var DT='';
                                 var TM='';
                                 console.log(data);
@@ -1750,9 +1735,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                                 var FORMSEQANCE=data.FORMSEQANCE;
                                 var SER_DT=data.SER_DT;
                                 var SER_TM=data.SER_TM;
-                                document.getElementById('FORMSEQANCE').value=FORMSEQANCE;
-                                document.getElementById('SER_DT').value=SER_DT;
-                                document.getElementById('SER_TM').value=SER_TM;
+
+                                $('#FORMSEQANCE').val(FORMSEQANCE);
+                                $('#SER_DT').val(SER_DT);
+                                $('#SER_TM').val(SER_TM);
+                                $("input[name='forbid[]']").prop('checked',false);
                                 $.each(forbid_REGION,function (index) {
                                     console.log(forbid_REGION[index]);
                                     document.getElementById('No_'+forbid_REGION[index]).checked=true;
@@ -2124,10 +2111,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                 <div style="background-color: brown;color:white;padding-top: 5px;padding-left: 5px;border-radius:3px;">
                     <label style="margin-right: 5px;font-size: 5vmin"> <input type="radio" value="A" id="Eating1" name="IDGP"
                                                                               style="width: 6vmin;height: 6vmin"
-                                                                              onchange="BloodRdo()">飯前</label>
+                                                                              >飯前</label>
                     <label style="margin-right: 5px;font-size: 5vmin"> <input type="radio" value="B" id="Eating2" name="IDGP"
                                                                               style="width: 6vmin;height: 6vmin"
-                                                                              onchange="BloodRdo()">飯後</label>
+                                                                             >飯後</label>
                 </div>
                 <div style="background-color: #FFFBCC;padding-top: 10px">
 
@@ -2242,7 +2229,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
         <!--部位圖-->
         <div id="Imgisuling">
             <img src="ISLN800.bmp" style="z-index: -1;">
-            <table id="A" border="1" style="z-index: 2;position: static;margin-top: -445px;margin-left: 35px">                　
+            <table id="A" border="1" style="z-index: 2;position: static;margin-top: -445px;margin-left: 35px" class="ImgTable">                　
                 <tr>                    　
                     <td id="A1">A1</td>                    　
                     <td id="A2">A2</td>                    　
@@ -2264,7 +2251,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     <td id="A8">A8</td>
                 </tr>
             </table>
-            <table id="B" border="1" style="z-index: 2;position: relative;margin-left: 110px;margin-top: -27px">
+            <table id="B" border="1" style="z-index: 2;position: relative;margin-left: 110px;margin-top: -27px" class="ImgTable">
                 　
                 <tr>
                     　
@@ -2289,7 +2276,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     <td id="B8">B8</td>
                 </tr>
             </table>
-            <table id="C" border="1" style="z-index: 2;position: relative;margin-left: 74px;margin-top: -22px">
+            <table id="C" border="1" style="z-index: 2;position: relative;margin-left: 74px;margin-top: -22px" class="ImgTable">
                 　
                 <tr>
                     　
@@ -2316,7 +2303,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     <td id="C8">C8</td>
                 </tr>
             </table>
-            <table id="D" border="1" style="z-index: 2;position: relative;margin-left: 88px;margin-top: -22px">
+            <table id="D" border="1" style="z-index: 2;position: relative;margin-left: 88px;margin-top: -22px" class="ImgTable">
                 　
                 <tr>
                     　
@@ -2344,7 +2331,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     <td id="D8">D8</td>
                 </tr>
             </table>
-            <table id="H" border="1" style="z-index: 2;position: static;margin-top: -450px;margin-left: 265px">
+            <table id="H" border="1" style="z-index: 2;position: static;margin-top: -450px;margin-left: 265px" class="ImgTable">
                 　
                 <tr>
                     　
@@ -2372,7 +2359,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     <td id="H7">H7</td>
                 </tr>
             </table>
-            <table id="G" border="1" style="z-index: 2;position: relative;margin-left: 190px;margin-top: -28px">
+            <table id="G" border="1" style="z-index: 2;position: relative;margin-left: 190px;margin-top: -28px" class="ImgTable">
                 　
                 <tr>
                     　
@@ -2400,7 +2387,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     <td  id="G7">G7</td>
                 </tr>
             </table>
-            <table id="F" border="1" style="z-index: 2;position: relative;margin-left: 230px;margin-top: -22px">
+            <table id="F" border="1" style="z-index: 2;position: relative;margin-left: 230px;margin-top: -22px" class="ImgTable">
                 　
                 <tr>
                     　
@@ -2428,7 +2415,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     <td id="F7">F7</td>
                 </tr>
             </table>
-            <table id="E" border="1" style="z-index: 2;position: relative;margin-left: 215px;margin-top: -22px">
+            <table id="E" border="1" style="z-index: 2;position: relative;margin-left: 215px;margin-top: -22px" class="ImgTable">
                 　
                 <tr>
                     　
