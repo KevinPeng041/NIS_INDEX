@@ -18,8 +18,8 @@ $sUr=trim($user_value[1]);/*使用者*/
 
 
 $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
+/*$parameter="sfm=CNAD".'&sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;*/
 $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,26 +49,23 @@ $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
         .btn{
            font-size: 19px;
         }
+
     </style>
 </head>
+
 <body>
 <div class="container">
     <div class="row" style="margin-top: 5px">
         <div class="col-auto col-auto col-sm-auto col-md-auto col-lg-auto ">
-            <h2><?php echo  $sUr?></h2>
+            <h1><?php echo  $sUr?></h1>
         </div>
         <div class="col-auto col-auto col-sm-auto col-md-auto col-lg-auto ">
             <button id="LogOutModleUI" class="btn btn-sm btn-warning" style="margin-top: 4px"><b>登出</b></button>
         </div>
     </div>
-    <div class="row">
-    <div class="col col-12 col-sm-6 col-md-4 col-lg-2 ">
-        <button type="button" class="btn btn-primary btn-lg btn-block" onclick="openwindow('ILSG')">血糖胰島素作業</button>
+    <div id="MenuBtn" class="row">
+
     </div>
-    <div class="col col-12 col-sm-6 col-md-4 col-lg-2">
-        <button type="button" class="btn btn-primary btn-lg btn-block" onclick="openwindow('CBLD')">領輸血作業</button>
-    </div>
-</div>
 </div>
 <div class="modal fade" id="LogOutmodal" tabindex="-1" aria-labelledby="LogOutmodalCenterTitle" role="dialog" aria-hidden="true" data-backdrop="static">
     <div class="modal-dialog modal-dialog-centered modal-md" role="document">
@@ -86,21 +83,37 @@ $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
         </div>
     </div>
 </div>
-<!--確認選單頁面存在-->
-<input id="CKWindow" value="" type="text" style="display: none">
+
+
 </body>
 <script>
-var  myWindow='';
-function openwindow(mode) {
-    switch (mode) {
-        case "ILSG":
-            myWindow= window.open("NISPRW"+mode+".php?str="+AESEnCode('<?PHP echo $parameter?>'),"血糖胰島素作業",'width=850px,height=750px,scrollbars=yes,resizable=no');
-            break;
-        case "CBLD":
-            myWindow= window.open("test/NISPRW"+mode+".php?str="+AESEnCode('<?PHP echo $parameter?>'),"領輸血作業",'width=850px,height=750px,scrollbars=yes,resizable=no');
-            break;
-    }
+    var x=[
+        {
+            sFm:'ILSG',name:'血糖胰島素作業'
+        },{
+            sFm:'CBLD',name:'領輸血作業'
+        },{
+            sFm:'CNBD',name:'領用血袋簽收單作業'
+        },{
+            sFm:'CNAD',name:'發血覆核作業'
+        }
 
+    ];
+    $.each(x,function (index) {
+        var a=x[index].sFm;
+        $('#MenuBtn').append(
+            "<div class='col col-12 col-sm-6 col-md-4 col-lg-2'>"+
+                "<button class='btn btn-primary btn-lg btn-block' id='"+a+"' onclick='openwindow("+'"'+a+'"'+")'  >"+x[index].name+
+                "</button>"+
+                "</div>"
+        );
+    });
+
+var  myWindow='';
+function openwindow(sFm) {
+   myWindow= window.open("NIS/"+sFm+"/NISPRW"+sFm+".php?str="+AESEnCode('<?PHP echo $parameter?>'),$("#"+sFm).text(),'width=850px,height=750px,scrollbars=yes,resizable=no');
+   console.log("http://10.10.230.73:8080/"+"NIS/"+sFm+"/NISPRW"+sFm+".php?str="+AESEnCode('<?PHP echo $parameter?>'));
+    console.log("http://10.10.230.73:8080/"+"NIS/"+sFm+"/NISPRW"+sFm+".php?str="+'<?PHP echo $parameter?>');
 }
 
 function CloseWin() {
@@ -126,7 +139,9 @@ function CancellLogOut() {
     $('#LogOutmodal').modal('hide');
 }
 function WindowCloes() {
+/*
     window.close();
+*/
 }
 </script>
 </html>
