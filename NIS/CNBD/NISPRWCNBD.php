@@ -1,5 +1,37 @@
 <?php
-$OPID="00FUZZY"
+include '../../NISPWSIFSCR.php';
+$str=$_GET['str'];
+$replaceSpace=str_replace(' ','+',$str);//空白先替換+
+$EXPLODE_data=explode('&',AESDeCode($replaceSpace));
+preg_match('/(sfm)/',AESDeCode($replaceSpace),$matches);
+
+$sfm_STR='';
+$sfm_value='';
+$sfm='';
+
+
+if(count($matches)>0){
+    $sfm_STR=$EXPLODE_data[0];
+    $sfm_value=explode('=',$sfm_STR);
+    $sfm=trim($sfm_value[1]);
+}
+
+$n=count($matches)>0?1:0;
+$sIdUser_STR=$EXPLODE_data[$n];
+$passwd_STR=$EXPLODE_data[$n+1];
+$user_STR=$EXPLODE_data[$n+2];
+
+
+$sIdUser_value=explode('=',$sIdUser_STR);
+$passwd_value=explode('=',$passwd_STR);
+$user_value=explode('=',$user_STR);
+
+
+$sIdUser=trim($sIdUser_value[1]);/*帳號*/
+$passwd=trim($passwd_value[1]);/*密碼*/
+$sUr=trim($user_value[1]);/*使用者*/
+$OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
+
 ?>
 
 <!DOCTYPE html>
@@ -16,6 +48,28 @@ $OPID="00FUZZY"
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
     <script src="../../NISCOMMAPI.js"></script>
+    <script>
+        var sfm='<?php echo $sfm?>';
+        console.log(sfm);
+        if(sfm==""){
+            console.log(123);
+            var ckw=setInterval(function () {
+                try {
+                    if(!window.opener) {
+                        alert("此帳號以被登出,請重新登入開啟");
+                        window.close();
+                    }
+                }catch (e) {
+                    $("#wrapper").show();
+                    alert(e);
+                    window.close();
+                    clearInterval(ckw);
+                    return false;
+                }
+            },500);
+        }
+
+    </script>
     <style>
         /* In order to place the tracking correctly */
         .container{
@@ -29,16 +83,15 @@ $OPID="00FUZZY"
             font-size: 3.7vmin;
         }
         .List{
-            height:300px;overflow:auto;
+            height:50vmin;
+            overflow:auto;
             position: relative;
 
         }
         .btn {
             margin-top: 5px;
         }
-        div{
-            margin-top: 5px;
-        }
+
         body{
             overscroll-behavior-y:contain;
         }
@@ -101,10 +154,22 @@ $OPID="00FUZZY"
             opacity: 0.5;
             z-index: 9998;
         }
+        .input-group{
+            margin-top: 5px;
+        }
+        .Num_input{
+            margin-top: 5px;
+            margin-bottom: 5px;
+            height: 40px;
+            font-size: 20px;
+        }
+
     </style>
 </head>
 
 <body>
+<div id="wrapper"></div>
+<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
 <div class="Parametertable">
     <input id="BUT_NEEDUNIT" type="text" value="" placeholder="BUT_NEEDUNIT">
     <input id="BUT_PROCDATE" type="text" value="" placeholder="BUT_PROCDATE">
@@ -114,8 +179,7 @@ $OPID="00FUZZY"
     <input id="sTraID" type="text" value="" placeholder="sTraID">
     <input id="NURSOPID" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
 </div>
-<div id="wrapper"></div>
-<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
+
 <div class="container">
     <h2>領用血簽收單作業</h2>
     <form id="form1">
@@ -145,9 +209,10 @@ $OPID="00FUZZY"
         </div>
 
         <div>
-            <div class="Num_input">
-                <input id="IdPt" type="text" placeholder="輸入病歷號" maxlength="8">
-                <input id="NumId" type="text" placeholder="輸入血袋號碼" maxlength="10" disabled>
+            <div>
+                <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8">
+                <input id="NumId" class="Num_input"  type="text" placeholder="輸入血袋號碼" >
+                <button id="Error_btn" type="button" class="btn btn-secondary btn-md Num_input"  style="margin-bottom: 15px;" disabled>錯誤查詢</button>
             </div>
             <table class="table" style="table-layout: fixed;text-align: center;margin-bottom: 0rem;">
                 <thead  class="theadtitle" style=" font-size: 3.5vmin;">
@@ -158,7 +223,7 @@ $OPID="00FUZZY"
                 <th style="text-align: center ;padding-bottom: 5px !important">血袋號碼</th>
                 </thead>
             </table>
-            <div data-spy="scroll" data-target="#navbar-example" data-offset="0" class="List">
+            <div id="scrollList" data-spy="scroll" data-target="#navbar-example" data-offset="0" class="List">
                 <table class="table" style="table-layout: fixed;text-align: center">
                     <tbody style=" font-size: 3.5vmin;" id="DATAList">
 
@@ -167,14 +232,25 @@ $OPID="00FUZZY"
             </div>
         </div>
     </form>
+
+
     <div class="modal fade" id="Errormodal" tabindex="-1" aria-labelledby="ErrormodalCenterTitle" role="dialog" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-md" role="document">
-            <div class="modal-content" style="height:30%;width: 90%;">
+            <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="ErrormodalCenterTitle">錯誤提示</h5>
+                    <h5 class="modal-title" id="ErrormodalCenterTitle">錯誤訊息</h5>
                 </div>
-                <div class="modal-body" style="overflow-y: auto">
-                    <p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word"></p>
+                <div class="modal-body"   id="ModalBody" style="overflow-y: auto">
+                    <table class="table" style="table-layout: fixed;text-align: center;margin-bottom: 0rem;">
+                        <thead  class="theadtitle" style=" font-size: 2.5vmin;">
+                            <th style=" padding-bottom: 5px !important">序號</th>
+                            <th style=" padding-bottom: 5px !important">病歷號</th>
+                            <th style="text-align: center ;padding-bottom: 5px !important">血袋號碼</th>
+                        </thead>
+                        <tbody style=" font-size: 3.5vmin;" id="ErrBlood">
+
+                        </tbody>
+                    </table>
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="ErorFocus" class="btn btn-secondary" data-dismiss="modal">關閉</button>
@@ -182,6 +258,7 @@ $OPID="00FUZZY"
             </div>
         </div>
     </div>
+
     <div class="modal fade" id="DELModal" tabindex="-1" role="dialog" aria-labelledby="DELModalCenterTitle" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
             <div class="modal-content" style="height: 30%;">
@@ -219,57 +296,118 @@ $OPID="00FUZZY"
     },700);
 
     $(document).ready(function () {
-
         TimerDefault();
         UIDefault();
-        var a=[];
-        var ckNum=false;
+
+
+        $(document).on("keydown", "form", function(event) {
+            return event.key != "Enter";
+        });
+
+
        $("#IdPt").bind("input propertychange",function () {
-           var idpt=$(this).val();
-           if(idpt.length==8){
-               $("input[type=checkbox]").each(function (i) {
-                   var idVal=$(this).attr("id");
-                   var CheckboxId=idVal.split("@");
-                   if(CheckboxId.indexOf(idpt) > -1 ){
-                       console.log(idVal);
-                       ckNum=true;
-                       if(ckNum==true){
-                           $("#NumId").prop("disabled",false);
-                           $("#NumId").focus();
-                           ckNum=false;
-                       }
-
-                       return false;
-                   }
-
-               });
+           if(this.value.length==8)
+           {
+               $("#NumId").focus();
            }
         });
 
-
+        var err=[];
+        var obj={
+            IDPT:{},
+            BSK_BAGENO:{},
+            NUM:{}
+        };
+        var a=0;
         $("#NumId").bind("input propertychange",function () {
-            var BSK_BAGENO=$(this).val();
-           if(BSK_BAGENO.length==10){
-               $("input[type=checkbox]").each(function (i) {
-                   var idVal=$(this).attr("id");
-                   var CheckboxId=idVal.split("@");
-                   if(CheckboxId.indexOf(BSK_BAGENO) > -1 ){
-                       var id=$("#IdPt").val();
-                       $("#"+id+"\\@"+BSK_BAGENO).prop("checked",true);
-                       $("#NumId").prop("disabled",true);
-                       $("#IdPt").focus();
-                       $("#IdPt").val("");
-                       $("#NumId").val("");
-                       return false;
-                   }
+            var BSK_BAGENO=($(this).val()).replace(/\s*/g,"");
+            var id=$("#IdPt").val();
 
-               });
+           if(BSK_BAGENO.length >=10){
+               if(BSK_BAGENO.indexOf("@")>-1){
+                  var arr= BSK_BAGENO.replace(/,/g,"@").split("@");
+                  var len=arr.length;
+                 for (var i=1;i<len;i++)
+                     {
+                         var checkID=$("#"+arr[0]+"\\@"+arr[i]);
+                         if(checkID.length>0){
+                             checkID.prop("checked",true);
+                             checkID.parent().parent().css({'background-color':'#BBFF00'});
+
+                         }else {
+                             obj.IDPT=arr[0];
+                             obj.BSK_BAGENO=arr[i];
+                             obj.NUM=i;
+                             var copy=Object.assign({},obj);//淺複製錯誤血袋
+                             err.push(copy);
+                         }
+
+                     }
+                         if(err.length>0){
+                             errUI(err);
+                         }
+                 } else{
+                   a++;
+                   if($("#"+id+"\\@"+BSK_BAGENO).length>0){
+                       $("#"+id+"\\@"+BSK_BAGENO).prop("checked",true);
+                       $("#"+id+"\\@"+BSK_BAGENO).parent().parent().css({'background-color':'#BBFF00'});
+                       var top=($("#"+id+"\\@"+BSK_BAGENO).offset()).top-500;
+                       $("#scrollList").scrollTop(top);
+                   }else {
+                       obj.IDPT=id;
+                       obj.BSK_BAGENO=BSK_BAGENO;
+                       obj.NUM=a;
+                       var copy=Object.assign({},obj);//淺複製錯誤血袋
+                       err.push(copy);
+                       var errfilter=err.filter(function (element, index, arr) {
+                           return arr.indexOf(element)===index;
+                       });
+                       errUI(errfilter);
+                   }
+               }
+               $("#IdPt").focus();
+               $("#IdPt").val("");
+               $("#NumId").val("");
             }
+
         });
+
+
+        function errUI(err){
+            $("#Error_btn").css({"background-color":"#FF0000","border-color":"#FF0000"});
+            $("#Error_btn").prop("disabled",false);
+            $("#ErrBlood").children().remove();
+            $.each(err,function (index,val) {
+                $("#ErrBlood").append(
+                    "<tr class='list-item'>"+
+                    "<td>"+val.NUM+"</td>"+
+                    "<td>"+val.IDPT+"</td>"+
+                    "<td>"+val.BSK_BAGENO+"</td>"+
+                    "<tr>"
+                );
+            });
+        }
+
+
+        $("#Error_btn").click(function () {
+            err.length=0;
+            a=0;
+            $('#Errormodal').modal('show');
+        });
+
+
         $(document).on('change', 'input[type=checkbox]', function() {
             var checkbox = $(this);
-            console.log(GetCheckVal());
+
+            if (checkbox.is(':checked')==true)
+            {
+                checkbox.parent().parent().css({'background-color':'#BBFF00'});
+            }else
+            {
+                checkbox.parent().parent().css({'background-color':'#FFFFFF'});
+            }
         });
+
 
         $("#form1").submit(function () {
             //$(window).off('beforeunload', reloadmsg);
@@ -353,10 +491,13 @@ $OPID="00FUZZY"
             $("#sSave").val(sSave);
             $("#sTraID").val(sTraID);
             InsertWSST(sTraID,'A',data);
-            tABLELIST(BUT_NEEDUNIT);
+            TableList(BUT_NEEDUNIT);
             $("button[type=submit]").prop("disabled",false);
             $("#SerchBtn").prop("disabled",false);
             $("#IdPt").prop("disabled",false);
+            $("#ErrBlood").children().remove();
+            $("#Error_btn").prop("disabled",true);
+            $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
         }
         var x;
         $("#sbed").click(function () {
@@ -366,7 +507,7 @@ $OPID="00FUZZY"
                     break;
                 case "true":
                     try {
-                        x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=00FUZZY"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
+                        x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $sIdUser?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
 
                     }catch (e) {
                         console.log(e);
@@ -381,7 +522,6 @@ $OPID="00FUZZY"
         function Serchcallback(AESobj){
             var str1=AESDeCode(AESobj);
             var objArr=JSON.parse(str1);
-            console.log(str1);
             $("#DATAList").children().remove();
             var  BSK_NURSDATE='';
             var  BSK_NURSTIME='';
@@ -439,7 +579,6 @@ $OPID="00FUZZY"
                     errorModal("查詢視窗已開啟");
                     break;
                 case "true":
-
                     y=window.open("/webservice/NISPWSLKQRY.php?str="+
                         AESEnCode("sFm=CNBD&PageVal="+$('#BUT_NEEDUNIT').val()+"&DA_idpt="+
                             ""+"&DA_idinpt="+""+
@@ -500,7 +639,7 @@ $OPID="00FUZZY"
         });
 
 
-        function tABLELIST(BUT_NEEDUNIT) {
+        function TableList(BUT_NEEDUNIT) {
 /*
             console.log("http://localhost"+'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT));
 */
@@ -512,7 +651,8 @@ $OPID="00FUZZY"
                    /* console.log(data);*/
                     var sTraID=$("#sTraID").val();
                     InsertWSST(sTraID,'B',data);
-                    var arr=JSON.parse(data);
+
+                    var arr=JSON.parse(AESDeCode(data));
                     if(arr.length==0){
                         $("#DATAList").append(
                             "<tr class='list-item'>"+
@@ -612,8 +752,13 @@ $OPID="00FUZZY"
             }
         }
         function errorModal(str) {
+            $("#ModalBody table").hide();//隱藏血袋錯誤訊息
+
+            $("#ModalBody").append(
+            '<p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word">'+str+'</p>'
+            );
             $('#Errormodal').modal('show');
-            document.getElementById('ErrorText').innerText=str;
+
         }
         function TimerDefault() {
             var TimeNow=new Date();
@@ -630,18 +775,18 @@ $OPID="00FUZZY"
             $("#DELMENU").prop("disabled",true);
             $("#SerchBtn").prop("disabled",true);
             $("#SubmitBtn").prop("disabled",true);
-            $("form input[type=text]").prop("disabled",true);
         }
         function restUI(){
             $("form input[type=text]").val("");
-            $("form input[type=text] :not(.Num_input)").prop("disabled",false);
             $("input:not(#NURSOPID)").val("");
             $("button").prop("disabled",false);
             $("#DATAList").children().remove();
             $("#SubmitBtn").prop("disabled",true);
             $("#SerchBtn").prop("disabled",true);
             $("#DELMENU").prop("disabled",true);
-
+            $("#ErrBlood").children().remove();
+            $("#Error_btn").prop("disabled",true);
+            $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
         }
 
 
