@@ -3,18 +3,6 @@
 date_default_timezone_set('Asia/Taipei');
 function GetCNBDIniJson($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
     //取護理站初始清單
-/*
-    $sql = "select ST_DATAA from HIS803.NISWSIT WHERE ID_TABFORM = 'CNBD'";
-
-    $stid=oci_parse($conn,$sql);
-    oci_execute($stid);
-    $ST_DATAA = '';
-
-    while (oci_fetch_array($stid)){
-        $ST_DATAA=oci_result($stid,"ST_DATAA")->read(2000);
-    }*/
-    //[{"BUT_BUTNAME":"","BUT_NEEDUNIT":"","BUT_PROCDATE":"","BUT_PROCOPID":"","BUT_PROCTIME":"","sTraID":"","sSave":""}]
-
     $sql="SELECT * FROM TBOUNT";
     $stid=oci_parse($conn,$sql);
     oci_execute($stid);
@@ -53,8 +41,6 @@ function GetCNBDIniJson($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FORM
         oci_commit($conn);
         return $json;
     }
-
-
 }
 function GetCNBDPageJson($conn,$BSK_NEEDUNIT){
     //取護理站輸血血袋紀錄清單
@@ -65,7 +51,8 @@ function GetCNBDPageJson($conn,$BSK_NEEDUNIT){
             AND BSK_BLDKIND=BKD_BLDKIND
             AND  BSK_CANCD='N' 
             AND BSK_CANDATE=' 'AND BSK_CANTIME=' '
-            AND BSK_OUTDATE <>' ' AND BSK_NURSDATE=' '";
+            AND BSK_OUTDATE <>' ' AND BSK_NURSDATE=' '
+            order by BSK_MEDNO DESC";
     $stid=oci_parse($conn,$Sql);
     oci_execute($stid);
     $arr=[];
@@ -183,14 +170,14 @@ function GetCNBDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
     $Arr=[];
 
 
-
-    $SQL="SELECT BSK_BAGENO,BSK_BLDKIND,BSK_MEDNO,BKD_EGCODE,BSK_NEEDUNIT,MH_NAME,BSK_NURSDATE,BSK_NURSTIME,BSK_NURSOPID,BSK_INDENTNO,BSK_TRANSRECNO,BSK_BARSIGN
+    $SQL="SELECT BSK_BAGENO,BSK_BLDKIND,BSK_MEDNO,BKD_EGCODE,BSK_NEEDUNIT,MH_NAME,
+                    BSK_NURSDATE,BSK_NURSTIME,BSK_NURSOPID,BSK_INDENTNO,BSK_TRANSRECNO,BSK_BARSIGN
             FROM TBOSTK,TBOKID,TREMED where  BSK_NEEDUNIT ='$sPg' 
             AND TBOSTK.BSK_MEDNO=TREMED.MH_MEDNO
             AND BSK_BLDKIND=BKD_BLDKIND
-             AND BSK_MEDNO='$IDPT'
             AND  BSK_BARSIGN='Y' 
            AND BSK_NURSDATE='$sDt'AND  BSK_NURSTIME='$sTm'AND BSK_NURSOPID='$sUr'";
+
 
     $stid=oci_parse($conn,$SQL);
     oci_execute($stid);
@@ -225,7 +212,6 @@ function GetCNBDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
 
     while ($row=oci_fetch_array($stid1)){
         $ST_DATAA=$row[0]->load();
-
     }
 
     $Insert_sql="INSERT INTO HIS803.NISWSTP(
