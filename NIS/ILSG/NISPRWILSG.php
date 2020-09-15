@@ -11,16 +11,18 @@ $sIdUser_STR=$EXPLODE_data[0];
 $passwd_STR=$EXPLODE_data[1];
 $user_STR=$EXPLODE_data[2];
 
+
 $sIdUser_value=explode('=',$sIdUser_STR);
 $passwd_value=explode('=',$passwd_STR);
 $user_value=explode('=',$user_STR);
+
 
 $sIdUser=trim($sIdUser_value[1]);/*帳號*/
 $passwd=trim($passwd_value[1]);/*密碼*/
 $sUr=trim($user_value[1]);/*使用者*/
 
 
-$Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($data,7,"0",STR_PAD_LEFT))*/
+$Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,10 +32,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
     <title>血糖胰島素</title>
     <script type="text/javascript" src="../../jquery-3.4.1.js"></script>
     <link rel="stylesheet" href="../../bootstrap-4.3.1-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/NIS/ILSG.css">
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="../../crypto-js.js"></script>
     <script>
-        var ckw=setInterval(function () {
+       /* var ckw=setInterval(function () {
             try {
                 if(!window.opener) {
                     alert("此帳號以被登出,請重新登入開啟");
@@ -48,7 +51,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                 return false;
             }
 
-        },500);
+        },500);*/
 
         /*ajax Transitions img*/
         function isload(t) {
@@ -66,64 +69,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
         },700);
 
 
-
-
-        function TimerRdo() {
-            var obj = document.getElementsByName("sRdoDateTime");
-            var IDTM=document.getElementById("IDTM");
-            var TimeNow=new Date();
-            var yyyy=TimeNow.toLocaleDateString().slice(0,4);
-            var MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
-            var dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
-            var  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
-            var  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
-            var  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
-
-            document.getElementById("timer").value=yyyy-1911+MM+dd;
-            for (var i = 0; i < obj.length; i++) {
-                if (obj[i].type == "radio") {
-                    if (obj[i].checked) {
-                        var value = obj[i].value;
-                        if (value == "06:30") {
-                            document.getElementById("Eating1").disabled = false;
-                            document.getElementById("Eating2").disabled = false;
-                            IDTM.value="ISTM00000001";
-                            var tt = "0630";
-                            document.getElementById("timetxt").value = tt;
-
-                        } else if (value == "10:30") {
-                            document.getElementById("Eating1").disabled = false;
-                            document.getElementById("Eating2").disabled = false;
-                            IDTM.value="ISTM00000002";
-                            var tt2 = "1030";
-                            document.getElementById("timetxt").value = tt2;
-
-                        } else if (value == "16:30") {
-                            document.getElementById("Eating1").disabled = false;
-                            document.getElementById("Eating2").disabled = false;
-                            IDTM.value="ISTM00000003";
-                            var tt3="1630";
-                            document.getElementById("timetxt").value = tt3;
-
-                        } else if (value == "20:30") {
-                            document.getElementById("Eating1").disabled = false;
-                            document.getElementById("Eating2").disabled = false;
-                            IDTM.value="ISTM00000004";
-                            var tt4 = "2030";
-                            document.getElementById("timetxt").value = tt4;
-                        } else if (value == "臨時") {
-                            document.getElementById("Eating1").disabled = true;
-                            document.getElementById("Eating2").disabled = true;
-                            document.getElementById("Eating1").checked = false;
-                            document.getElementById("Eating2").checked = false;
-                            IDTM.value="ISTM00000005";
-                            document.getElementById("timetxt").value =h+m;
-                        }
-
-                    }
-                }
-            }
-        }
         /*reset ui*/
         function Reset(num) {
             switch (num) {
@@ -140,75 +85,31 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     break;
             }
 
-            $("#SERCH_Click").val("1");
+
             $("#BSData").hide();
             $("#isuling").hide();
             $("#Imgisuling").hide();
-
             $("#NO_isuling").hide();
             $("#Del").attr("disabled", true);
             $("#DELMENU").attr("disabled", true);
-            document.getElementById('SubmitBtn').disabled=false;
-
-            document.getElementById('FORMSEQANCE').value='';
-            document.getElementById('DT_EXE').value='';
-            document.getElementById('TM_EXE').value='';
-            document.getElementById('sSave').value='';
-
-            document.getElementById('STDATA_FORMWT').value='';
-            document.getElementById('STDATA_JID_NSRANK').value='';
-            document.getElementById('STDATB_idFrm').value='';
-            document.getElementById('transKEY').value='';
-            document.getElementById('SER_TM').value='';
-            document.getElementById('SER_DT').value='';
-
+            $('#SubmitBtn').prop('disabled',false);
             $("#Part").prop("disabled", true);
+            $("input[type=text]:not(#clickTime,#sUser)").val("");
+            $('#Textarea').val("");
+            $("#SERCH_Click").val("1");
             /*時間格式化*/
             $("input[name='sRdoDateTime']").attr("disabled", false);
             $("input[name='sRdoDateTime']").prop('checked',false);
             $('#timer').attr('readonly',false);
             $('#timetxt').attr('readonly',false);
-            document.getElementById('timer').value='';
-            document.getElementById('timetxt').value='';
             /*胰島素清空*/
             $("#Part").prop('disabled',true);
-            $("input[name=part]").prop('disabled',false);
-            $("input[name='part']").prop('checked',false);
             $("#Serch").prop('disabled',false);
-            document.getElementById('LastPart').value='';
-            document.getElementById('dose1').value='';
-            document.getElementById('dose2').value='';
-            document.getElementById('dose3').value='';
-            document.getElementById('fUSEF_1').value='';
-            document.getElementById('fUSEF_2').value='';
-            document.getElementById('fUSEF_3').value='';
-            document.getElementById('tt1').value='';
-            document.getElementById('tt2').value='';
-            document.getElementById('tt3').value='';
-            document.getElementById('tt4').value='';
-            document.getElementById('tt5').value='';
-            document.getElementById('tt6').value='';
-            document.getElementById('Isu_A').value='';
-            document.getElementById('Isu_B').value='';
-            document.getElementById('Isu_C').value='';
             /*血糖清空*/
-            $("input[name='sPressure']").prop('disabled',false);
-            $("input[name='sPressure']").prop('checked',false);
-            $("input[name='IDGP']").prop('checked',false);
-            $("input[name='IDGP']").prop('disabled',false);
-            document.getElementById("ITNO_btn").disabled = false;
-            document.getElementById('STVALval').value='';
-            document.getElementById('Textarea').value='';
-            /*禁打*/
-            var re_NO_MMAL=['1','2','3','4'];
-            $.each(re_NO_MMAL,function (index) {
-                if(document.getElementById('ISLF0000000'+re_NO_MMAL[index])){
-                    document.getElementById('ISLF0000000'+re_NO_MMAL[index]).disabled=false;
-                    document.getElementById('ISLF0000000'+re_NO_MMAL[index]).checked=false;
-                }
-
-            });
-
+            $("input[type=radio]").prop('checked',false);
+            $("input[type=radio]").prop('disabled',false);
+            $("input[type=checkbox]").prop('checked',false);
+            $("input[type=checkbox]").prop('disabled',false);
             $("#ISSG").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
             $("#ISLN").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
             $("#Inhibit").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
@@ -219,151 +120,21 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
         function  clearvalue(VAL){
             switch (VAL) {
                 case 1:
-                    document.getElementById('Isu_A').value='';
-                    document.getElementById('fUSEF_1').value='';
-                    document.getElementById('dose1').value='';
+                    $('#Isu_A').val("");
                     break;
                 case 2:
-                    document.getElementById('Isu_B').value='';
-                    document.getElementById('fUSEF_2').value='';
-                    document.getElementById('dose2').value='';
+                    $('#Isu_B').val("");
                     break;
                 case 3:
-                    document.getElementById('Isu_C').value='';
-                    document.getElementById('fUSEF_3').value='';
-                    document.getElementById('dose3').value='';
+                    $('#Isu_C').val("");
                     break;
             }
-
+            $('#fUSEF_'+VAL).val("");
+            $('#dose'+VAL).val("");
         }
 
     </script>
-    <style>
-        .btn {
-            margin-top: 3px;
-        }
 
-        h1 {
-            text-align: left;
-            font-size: 6vmin;
-        }
-
-        #BSData {
-            margin-top: 10px;
-            display: none;
-        }
-
-        #isuling {
-            margin-top: 10px;
-            display: none;
-        }
-
-        #Imgisuling {
-            margin-top: 10px;
-            width: 350px;
-            height: 560px;
-            display: none;
-        }
-        #NO_isuling{
-            margin-top: 10px;
-            display: none;
-        }
-        #A {
-            transform: rotate(25deg);
-        }
-
-        #H {
-            transform: rotate(-25deg);
-        }
-
-        .modal-dialog,
-        .modal-content {
-            /* 80% of window height */
-            height: 80%;
-        }
-
-        .modal-body {
-            /* 100% = dialog height, 120px = header + footer */
-            max-height: calc(100% - 120px);
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-        #loading{
-            position: absolute;
-            z-index: 9999;
-            top: 50%;
-            left: 50%;
-            background-color: #FFFFFF;
-            color: #000000;
-            font-size: 5vmin;
-            width: 45vmin;
-            height: 12vmin;
-            padding-left:20px;
-            padding-top:10px;
-            border-radius: 5px;
-            margin: -15vmin 0 0 -30vmin;
-
-        }
-        #loading .loadimg{
-            width: 10vmin;
-            height:10vmin;
-        }
-        #wrapper{
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            opacity: 0.5;
-            z-index: 9998;
-        }
-
-        li {
-            list-style-type:none;
-        }
-        .container{
-            max-width: 1140px;
-        }
-        .container button{
-            color: white;
-            font-size: 4.5vmin;
-        }
-        .container .float-left{
-            font-size: 3.7vmin;
-        }
-        .container .Otimer{
-            margin-top:10px;
-            font-size: 4vmin;
-            background-color: #baeeff;
-            border-radius:3px;
-        }
-        .container .Otimer  .pageTime #timer{
-            width:35vmin;
-            text-align: center;
-            margin-top: 5px;
-
-        }
-        .container .Otimer  .pageTime #timetxt {
-            width: 15vmin;
-            margin-left: 5px;
-            margin-top: 5px;
-            border: 1px white;
-        }
-        .container .Features{
-            font-size: 3.5vmin;
-        }
-        .Parametertable{
-             display: none;
-        }
-        #LastPart{
-            margin-top: 3px;
-            border-width:0 ;
-            background-color: brown;
-            color: white;
-        }
-        #dose3{
-            -ms-ime-mode: disabled;
-        }
-    </style>
 </head>
 <body>
 
@@ -582,6 +353,27 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                 $(document).on("keydown", "form", function(event) {
                     return event.key != "Enter";
                 });
+            $(document).on('change','input[name=sRdoDateTime]',function () {
+                var TimeNow=new Date();
+                var yyyy=TimeNow.toLocaleDateString().slice(0,4);
+                var MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
+                var dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
+                var  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
+                var  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
+             /*   var  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();*/
+
+                var Timetxt=($(this).val()).split("");
+               var timer=Timetxt.filter(function (value, index, array) { return  value!==":"});
+                var timerVal=$(this).attr('id')=="ISTM00000005"?h+m:timer.join("");
+                $("#IDTM").val($(this).attr('id'));
+                $("#timer").val(yyyy-1911+MM+dd);
+                $("#timetxt").val(timerVal);
+
+            });
+
+
+
+
                 $(window).on('beforeunload', reloadmsg);
                 function  reloadmsg() {
                     return '確認要重新整理嗎?';
@@ -591,16 +383,15 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                 });
 
                 $('#STVALval').bind("input propertychange",function(){
-                    var STVl=document.getElementById('STVALval').value;
-                    if(STVl){
+                    if($(this).val()){
                         $("input[name='sPressure']").prop('checked',false);
-                        document.getElementById('sPress').value='';
+                        $("#sPress").val("");
                     }
                 });
 
                 $("input[name='sPressure']").change(function () {
-                    document.getElementById('sPress').value=$(this).val();
-                    document.getElementById('STVALval').value='';
+                    $("#sPress").val($(this).val());
+                    $("#STVALval").val("");
                 });
 
                 var transKey='';     /*交易續號*/
@@ -632,7 +423,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                             console.log(json);
                             var ST_DATAA=(JSON.parse(json.ST_DATAA))[0];
                             var ST_DATAB=(JSON.parse(json.ST_DATAB))[0];
-                            document.getElementById('STDATB_idFrm').value=ST_DATAB.idFrm;
+                            $("#STDATB_idFrm").val(ST_DATAB.idFrm);
                             $("input[name='forbid[]']").prop('checked',false);
                             $("input[name='forbid[]']").prop('disabled',false);
                             FORBIDArrary=ST_DATAB.FORBID;
@@ -647,17 +438,17 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                                 });
                             }
                             /*禁打原因*/
-                           Radioforbid();
+                           Radioforbid(ST_DATAC.NO_MMVAL);
                             /*上次施打部位*/
                             LSTPT=ST_DATAB.LSTPT;
                             if(LSTPT){
-                                document.getElementById('LastPart').value=LSTPT;
+                                $("#LastPart").val(LSTPT);
                             }
                             if(ST_DATAB.IDGP){
                                 $('#Part'+ST_DATAB.IDGP).prop('checked',true);
                             }
-                            document.getElementById('fu2').innerHTML='';
-                            document.getElementById('fu1').innerHTML='';
+                            $("#fu2").val("");
+                            $("#fu1").val("");
                             /*施打頻率UI*/
                             for(var i=0;i<fu_data.length;i++){
                                 var str1='';
@@ -686,10 +477,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                                     );
                                 }
                             }
-                            document.getElementById('transKEY').value=transKey;
-                            document.getElementById('sSave').value=sSave;
-                            document.getElementById('STDATA_JID_NSRANK').value=JID_NSRANK;
-                            document.getElementById('STDATA_FORMWT').value=FORMSEQANCE_WT;
+                            $("#transKEY").val(transKey);
+                            $("#sSave").val(sSave);
+                            $("#STDATA_JID_NSRANK").val(JID_NSRANK);
+                            $("#STDATA_FORMWT").val(FORMSEQANCE_WT);
                         },error:function (XMLHttpResponse,textStatus,errorThrown) {
                             errorModal(
                                 "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -701,20 +492,14 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                     });
                 }
 
-                function Radioforbid(){
-                    var arrayAA=ST_DATAC.NO_MMVAL;
-                    var NOisuling_RE_obj=document.getElementById("NOisuling_RE");
-                    var liobj=NOisuling_RE_obj.childNodes;
-                    if(liobj){
-                        for (var i=0;i<liobj.length;i++){
-                            liobj[i].innerHTML='';
-                        }
+                function Radioforbid(arr){
+                    if($("#NOisuling_RE").children().length==0){
+                        $.each(arr,function (index) {
+                            $("#NOisuling_RE").append(
+                                "<label id='bb"+index+"' style='font-size: 4.5vmin'>"+"<input type='radio' name='NO_MMVAL' id='"+Object.keys(arr[index])+"' value='"+Object.keys(arr[index])+"' style='width: 6vmin;height: 6vmin' >"+Object.values(arr[index])+"</label>"
+                            );
+                        });
                     }
-                    $.each(arrayAA,function (index) {
-                        $("#NOisuling_RE").append(
-                            "<label id='bb"+index+"' style='font-size: 4.5vmin'>"+"<input type='radio' name='NO_MMVAL' id='"+Object.keys(arrayAA[index])+"' value='"+Object.keys(arrayAA[index])+"' style='width: 6vmin;height: 6vmin' >"+Object.values(arrayAA[index])+"</label>"
-                        );
-                    });
                 }
 
                 /*各頁面控制*/
@@ -813,14 +598,14 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
 
                     var val=$(this).val();
                     var btnid=this.id;
-                    document.getElementById("PageVal").value=val;
+                    $("#PageVal").val($(this).val());
                     switch (val) {
                         case 'A':
                             $('#Serch').prop('disabled',false);
                             if($("#clickTime").val()=='0'){
                                 ajaxdata();
                                 LoadInsertPage('DATAA');
-                                document.getElementById('clickTime').value=1;
+                                $("#clickTime").val(1);
                             }
                             /*if val=1 執行快存WSST*/
                             if($("#clickTime").val()=='1'){
@@ -859,7 +644,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
 
                             if($("#clickTime").val()=='0'){
                                 ajaxdata();
-                                document.getElementById('clickTime').value=1;
+                                $('#clickTime').val(1);
 
                             }
                             /*if val=1 執行快存WSST*/
@@ -887,7 +672,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                             }
                                 if($("#clickTime").val()=='0'){
                                 ajaxdata();
-                                document.getElementById('clickTime').value=1;
+                                    $('#clickTime').val(1);
                             }
                             /*if val=1 執行快存WSST*/
                             if($("#clickTime").val()=='1'){
@@ -912,7 +697,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                         case 'D':
                             if($("#clickTime").val()=='0'){
                                 ajaxdata();
-                                document.getElementById('clickTime').value=1;
+                                $('#clickTime').val(1);
                             }
                             NISPWSCILREG();
                             $("#Imgisuling").show();
@@ -938,19 +723,19 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                                 if($("#ckt").val()==0){
                                     LoadInsertPage('PREB',);
                                 }
-                                document.getElementById('ckt').value=1;
+                                $('#ckt').val(1);
                                 break;
                             case '2':
                                 if($("#ckt").val()==0){
                                     LoadInsertPage('PREB');
                                 }
-                                document.getElementById('ckt').value=2;
+                                $('#ckt').val(2);
                                 break;
                             case '3':
                                 if($("#ckt").val()==0){
                                     LoadInsertPage('PREB');
                                 }
-                                document.getElementById('ckt').value=3;
+                                $('#ckt').val(3);
                                 break;
                         }
                     });
@@ -2065,11 +1850,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                         var ST_PREAAry=json[0];
                         var obj=(JSON.parse(ST_PREAAry.ST_PREA))[0];
                         $("#ISTM").append(
-                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000001' value='"+obj.ISTM00000001+"' style='width: 6vmin;height: 6vmin' onchange='TimerRdo()'>"+obj.ISTM00000001+"</label>"+
-                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000002' value='"+obj.ISTM00000002+"' style='width: 6vmin;height: 6vmin' onchange='TimerRdo()'>"+obj.ISTM00000002+"</label>"+
-                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000003' value='"+obj.ISTM00000003+"' style='width: 6vmin;height: 6vmin' onchange='TimerRdo()'>"+obj.ISTM00000003+"</label>"+
-                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000004' value='"+obj.ISTM00000004+"' style='width: 6vmin;height: 6vmin' onchange='TimerRdo()'>"+obj.ISTM00000004+"</label>"+
-                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000005' value='"+obj.ISTM00000005+"' style='width: 6vmin;height: 6vmin' onchange='TimerRdo()'>"+obj.ISTM00000005+"</label>"
+                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000001' value='"+obj.ISTM00000001+"' style='width: 6vmin;height: 6vmin' >"+obj.ISTM00000001+"</label>"+
+                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000002' value='"+obj.ISTM00000002+"' style='width: 6vmin;height: 6vmin' >"+obj.ISTM00000002+"</label>"+
+                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000003' value='"+obj.ISTM00000003+"' style='width: 6vmin;height: 6vmin' >"+obj.ISTM00000003+"</label>"+
+                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000004' value='"+obj.ISTM00000004+"' style='width: 6vmin;height: 6vmin' >"+obj.ISTM00000004+"</label>"+
+                            "<label style='font-size: 4.5vmin'>"+"<input type='radio' name='sRdoDateTime' id='ISTM00000005' value='"+obj.ISTM00000005+"' style='width: 6vmin;height: 6vmin' >"+obj.ISTM00000005+"</label>"
                         );
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         errorModal(
@@ -2130,7 +1915,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));/*strtoupper(str_pad($
                             >CE</label>
                     </div>
                     <div class="form-group shadow-textarea">
-                        <textarea class="form-control z-depth-1" id="Textarea" name="MMVAL" rows="3"
+                        <textarea class="form-control z-depth-1"  id="Textarea" name="MMVAL" rows="3"
                                   placeholder="備註" autocomplete="off"></textarea>
                     </div>
                 </div>
