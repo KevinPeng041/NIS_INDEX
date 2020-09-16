@@ -1228,20 +1228,17 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     $.each(objpart, function (index) {
                         for(var i=0;i<8;i++){
                             var region=objpart[index].FORBID[i].region;
-                            document.getElementById(region).style.backgroundColor='white';
-                            document.getElementById(region).style.color='black';
+                            $("#"+region).css({'backgroundColor':'white','color':'black'});
                         }
                     });
                     $('.ImgTable').css({"background-color":"","color":""});
 
                     $.each(FORBIDArrary,function (index) {
-                        document.getElementById(FORBIDArrary[index].REGION).style.backgroundColor='red';
-                        document.getElementById(FORBIDArrary[index].REGION).style.color='white';
+                        $("#"+FORBIDArrary[index].REGION).css({'backgroundColor':'red','color':'white'});
                     });
 
                     if(LSTPT){
-                        document.getElementById(LSTPT).style.backgroundColor='blue';
-                        document.getElementById(LSTPT).style.color='white';
+                        $("#"+LSTPT).css({'backgroundColor':'blue','color':'white'});
                     }
 
                     $.ajax({
@@ -1251,8 +1248,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         success:function (json) {
                             var data=JSON.parse(AESDeCode(json));
                             var IDGP_num=$("input[name=part]:checked").val();
-                            document.getElementById(IDGP_num+data).style.backgroundColor="green";
-                            document.getElementById(IDGP_num+data).style.color="white";
+                            $("#"+IDGP_num+data).css({'backgroundColor':'green','color':'white'});
                         },error:function (XMLHttpResponse,textStatus,errorThrown) {
                             errorModal(
                                 "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -1275,7 +1271,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         success:function (json){
                             if(json){
                                 var data=AESDeCode(json);
-                                console.log(data);
                                 if(num=='DATAA'){
                                     console.log(data);
                                 }
@@ -1353,56 +1348,33 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     var str=AESDeCode(AESdata);
                     var datastr=JSON.parse(JSON.stringify(str).replace(/\u0000/g, '').replace(/\\u0000/g, ""));
                     var data=JSON.parse(datastr);
-                    console.log(AESdata);
-                    console.log(data);
                  if(data){
-                        document.getElementById("DELMENU").disabled= false;
-                        document.getElementById("Del").disabled= false;
-                        document.getElementById("timer").readonly= true;
-                        document.getElementById("timetxt").readonly= true;
-                        document.getElementById('STVALval').value='';
-                        document.getElementById('sPress').value='';
+                        $("#DELMENU").prop('disabled',false);
+                        $("#Del").prop('disabled',false);
+                        $("#timer").prop('readonly',true);
+                        $("#timetxt").prop('readonly',true);
                         $("input[name=sRdoDateTime]").prop("disabled",true);
-
-                        var STVALval=document.getElementById('STVALval');
-                        STVALval.onpropertychange=function(){
+                        $("#STVALval").val("");
+                        $("#sPress").val("");
+console.log(data);
+                        $("#STVALval").bind('input propertychange',function () {
                             var newReg=new RegExp(/^[0-9]*$/);
-                            var regExp = new RegExp(/^[a-zA-Z]+$/);
-                            if( STVALval.value.length>0 && STVALval.value.match(newReg)){
-                                document.getElementById('P_LO').checked= false;
-                                document.getElementById('P_HI').checked= false;
-                                document.getElementById('P_NONE').checked= false;
-                                document.getElementById('P_CE').checked= false;
+                            var val=$(this).val();
+
+                            if( val.length>0 && val.match(newReg)){
+                                $("input[name=sPressure]").prop('checked',false);
                             }
-                            else if( STVALval.value.length>0  && STVALval.value.match(regExp)){
-                                switch (STVALval.value)
-                                {
-                                    case 'LO':
-                                        document.getElementById('P_LO').checked= true;
-                                        document.getElementById('STVALval').value='';
-                                        break;
-                                    case 'HI':
-                                        document.getElementById('P_HI').checked= true;
-                                        document.getElementById('STVALval').value='';
-                                        break;
-                                    case 'NONE':
-                                        document.getElementById('P_NONE').checked= true;
-                                        document.getElementById('STVALval').value='';
-                                        break;
-                                    case 'CE':
-                                        document.getElementById('P_CE').checked= true;
-                                        document.getElementById('STVALval').value='';
-                                        break;
-                                }
+                            else if($("#P_"+val).length>0){
+                                $("#P_"+val).prop('checked',true);
+                                $(this).val("");
                             }
-                        };
+                            else {
+                                return false;
+                            }
+                        });
 
                     switch (page) {
                             case 'A':
-                                document.getElementById('BSData').style.display = "block";
-                                document.getElementById('ISLN').disabled= true;
-                                document.getElementById('Inhibit').disabled= true;
-
                                 var idPt=data.idPt;
                                 var DT_EXCUTE=data.DT_EXCUTE;
                                 var TM_EXCUTE=data.TM_EXCUTE;
@@ -1420,77 +1392,65 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                     errorModal("病人資訊已異動,請先重新操作一次");
                                     return false;
                                 }
+                                $('#BSData').show();
+                                $('#ISLN').prop('disabled',true);
+                                $('#Inhibit').prop('disabled',true);
 
-                                document.getElementById('FORMSEQANCE').value=FORMSEQANCE;
-                                document.getElementById('SER_DT').value=SER_DT;
-                                document.getElementById('SER_TM').value=SER_TM;
                                 timeback(JID_TIME);
-                                document.getElementById("timer").value=DT_EXCUTE.substr(0,3)+DT_EXCUTE.substr(3,2)+DT_EXCUTE.substr(5,2);
-                                document.getElementById("timetxt").value=TM_EXCUTE.substr(0,2)+TM_EXCUTE.substr(2,2);
-                                document.getElementById("Textarea").value=MM_TPRS.match(/＆/)!=null?MM_TPRS.replace(/＆/g,'&'):MM_TPRS;
-                                document.getElementById("transKEY").value=transKEY;
+                                $('#FORMSEQANCE').val(FORMSEQANCE);
+                                $('#SER_DT').val(SER_DT);
+                                $('#SER_TM').val(SER_TM);
+                                $("#timer").val(DT_EXCUTE.substr(0,3)+DT_EXCUTE.substr(3,2)+DT_EXCUTE.substr(5,2));
+                                $("#timetxt").val(TM_EXCUTE.substr(0,2)+TM_EXCUTE.substr(2,2));
+                                $("#Textarea").val(MM_TPRS.match(/＆/)!=null?MM_TPRS.replace(/＆/g,'&'):MM_TPRS);
+                                $("#transKEY").val(transKEY);
                                 var regExp = new RegExp(/^[a-zA-Z]+$/);
                                 if(SPRESS.match(regExp)){
-                                    document.getElementById("sPress").value=SPRESS;
-                                    switch (SPRESS) {
-                                        case 'LO':
-                                            document.getElementById("P_LO").checked= true;
-                                            break;
-                                        case 'HI':
-                                            document.getElementById("P_HI").checked= true;
-                                            break;
-                                        case 'NONE':
-                                            document.getElementById("P_NONE").checked= true;
-                                            break;
-                                        case 'CE':
-                                            document.getElementById("P_CE").checked= true;
-                                            break;
-                                    }
+                                    $("#sPress").val(SPRESS);
+                                    $("#P_"+SPRESS).prop('checked',true);
                                 }
                                 if(ST_MEASURE.trim()){
-                                    document.getElementById("STVALval").value=ST_MEASURE;
+                                    $("#STVALval").val(ST_MEASURE);
                                 }
 
                                 if (CID_MEAL=='A'){
-                                    document.getElementById('Eating1').checked=true;
+                                    $("#Eating1").prop('checked',true);
 
-                                }else if(CID_MEAL=='B')
+                                }
+                                else if(CID_MEAL=='B')
                                 {
-                                    document.getElementById('Eating2').checked=true;
+                                    $("#Eating2").prop('checked',true);
                                 }
                                 else{
-                                    document.getElementById('Eating1').checked=false;
-                                    document.getElementById('Eating2').checked=false;
+                                    $('input[name=IDGP]').prop('checked',false);
                                 }
                                 break;
                             case 'B':
-                               document.getElementById('isuling').style.display = "block";
-                               document.getElementById('ISSG').disabled=true;
-                               document.getElementById('Inhibit').disabled=true;
-                                $("#SERCH_Click").val("2");
-
-                                var json=data;
-                                // var json=data.ISLN;
-                                console.log(json);
                                 var DT='';
                                 var TM='';
-                                console.log(data);
-                                $.each(json,function (index) {
-                                    DT=json[index].DT_EXCUTE;
-                                    TM=json[index].TM_EXCUTE;
-                                    var idPt=json[index].idPt;
-                                    var JID_TIME=json[index].JID_TIME;
-                                    var ID_REGION=json[index].ID_REGION; //部位A1
-                                    var ID_ORDER=json[index].ID_ORDER;   //藥名id
-                                    var NM_ORDER=json[index].NM_ORDER;
-                                    var DB_DOSE=json[index].DB_DOSE; //-1
-                                    var ST_DOSE=json[index].ST_DOSE; //劑量
-                                    var ST_USENO=json[index].ST_USENO; //頻率
-                                    var LSTPT=json[index].LSTPT; //頻率
+                                $.each(data,function (index) {
+                                    DT=data[index].DT_EXCUTE;
+                                    TM=data[index].TM_EXCUTE;
+                                    var idPt=data[index].idPt;
+                                    var JID_TIME=data[index].JID_TIME;
+                                    var ID_REGION=data[index].ID_REGION; //部位A1
+                                    var ID_ORDER=data[index].ID_ORDER;   //藥名id
+                                    var NM_ORDER=data[index].NM_ORDER;
+                                   /* var DB_DOSE=data[index].DB_DOSE; //-1*/
+                                    var ST_DOSE=data[index].ST_DOSE; //劑量
+                                    var ST_USENO=data[index].ST_USENO; //頻率
+                                    var LSTPT=data[index].LSTPT; //頻率
+
+                                    $('#isuling').show();
+                                    $('#ISSG').prop('disabled',true);
+                                    $('#Inhibit').prop('disabled',true);
+
+                                    $("#SERCH_Click").val("2");
                                     $("#DT_EXE").val(DT);
                                     $("#TM_EXE").val(TM);
-                                   document.getElementById('LastPart').value=LSTPT;
-                                   document.getElementById('transKEY').value=json[index].sTraID;
+                                    $("#LastPart").val(LSTPT);
+                                    $("#transKEY").val(data[index].sTraID);
+
                                     $("#ISLNLi").append('<li style="display:none;">'+
                                         '<input type="text"  name="DT_E" id=DT_E'+index+' value='+DT+'>'+
                                         '<input type="text"  name="TM_E" id=TM_E'+index+' value='+TM+'>'+
@@ -1507,8 +1467,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 });
                                 break;
                             case 'C':
-                                $("#SERCH_Click").val("2");
-                                $("#Part").prop('disabled',true);
 
                                 var json=data.Forbid;
                                 var idPt=json.idPt;
@@ -1521,15 +1479,17 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 var SER_DT=data.SER_DT;
                                 var SER_TM=data.SER_TM;
 
+
+                                $("#SERCH_Click").val("2");
+                                $("#Part").prop('disabled',true);
+
                                 $('#FORMSEQANCE').val(FORMSEQANCE);
                                 $('#SER_DT').val(SER_DT);
                                 $('#SER_TM').val(SER_TM);
                                 $("input[name='forbid[]']").prop('checked',false);
                                 $.each(forbid_REGION,function (index) {
-                                    console.log(forbid_REGION[index]);
-                                    document.getElementById('No_'+forbid_REGION[index]).checked=true;
+                                    $('#No_'+forbid_REGION[index]).prop('checked',true);
                                 });
-
                                 Forbid_Dateback(idPt,DT,TM,NO_MMAL,sTraID);
 
                             break;
@@ -1591,98 +1551,61 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         errorModal("病人資訊已異動,請先重新操作一次");
                         return false;
                     }
-                    var DT_EXCUTE=document.getElementById("DT_E"+ NUM).value;
-                    var TM_EXCUTE=document.getElementById("TM_E"+ NUM).value;
-                    var JID_TIME = document.getElementById("JID_T"+ NUM).value;
-                    var ID_REGION= document.getElementById("ID_R0").value;
 
+                    var DT_EXCUTE=$("#DT_E"+ NUM).val();
+                    var TM_EXCUTE= $("#TM_E"+ NUM).val();
+                    var JID_TIME = $("#JID_T"+ NUM).val();
+                    var ID_REGION=$("#ID_R0").val();
 
-                   document.getElementById("Isu_A").value=document.getElementById("NM_O"+"0").value;
-                   document.getElementById("dose1").value=document.getElementById("ST_D"+ '0').value;
-                   document.getElementById("tt1").value=document.getElementById("ID_O0").value;
-                   document.getElementById("fUSEF_1").value=document.getElementById("ST_U"+ '0').value;
+                    $("#Isu_A").val($("#NM_O"+"0").val());
+                    $("#dose1").val($("#ST_D"+"0").val());
+                    $("#tt1").val($("#ID_O0").val());
+                    $("#fUSEF_1").val($("#ST_U"+"0").val());
 
-                    if(document.getElementById("NM_O"+"1")){
-                       document.getElementById("Isu_B").value=document.getElementById("NM_O"+"1").value;
-                       document.getElementById("dose2").value=document.getElementById("ST_D"+ '1').value;
-                       document.getElementById("tt3").value=document.getElementById("ID_O"+"1").value;
-                       document.getElementById("fUSEF_2").value=document.getElementById("ST_U"+ '1').value;
+                    if($("#NM_O"+ "1").val()){
+                        $("#Isu_B").val($("#NM_O"+"1").val());
+                        $("#dose2").val($("#ST_D"+"1").val());
+                        $("#tt3").val($("#ID_O"+"1").val());
+                        $("#fUSEF_2").val($("#ST_U"+"1").val());
 
                     }
-                    if(document.getElementById("NM_O"+"2")){
-                       document.getElementById("Isu_C").value=document.getElementById("NM_O"+"2").value;
-                       document.getElementById("dose3").value=document.getElementById("ST_D"+ '2').value;
-                       document.getElementById("tt5").value=document.getElementById("ID_O"+"2").value;
-                       document.getElementById("fUSEF_3").value=document.getElementById("ST_U"+ '2').value;
+                    if($("#NM_O"+ "2").val()){
+
+                        $("#Isu_C").val($("#NM_O"+"2").val());
+                        $("#dose3").val($("#ST_D"+"2").val());
+                        $("#tt5").val($("#ID_O"+"2").val());
+                        $("#fUSEF_3").val($("#ST_U"+"2").val());
                     }
-                    var spart= document.getElementsByName('part');
-                    for(var i=0;i<spart.length;i++){
-                        document.getElementsByName('part')[i].disabled=true;
-                    }
-                    var part =ID_REGION.substr(0,1);
-                    switch (part) {
-                        case 'A':
-                            document.getElementById("PartA").checked= true;
-                            break;
-                        case 'B':
-                            document.getElementById("PartB").checked= true;
-                            break;
-                        case 'C':
-                           document.getElementById("PartC").checked= true;
-                            break;
-                        case 'D':
-                            document.getElementById("PartD").checked= true;
-                            break;
-                        case 'E':
-                            document.getElementById("PartE").checked= true;
-                            break;
-                        case 'F':
-                            document.getElementById("PartF").checked= true;
-                            break;
-                        case 'G':
-                            document.getElementById("PartG").checked= true;
-                            break;
-                        case 'H':
-                            document.getElementById("PartH").checked= true;
-                            break;
-                    }
+                    $('input[name=part]').prop('disabled',true);
+                    $("Part"+ID_REGION.substr(0,1)).prop('checked',true);
                     timeback(JID_TIME);
                     var y=DT_EXCUTE.substr(0,3);
                     var m=DT_EXCUTE.substr(3,2);
                     var d=DT_EXCUTE.substr(5,2);
                     var H=TM_EXCUTE.substr(0,2);
                     var M=TM_EXCUTE.substr(2,2);
-
-                   document.getElementById("timer").value=y+m+d;
-                   document.getElementById("timetxt").value=H+M;
+                    $("#timer").val(y+m+d);
+                    $("#timetxt").val(H+M);
                 }
                 function Forbid_Dateback(idPt,DT,TM,NO_MMAL,sTraID) {
                     if(idPt!=$("#DA_idpt").val()){
                         errorModal("病人資訊已異動,請先重新操作一次");
                         return false;
                     }
-                    document.getElementById('NO_isuling').style.display = "block";
-                    document.getElementById('ISSG').disabled=true;
-                    document.getElementById('ISLN').disabled=true;
-                    document.getElementById('Part').disabled=true;
-                    document.getElementById('SubmitBtn').disabled=true;
-                    document.getElementById('DT_EXE').value=DT;
-                    document.getElementById('TM_EXE').value=TM;
-                    document.getElementById("timer").value=DT;
-                    document.getElementById("timetxt").value=TM;
-                    document.getElementById('transKEY').value=sTraID;
+                    $("#NO_isuling").show();
+                    $("#ISSG").prop('disabled',true);
+                    $("#ISLN").prop('disabled',true);
+                    $("#Part").prop('disabled',true);
+                    $("#SubmitBtn").prop('disabled',true);
 
-
-
-                    document.getElementById(NO_MMAL).checked=true;
-                    var re_NO_MMAL=['1','2','3','4'];
-                    $.each(re_NO_MMAL,function (index) {
-                       document.getElementById('ISLF0000000'+re_NO_MMAL[index]).disabled=true;
-                    });
-                    var region=['A','B','C','D','E','F','G','H'];
-                    $.each(region,function (index) {
-                        document.getElementById('No_'+region[index]).disabled=true;
-                    });
+                    $("#DT_EXE").val(DT);
+                    $("#timer").val(DT);
+                    $("#TM_EXE").val(TM);
+                    $("#timetxt").val(TM);
+                    $("#transKEY").val(sTraID);
+                    $("#NO_MMAL").prop('checked',true);
+                    $("input[name=sRdoDateTime]").prop('disabled',true);
+                    $("input[type=checkbox]").prop('disabled',true);
 
                 }
 
@@ -1709,7 +1632,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                         return false;
                                     }else {
                                      $('#DELModal').modal('hide');
-                                        document.getElementById('clickTime').value=0;
+                                     $('#clickTime').val(0);
                                         Reset(2);
                                     }
 
@@ -1736,22 +1659,22 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             });
 
             function BEDbtnID(num) {
-                document.getElementById("PageVal").value='A';/*預設頁面*/
+                $("#PageVal").val('A');/*預設頁面*/
                 $("#ISSG").prop("disabled", false);
                 $("#ISLN").prop("disabled", false);
                 $("#Inhibit").prop("disabled", false);
                 $("#Part").prop("disabled", true);
 
                 var txt = $("#BEDli" + num).text();
-                var idpt = document.getElementById("idpt"+num).value;
-                var idinpt = document.getElementById("idINPt"+num).value;
-                var SBED=document.getElementById("SBED"+num).value;
+                var idpt =$("#idpt"+num).val();
+                var idinpt =$("#idINPt"+num).val();
+                var SBED=$("#SBED"+num).val();
 
-                document.getElementById("DataTxt").value = txt;
-                document.getElementById("DA_idpt").value = idpt;
-                document.getElementById("DA_idinpt").value = idinpt;
-                document.getElementById("DA_sBed").value=SBED;
-                document.getElementById('clickTime').value=0;
+                $("#DataTxt").val(txt);
+                $("#DA_idpt").val(idpt);
+                $("#DA_idinpt").val(idinpt);
+                $("#DA_sBed").val(SBED);
+                $("#clickTime").val(0);
                 Reset(2);
             }
             /*藥品選擇貼上的位置*/
@@ -1761,6 +1684,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 var USERtxt=document.getElementById("sUSEF"+NUM).value;
                 var ckt=document.getElementById('ckt').value;
                 var QTY=document.getElementById("QTY"+NUM).value;
+
                 switch (ckt) {
                     case '1':
                         document.getElementById("tt1").value = IDtxt;
@@ -2506,25 +2430,15 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     });
     function fumadol() {
         $('#FuModal').modal('show');
-        document.getElementById('Fuval').value='';
+        $("#Fuval").val("");
     }
     function fuval(val){
         var num=$('#funum').val();
-        switch (num) {
-            case '1':
-                document.getElementById('fUSEF_1').value=val;
-                break;
-            case '2':
-                document.getElementById('fUSEF_2').value=val;
-                break;
-            case '3':
-                document.getElementById('fUSEF_3').value=val;
-                break;
-        }
+        $("#fUSEF_"+num).val(val);
         $('#FuModal').modal('hide');
     }
     function PersonFuval() {
-        var val= document.getElementById('Fuval').value;
+        var val=$("#Fuval").val();
         if($('#fut').val()==1){
             document.getElementById('fUSEF_1').value='';
             document.getElementById('fUSEF_1').value=val;
