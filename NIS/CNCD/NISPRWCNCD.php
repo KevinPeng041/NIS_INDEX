@@ -75,6 +75,7 @@ $OPID="00FUZZY";
 <body>
 <div id="wrapper"></div>
 <div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
+
 <div class="Parametertable" >
     <input id="sSave" class="noneEle" type="text" value="" placeholder="sSave" >
     <input id="sTraID"  class="noneEle" type="text" value="" placeholder="sTraID">
@@ -92,8 +93,7 @@ $OPID="00FUZZY";
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" disabled>查詢</button>
             <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal" disabled>作廢</button>
             <button type="button" id="ReStart" class="btn btn-primary btn-md" >清除</button>
-            <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button><span style="margin-left: 1px">
-
+            <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button>
         </div>
         <div class="PatientName">
             <input id="DataTxt"  value="" type="text" readonly="readonly">
@@ -106,22 +106,12 @@ $OPID="00FUZZY";
             </div>
         </div>
 
-        <div>
+        <div class="DataTable">
             <div>
                 <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8" autocomplete="off">
                 <input id="NumId" class="Num_input"  type="text" placeholder="輸入採血編號" autocomplete="off">
                 <button id="Error_btn" type="button" class="btn btn-secondary btn-md Num_input"  style="margin-bottom: 15px;" disabled>錯誤查詢</button>
             </div>
-          <!--  <table class="table" style="table-layout: fixed;text-align: center;margin-bottom: 0rem;text-align:center;">
-                <thead  class="theadtitle" style=" font-size: 3vmin;">
-                    <th></th>
-                    <th style='text-align:left;'>採血編號</th>
-                    <th>病歷號</th>
-                    <th >姓名</th>
-                    <th>檢體</th>
-                    <th>容器</th>
-                </thead>
-            </table>-->
             <div id="scrollList" data-spy="scroll" data-target="#navbar-example" data-offset="0" class="List" style="overflow:auto;">
                 <table class="table" style="table-layout: fixed;text-align: center">
                     <tbody style=" font-size: 3.0vmin;" id="DATAList" >
@@ -131,22 +121,22 @@ $OPID="00FUZZY";
             </div>
         </div>
     </form>
-    <div class="modal fade" id="DELModal" tabindex="-1" role="dialog" aria-labelledby="DELModalCenterTitle" aria-hidden="true" data-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-            <div class="modal-content" style="height: 30%;">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="DELModalCenterTitle">作廢提醒</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="overflow-y: hidden;overflow-x: hidden;">
-                    <p>請確認是否要作廢此清單!!!</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="Del" class="btn btn-primary btn-md">作廢</button>
-                    <button type="button" class="btn btn-secondary btn-md" data-dismiss="modal">取消</button>
-                </div>
+</div>
+<div class="modal fade" id="DELModal" tabindex="-1" role="dialog" aria-labelledby="DELModalCenterTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content" style="height: 30%;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DELModalCenterTitle">作廢提醒</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow-y: hidden;overflow-x: hidden;">
+                <p>請確認是否要作廢此清單!!!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="Del" class="btn btn-primary btn-md">作廢</button>
+                <button type="button" class="btn btn-secondary btn-md" data-dismiss="modal">取消</button>
             </div>
         </div>
     </div>
@@ -178,7 +168,6 @@ $OPID="00FUZZY";
 </body>
 <script>
     $(document).ready(function () {
-
         var x;
         var y;
         (function () {
@@ -210,7 +199,7 @@ $OPID="00FUZZY";
         var FocusIndex="";
         var InputIdArr=['DataTxt','DateVal','TimeVal','IdPt','NumId'];
         var CheckedTime=0;
-        var ChecekdColor=['#CAFFFF','#BBFF00'];
+        var ChecekdColor=['#C1CBD7','#FFFAF4'];
         $(document).on('focus', 'input[type=text]', function() {
             var Index=InputIdArr.indexOf($(this).attr('id'));
             FocusIndex=Index+1;
@@ -413,6 +402,28 @@ $OPID="00FUZZY";
 
         });
 
+        function CheckUIisset(IdPt,NumidStr){
+            if($("#"+IdPt+"\\@"+NumidStr).length>0){
+                var top=($("#"+IdPt+"\\@"+NumidStr).offset()).top-400;
+                $("#"+IdPt+"\\@"+NumidStr).prop('checked',true);
+                $("#"+IdPt+"\\@"+NumidStr).parent().parent().css({'background-color':ChecekdColor[CheckedTime]});
+                $("#"+IdPt+"\\@"+NumidStr).parent().parent().next('tr').css({'background-color':ChecekdColor[CheckedTime]});
+                $("#scrollList").scrollTop(top);
+                CheckedTime++;
+            }else {
+                ErrIndex++;
+                obj.IDPT=IdPt;
+                obj.BAR_CODE=NumidStr;
+                obj.NUM=ErrIndex;
+                var copy=Object.assign({},obj);//淺複製錯誤血袋
+                err.push(copy);
+                var errfilter=err.filter(function (element, index, arr) {
+                    return arr.indexOf(element)===index;
+                });
+                errUI(errfilter);
+            }
+            $("#NumId").val("");
+        }
         function bedcallback(AESobj) {
             var str=AESDeCode(AESobj);
             var dataObj=JSON.parse(str);
@@ -452,6 +463,5 @@ $OPID="00FUZZY";
                 }
             }
         }
-
     });
 </script>
