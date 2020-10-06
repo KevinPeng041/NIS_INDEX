@@ -183,25 +183,3 @@ function errUI(Arr){
         );
     });
 }
-function CheckUIisset(IdPt,NumidStr){
-    if($("#"+IdPt+"\\@"+NumidStr).length>0){
-        var top=($("#"+IdPt+"\\@"+NumidStr).offset()).top-400;
-        $("#"+IdPt+"\\@"+NumidStr).prop('checked',true);
-        $("#"+IdPt+"\\@"+NumidStr).parent().parent().css({'background-color':ChecekdColor[CheckedTime]});
-        $("#"+IdPt+"\\@"+NumidStr).parent().parent().next('tr').css({'background-color':ChecekdColor[CheckedTime]});
-        $("#scrollList").scrollTop(top);
-        CheckedTime++;
-    }else {
-        ErrIndex++;
-        obj.IDPT=IdPt;
-        obj.BAR_CODE=NumidStr;
-        obj.NUM=ErrIndex;
-        var copy=Object.assign({},obj);//淺複製錯誤血袋
-        err.push(copy);
-        var errfilter=err.filter(function (element, index, arr) {
-            return arr.indexOf(element)===index;
-        });
-        errUI(errfilter);
-    }
-    $("#NumId").val("");
-}
