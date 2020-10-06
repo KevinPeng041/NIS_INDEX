@@ -10,8 +10,9 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
             DT_LOOKDT AS LOOKDT,
              WMSYS.WM_CONCAT(DT_DIACODE) AS DIACODE,
             ITW_BARCODE AS BARCODE ,
-            WMSYS.WM_CONCAT(DT_DIACODE  || ':' || DA_EGNAME || ':' ||  (SELECT SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND 
-            SPE_SPECODE = SCR_SPECODE) || ':' || (SELECT CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE) )  AS EGNAME,
+        WMSYS.WM_CONCAT((SELECT   CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE))AS CONNAME, 
+         WMSYS.WM_CONCAT((SELECT  SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND SPE_SPECODE = SCR_SPECODE))     AS SPENAME,
+            WMSYS.WM_CONCAT(DT_DIACODE  || ':' || DA_EGNAME)  AS EGNAME,
             WMSYS.WM_CONCAT(TO_CHAR(ITW_WORKNO))  AS MACHINENO,
             WMSYS.WM_CONCAT(DT_SENDCD)AS SENDCD, 
            WMSYS.WM_CONCAT('http://192.168.16.77:8005/InExam/pic/' || SUBSTR(DT_SENDCD,1,1) ||  SCR_CONCODE || '.JPG')  AS PICURL, 
@@ -32,7 +33,7 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
             INNER JOIN  TOPDIA ON   DA_DIACODE = DT_DIACODE 
             INNER JOIN  TOPSCR ON DT_DIACODE = SCR_DIACODE AND DT_SPECODE = SCR_SPECODE 
             LEFT JOIN  SYSESD ON  ED_SENDCD = DT_SENDCD 
-            WHERE CA_MEDNO  ='$Idpt' AND CA_DIVINSU = 'N' AND CA_CLOSE = 'N' AND CA_CHECK<>'D' AND DT_CANCD = 'N' AND DT_LOOKDT BETWEEN ROCDATE(SYSDATE-14) AND
+            WHERE CA_MEDNO  ='01165464' AND CA_DIVINSU = 'N' AND CA_CLOSE = 'N' AND CA_CHECK<>'D' AND DT_CANCD = 'N' AND DT_LOOKDT BETWEEN ROCDATE(SYSDATE-14) AND
              ROCDATE(SYSDATE) AND(DT_SENDCD LIKE '3%' or DT_SENDCD LIKE 'M%')
             AND DT_LABDEGREE = '0' AND(ITW_STATUS = '1' or ITW_STATUS = '2')
              AND NOT EXISTS(SELECT * FROM  TOPLBT WHERE  LBT_MEDNO = MH_MEDNO AND DT_INPSEQ = LBT_SEQ AND LBT_DIACODE = DT_DIACODE
@@ -40,36 +41,7 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
                GROUP BY MH_NAME,MH_MEDNO,MH_SEX,CA_BEDNO,DT_INPSEQ,DT_LOOKDT,ITW_BARCODE,DT_SEQ,DT_PROCDATE,DT_PROCTIME
             ORDER BY BARCODE
            ";
-   /* $sql="
-        SELECT  MH_NAME AS NAME, MH_MEDNO AS MEDNO, DECODE(MH_SEX, '1', '男', '2', '女', '不分') AS SEX, CA_BEDNO AS BEDNO, TO_CHAR(DT_INPSEQ) AS INPSEQ, DT_LOOKDT AS LOOKDT, 
-                    DA_EGNAME AS EGNAME,TO_CHAR(ITW_BARCODE) AS BARCODE, 
-                    (SELECT CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE) AS CONNAME, 
-                    (SELECT SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND SPE_SPECODE = SCR_SPECODE) AS SPENAME,
-                     DT_DIACODE AS DIACODE, TO_CHAR(ITW_WORKNO) AS MACHINENO,DT_SENDCD AS SENDCD, 
-                    'http://192.168.16.77:8005/InExam/pic/' || SUBSTR(DT_SENDCD,1,1) ||  SCR_CONCODE || '.JPG' as PICURL, 
-                    'http://192.168.16.77/labinfo/web/LabInfo.asp?DIACODE=' || DT_DIACODE as DETAILURL,
-                     TO_CHAR(DT_SEQ) AS ORDERSEQ, TO_CHAR(DT_NO) AS ORDERNO,
-                     DT_PROCDATE AS ORDERDATE, DT_PROCTIME AS ORDERTIME,
-                     DT_WORKNO AS WORKNO,
-                     CASE ED_CLASS WHEN '0B' THEN 1 WHEN '0A' THEN 2  WHEN '0D' THEN 3 WHEN '0J' THEN 4  WHEN '0Y' THEN 5  WHEN '0C' THEN 6 WHEN '0H' THEN 7 WHEN '0L' THEN 8
-                      WHEN '0M' THEN 9 WHEN '0V' THEN 10 WHEN '0Z' THEN 11 WHEN '0G' THEN 12 WHEN '0I' THEN 13 WHEN '0O' THEN 13 WHEN '0U' THEN 14 WHEN '0F' THEN 15 
-                      WHEN '0X' THEN 15 WHEN '0S' THEN 16 WHEN '0E' THEN 17 WHEN '0K' THEN 18 WHEN '0P' THEN 19 WHEN '0N' THEN 20 WHEN '0T' THEN 21 WHEN '1A' THEN 22
-                       WHEN '0Q' THEN 23 WHEN '0R' THEN 24 WHEN '1S' THEN 25 WHEN '2S' THEN 26 END as sort_num 
-                    FROM TREMED
-                     INNER JOIN  INACAR ON   MH_MEDNO = CA_MEDNO 
-                    INNER JOIN  INADET ON  CA_INPSEQ = DT_INPSEQ AND CA_DIVNO = DT_DIVNO 
-                    INNER JOIN  INATWN ON  ITW_INPSEQ = DT_INPSEQ AND ITW_LOOKDT = DT_LOOKDT AND DT_WORKNO = ITW_WORKNO AND ITW_BARCODE <> '-1'
-                    INNER JOIN  TOPDIA ON   DA_DIACODE = DT_DIACODE 
-                    INNER JOIN  TOPSCR ON DT_DIACODE = SCR_DIACODE AND DT_SPECODE = SCR_SPECODE 
-                    LEFT JOIN  SYSESD ON  ED_SENDCD = DT_SENDCD 
-                    WHERE CA_MEDNO='$Idpt'  AND
-                     CA_DIVINSU = 'N' AND CA_CLOSE = 'N' AND CA_CHECK<>'D' AND DT_CANCD = 'N'
-                    --AND DT_LOOKDT BETWEEN ROCDATE(SYSDATE-14) AND  ROCDATE(SYSDATE) 
-                    AND(DT_SENDCD LIKE '3%' or DT_SENDCD LIKE 'M%')
-                    AND DT_LABDEGREE = '0' AND(ITW_STATUS = '1' or ITW_STATUS = '2')
-                     AND NOT EXISTS(SELECT * FROM  TOPLBT WHERE  LBT_MEDNO = MH_MEDNO AND DT_INPSEQ = LBT_SEQ AND LBT_DIACODE = DT_DIACODE
-                      AND DT_LOOKDT = LBT_LOOKDT  AND ITW_WORKNO = LBT_MACHINENO  AND LBT_CANDATE=' ') 
-                    ORDER BY sort_num ";*/
+
     $stid=oci_parse($conn,$sql);
     oci_execute($stid);
     $arr=[];
@@ -92,7 +64,7 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
         $SORTNUM=oci_result($stid,"SORT_NUM");//檢驗類別
         $WORKNO=oci_result($stid,"WORKNO");//申請序號
         $arr[]=array("NAME"=>$NAME,"MEDNO"=>$MEDNO,"SEX"=>$SEX,"BEDNO"=>$BEDNO,"INPSEQ"=>$INPSEQ,"LOOKDT"=>$LOOKDT,"EGNAME"=>$EGNAME,"BARCODE"=>$BARCODE,
-            "SPENAME"=>$SPENAME,"DIACODE"=>$DIACODE,"MACHINENO"=>$MACHINENO,"CONNAME"=>$CONNAME,"SENDCD"=>$SENDCD,
+            "CONNAME"=>explode(",",$CONNAME)[0],"SPENAME"=>explode(",",$SPENAME)[0],"DIACODE"=>$DIACODE,"MACHINENO"=>$MACHINENO,"SENDCD"=>$SENDCD,
             "ORDERSEQ"=>$ORDERSEQ,"ORDERNO"=>$ORDERNO,"SORTNUM"=>$SORTNUM,"WORKNO"=>$WORKNO);
     }
     /*無資料:push交易序號回傳,有資料:unshift加到陣列[0]*/
@@ -158,12 +130,10 @@ function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
     if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
         if($ST_DATAA){
             $A=json_decode($ST_DATAA);
+            if(GetCNCDCheck($ST_DATAA)=="false"){
+                return    $response=json_encode(array("response" => "false","message" =>"存檔錯誤訊息:檢驗項目尚未勾選"),JSON_UNESCAPED_UNICODE);
 
-            /*
-            if(GetCNADCheck($ST_DATAA)=="false"){
-                return    $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
-
-            }*/
+            }
             for ($i=0;$i<count($A);$i++)
             {
                 $LBT_LOOKDT=$A[$i]->{"LOOKDT"};
@@ -252,9 +222,9 @@ function GetCNCDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
 
     $Arr=[];
     $sSQL="SELECT  LBT_EXECDATE,LBT_EXECTIME,LBT_PRCOPID ,ITW_BARCODE AS BARCODE ,
-            WMSYS.WM_CONCAT(DT_DIACODE  || ':' || DA_EGNAME  || ':' ||ITW_BARCODE || ':' ||  
-            (SELECT SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND SPE_SPECODE = SCR_SPECODE) || ':' || 
-            (SELECT CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE) )  AS EGNAME,
+         WMSYS.WM_CONCAT((SELECT   CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE))  AS CONNAME, 
+         WMSYS.WM_CONCAT((SELECT  SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND SPE_SPECODE = SCR_SPECODE))   AS SPENAME,
+            WMSYS.WM_CONCAT(DT_DIACODE  || ':' || DA_EGNAME  || ':' ||ITW_BARCODE )  AS EGNAME,
             WMSYS.WM_CONCAT(TO_CHAR(ITW_WORKNO))  AS MACHINENO,
             WMSYS.WM_CONCAT(DT_SENDCD)AS SENDCD, 
            WMSYS.WM_CONCAT('http://192.168.16.77:8005/InExam/pic/' || SUBSTR(DT_SENDCD,1,1) ||  SCR_CONCODE || '.JPG')  AS PICURL, 
@@ -303,8 +273,8 @@ function GetCNCDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
         $SORTNUM=oci_result($stid,"SORT_NUM");//檢驗類別
         $WORKNO=oci_result($stid,"WORKNO");//申請序號
         $Arr[]=array("EXECDATE"=>$LBT_EXECDATE,"EXECTIME"=>$LBT_EXECTIME,"PRCOPID"=>$LBT_PRCOPID,"NAME"=>$NAME,"MEDNO"=>$MEDNO,"SEX"=>$SEX,"BEDNO"=>$BEDNO,"INPSEQ"=>$INPSEQ,
-            "LOOKDT"=>$LOOKDT,"EGNAME"=>$EGNAME,"BARCODE"=>$BARCODE,"SPENAME"=>$SPENAME,"DIACODE"=>$DIACODE,"MACHINENO"=>$MACHINENO,"CONNAME"=>$CONNAME,"SENDCD"=>$SENDCD,
-           "ORDERSEQ"=>$ORDERSEQ,"ORDERNO"=>$ORDERNO,"SORTNUM"=>$SORTNUM,"WORKNO"=>$WORKNO);
+            "LOOKDT"=>$LOOKDT,"EGNAME"=>$EGNAME,"BARCODE"=>$BARCODE,"CONNAME"=>explode(",",$CONNAME)[0],"SPENAME"=>explode(",",$SPENAME)[0],
+            "DIACODE"=>$DIACODE,"MACHINENO"=>$MACHINENO,"SENDCD"=>$SENDCD,"ORDERSEQ"=>$ORDERSEQ,"ORDERNO"=>$ORDERNO,"SORTNUM"=>$SORTNUM,"WORKNO"=>$WORKNO);
     }
     array_unshift($Arr,'{"sSave":"'.$ID_COMFIRM.'","sTraID":"'.$TransKey.'"}');
     $ST_DATAA=json_encode($Arr,JSON_UNESCAPED_UNICODE);
@@ -419,5 +389,10 @@ function GetCNCDChangeBed($conn){
     return json_encode($Arr,JSON_UNESCAPED_UNICODE);
 }
 function GetCNCDCheck($json){
-
+    $JsonB=json_decode($json);
+    $response="true";
+    if(count($JsonB)==0){
+        $response="false";
+    }
+    return $response;
 }
