@@ -9,26 +9,49 @@ function DefaultData(idPt,INPt,sUr) {
         success:function (data) {
             $("#loading").hide();
             $("#wrapper").hide();
-            var objArr=JSON.parse(AESDeCode(data));
-            var TraObj=JSON.parse(objArr.shift());
+            let objArr=JSON.parse(AESDeCode(data));
+            let TraObj=JSON.parse(objArr.shift());
             if( $("#DATAList").children().length>0){
                 $("#DATAList").children().remove();
             }
-            console.log(objArr);
+
             $.each(objArr,function (index,val){
                 $("#DATAList").append(
-                    "<tr class='list-item'>"+
-                    "<td>"+
-                    "<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+val.MEDNO+'@'+val.BARCODE+"' value='"+val.LOOKDT+"@"+val.MEDNO+"@"+$('#DA_InPt').val()+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO+"'>"+
-                    "</td>"+
-                    "<td  colspan='4' style='text-align:left;font-weight: bold'>"+"採血編號:"+" "+val.BARCODE+" 檢體:"+val.SPENAME+" 試管:"+val.CONNAME+"</td>"+
-                    "</tr>"+
-                    "<tr>"+
-                    "<td style='font-weight: bold'>"+"檢驗項目:"+"</td>"+
-                    "<td colspan='4' style='text-align:left;'>"+(val.EGNAME).replaceAll(',',",<br>")+"</td>"+
-                    "</tr>"
+                        "<tr class='list-item'>"+
+                            "<td>"+
+                            "<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+val.MEDNO+'@'+val.BARCODE+"' value='"+val.LOOKDT+"@"+val.MEDNO+"@"+$('#DA_InPt').val()+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO+"'>"+
+                            "</td>"+
+                            "<td  colspan='4' style='text-align:left;font-weight: bold'>"+"採血編號:"+" "+val.BARCODE+" 檢體:"+val.SPENAME+" 試管:"+val.CONNAME+"</td>"+
+                        "</tr>"+
+                        "<tr>"+
+                            "<td style='font-weight: bold'>"+"檢驗項目:"+"</td>"+
+                            "<td colspan='4' style='text-align:left;'>"+(val.EGNAME).replaceAll(',',",<br>")+"</td>"+
+                        "</tr>"
+
                 );
+
+
+
+
             });
+
+            let ele=group($("#DATAList").children('tr'),2) ;
+            let ChecekdColor=['#F2EFE9','#FFFAF4'];
+             $.each(ele,function (index,val) {
+                 if(index%2===0){
+                     val.css({'background-color':ChecekdColor[0]});
+                     val.next('tr').css({'background-color':ChecekdColor[0]});
+                 }else {
+                     val.css({'background-color':ChecekdColor[1]});
+                     val.next('tr').css({'background-color':ChecekdColor[1]});
+                 }
+
+             });
+
+
+
+
+
 
             $("#sTraID").val(TraObj.sTraID);
             $("#sSave").val(TraObj.sSave);
@@ -46,9 +69,9 @@ function DefaultData(idPt,INPt,sUr) {
     });
 }
 function Serchcallback(AESobj){
-    var str1=AESDeCode(AESobj);
-    var objArr=JSON.parse(str1);
-    var TraObj=JSON.parse(objArr.shift());
+    let str1=AESDeCode(AESobj);
+    let objArr=JSON.parse(str1);
+    let TraObj=JSON.parse(objArr.shift());
 
     if( $("#DATAList").children().length>0){
         $("#DATAList").children().remove();
@@ -88,7 +111,7 @@ function InsertWSST(sTraID,page,json) {
         type:"POST",
         dataType:"text",
         success:function(data){
-            var json=JSON.parse(AESDeCode(data));
+            let json=JSON.parse(AESDeCode(data));
             /*
                                 console.log(json.message);
             */
@@ -105,28 +128,28 @@ function InsertWSST(sTraID,page,json) {
     });
 }
 function TimerDefault() {
-    var TimeNow=new Date();
-    var yyyy=TimeNow.toLocaleDateString().slice(0,4);
-    var MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
-    var dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
-    var  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
-    var  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
-    var  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
+    let TimeNow=new Date();
+    let yyyy=TimeNow.toLocaleDateString().slice(0,4);
+    let MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
+    let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
+    let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
+    let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
+    let  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
     $("#DateVal").val(yyyy-1911+MM+dd);
     $("#TimeVal").val(h+m);
 }
 function GetCheckVal() {
     //取checkbox的值
-    var cbxVehicle = new Array();
-    var Json=[];
+    let cbxVehicle = new Array();
+    let Json=[];
     $("input:checkbox:checked[name=BDckbox]").each(function (i) {
         cbxVehicle[i]=$(this).val();
     });
 
     if(cbxVehicle.length>0){
         $.each(cbxVehicle,function (index) {
-            var str=cbxVehicle[index];
-            var OBJ={
+            let str=cbxVehicle[index];
+            const OBJ={
                 LOOKDT:'',
                 MEDNO:'',
                 IDINPT:'',
@@ -135,11 +158,11 @@ function GetCheckVal() {
                 WORKNO:''
             };
             //LOOKDT@MEDNO@IDINPT@DIACODE@MACHINENO@A@WORKNO
-            var DIACODEarr= str.split("@",6)[3].split(",");
-            var MACHINENOarr= str.split("@",6)[4].split(",");
-            var WORKNOarr= str.split("@",6)[5].split(",");
+            let DIACODEarr= str.split("@",6)[3].split(",");
+            let MACHINENOarr= str.split("@",6)[4].split(",");
+            let WORKNOarr= str.split("@",6)[5].split(",");
             $.each(DIACODEarr,function (index) {
-                var DeepCopy={};
+                let DeepCopy={};
                 $.extend(true,OBJ,DeepCopy);
                 DeepCopy.LOOKDT= str.split("@",6)[0];
                 DeepCopy.MEDNO= str.split("@",6)[1];
@@ -182,4 +205,15 @@ function errUI(Arr){
             "<tr>"
         );
     });
+}
+function group(array,subGroupLength) {
+    let index=0;
+    let newArray=[];
+
+    while (index<array.length){
+        newArray.push(array.slice(index,index+=subGroupLength));
+    }
+
+    return newArray;
+
 }
