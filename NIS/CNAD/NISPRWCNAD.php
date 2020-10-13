@@ -41,13 +41,13 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="text/javascript" src="../../jquery-3.4.1.js"></script>
     <link rel="stylesheet" href="../../bootstrap-4.3.1-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../css/NIS/CNAD.css">
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
     <script src="../../NISCOMMAPI.js"></script>
     <script>
         var sfm='<?php echo $sfm?>';
-        console.log(sfm);
         if(sfm==""){
             var ckw=setInterval(function () {
                 try {
@@ -66,110 +66,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
         }
 
     </script>
-    <style>
-        /* In order to place the tracking correctly */
-        .container{
-            max-width: 1140px;
-        }
-        .container .ListBtn button{
-            color: white;
-            font-size: 4.5vmin;
-        }
-        .container .float-left{
-            font-size: 3.7vmin;
-        }
-        .List{
-            height:43vmin;
-            overflow:auto;
-            position: relative;
 
-        }
-        .btn {
-            margin-top: 5px;
-        }
-
-        body{
-            overscroll-behavior-y:contain;
-        }
-
-        input{
-            border-radius:4px;border:1px solid #DBDBDB;
-        }
-        input[type=checkbox]{
-            width: 4.5vmin;
-            height: 4.5vmin;
-        }
-        th{
-            padding-bottom: 5px !important;
-        }
-        h1{
-            margin-top:5px;
-        }
-        td{
-        overflow-wrap: break-word;
-        }
-        .Otimer{
-            margin-top:10px;
-            font-size: 4vmin;
-            background-color: #baeeff;
-            border-radius:3px;
-        }
-        .Otimer  .pageTime #DateVal{
-            width:35vmin;
-            text-align: center;
-            margin-top: 5px;
-
-        }
-        .Otimer .pageTime #TimeVal {
-            width: 15vmin;
-            margin-left: 5px;
-            margin-top: 5px;
-            border: 1px white;
-            text-align: center;
-        }
-        .Parametertable input{
-            display: none;
-            background-color: #00FF00;
-        }
-        #loading{
-            position: absolute;
-            z-index: 9999;
-            top: 50%;
-            left: 50%;
-            background-color: #FFFFFF;
-            color: #000000;
-            font-size: 5vmin;
-            width: 45vmin;
-            height: 12vmin;
-            padding-left:20px;
-            padding-top:10px;
-            border-radius: 5px;
-            margin: -15vmin 0 0 -30vmin;
-
-        }
-        #loading .loadimg{
-            width: 10vmin;
-            height:10vmin;
-        }
-        #wrapper{
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            opacity: 0.5;
-            z-index: 9998;
-        }
-        .input-group{
-            margin-top: 5px;
-        }
-        .Num_input{
-            margin-top: 5px;
-            margin-bottom: 5px;
-            height: 40px;
-            font-size: 20px;
-        }
-
-    </style>
 </head>
 
 <body>
@@ -185,24 +82,15 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 <div class="container">
     <h2>發血覆核作業</h2>
     <form id="form1">
-         <span class="ListBtn" style="margin-left:0 px">
-             <button type="button" class="btn btn-secondary btn-md" disabled style="display: none">回主畫面</button>
-             <!-- <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button><span style="margin-left: 1px">-->
-             <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >輸血紀錄單</button><span style="margin-left: 1px"></span>
-        </span>
-        <span class="ListBtn float-left">
+        <div class="ListBtn">
             <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md">查詢</button>
             <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal" disabled>作廢</button>
-<!--            <button type="reset" class="btn btn-primary btn-md" id="restBtn" style="display: none">清除</button>
--->           <button type="button" id="ReStart" class="btn btn-primary btn-md" >重整</button>
-        </span>
-      <!--  <div class="input-group">
-            <input id="DataTxt"  value="" type="text" readonly="readonly" style="font-size: 4vmin;width:100vmin;">
-        </div>-->
+            <button type="button" id="ReStart" class="btn btn-primary btn-md" >重整</button>
+            <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >輸血紀錄單</button><span style="margin-left: 1px">
+        </div>
 
-
-        <div class="Otimer" >
+        <div class="Otimer">
             <div class="pageTime">
                 <label style="font-size: 4vmin">評估時間:</label>
                 <input  type="text" id="DateVal" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
@@ -228,7 +116,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             </table>
             <div id="scrollList" data-spy="scroll" data-target="#navbar-example" data-offset="0" class="List" style="overflow:auto;">
                 <table class="table" style="table-layout: fixed;text-align: center">
-                    <tbody style=" font-size: 3.5vmin;" id="DATAList">
+                    <tbody style=" font-size: 3.0vmin;" id="DATAList">
 
                     </tbody>
                 </table>
@@ -282,81 +170,53 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 </body>
 <script>
 $(document).ready(function () {
-    DefaultData();
-    $("#loading").hide();
-    $("#wrapper").hide();
-    var x;
-    var y;
+
+    (function () {
+        DefaultData();
+        $("#loading").hide();
+        $("#wrapper").hide();
+    }());
+
+    let x;
+    let y;
+    let err=[];
+    let obj={
+        IDPT:{},
+        BSK_BAGENO:{},
+        NUM:{}
+    };
+    let ScanTime=0;
+    $(".Parametertable").children().prop('readonly',true);
 
     $("#IdPt").bind("input propertychange",function () {
-        console.log();
         if(this.value.length==8)
         {
             $("#NumId").focus();
         }
     });
 
-    var err=[];
-    var obj={
-        IDPT:{},
-        BSK_BAGENO:{},
-        NUM:{}
-    };
-    var ErrIndex=0;
-    $("#NumId").bind("input propertychange",function () {
-        var BSK_BAGENO=($(this).val()).replace(/\s*/g,"");
-        var id=$("#IdPt").val();
-
-        if(BSK_BAGENO.length >=10){
-            if(BSK_BAGENO.indexOf("@")>-1){
-                var arr= BSK_BAGENO.replace(/,/g,"@").split("@");
-                var len=arr.length;
-                for (var i=1;i<len;i++)
-                {
-                    var checkID=$("#"+arr[0]+"\\@"+arr[i]);
-                    if(checkID.length>0){
-                        checkID.prop("checked",true);
-                        checkID.parent().parent().css({'background-color':'#BBFF00'});
-
-                    }else {
-                        obj.IDPT=arr[0];
-                        obj.BSK_BAGENO=arr[i];
-                        obj.NUM=i;
-                        var copy=Object.assign({},obj);//淺複製錯誤血袋
-                        err.push(copy);
-                    }
-
-                }
-                if(err.length>0){
-                    errUI(err);
-                }
-            } else{
-                ErrIndex++;
-                if($("#"+id+"\\@"+BSK_BAGENO).length>0){
-                    $("#"+id+"\\@"+BSK_BAGENO).prop("checked",true);
-                    $("#"+id+"\\@"+BSK_BAGENO).parent().parent().css({'background-color':'#BBFF00'});
-                    var top=($("#"+id+"\\@"+BSK_BAGENO).offset()).top-500;
-                    $("#scrollList").scrollTop(top);
-                }else {
-                    obj.IDPT=id;
-                    obj.BSK_BAGENO=BSK_BAGENO;
-                    obj.NUM=ErrIndex;
-                    var copy=Object.assign({},obj);//淺複製錯誤血袋
-                    err.push(copy);
-                    console.log(err);
-                    var errfilter=err.filter(function (element, index, arr) {
-                        return arr.indexOf(element)===index;
-                    });
-                    errUI(errfilter);
-                }
+    $("#NumId").on('paste',function (e) {
+        //prevent paste action
+        e.preventDefault();
+        let PasteTxt=e.originalEvent.clipboardData.getData('text');
+        if( PasteTxt.lastIndexOf("#")>-1)
+        {
+            let Arr=PasteTxt.split("@");
+            let IdPt=Arr.shift();
+            Arr.pop();
+            for (let index in Arr)
+            {
+                CheckUI(IdPt,Arr[index]);
             }
-            $("#IdPt").focus();
-            $("#IdPt").val("");
-            $("#NumId").val("");
         }
+        else
+        {
+            CheckUI($("#IdPt").val(),PasteTxt);
+        }
+
     });
     $(document).on('change', 'input[type=checkbox]', function() {
-        var checkbox = $(this);
+        let checkbox = $(this);
         if (checkbox.is(':checked')==true)
         {
             checkbox.parent().parent().css({'background-color':'#BBFF00'});
@@ -365,33 +225,97 @@ $(document).ready(function () {
             checkbox.parent().parent().css({'background-color':'#FFFFFF'});
         }
     });
-    $(document).on("keydown", "form", function(event) {
+    $(document).on("keypress", "form", function(event) {
+        let  code = event.keyCode ? event.keyCode : event.which;
+        if(code===13)
+        {
+            CheckUI($("#IdPt").val(),$("#NumId").val());
+            $("#form1").on("submit",function () {return false;});
+        }
         return event.key != "Enter";
     });
-    $(".Parametertable").children().prop('readonly',true);
+    $(document).on('click','button',function () {
+        let BtnID=$(this).attr('id');
+        switch (BtnID) {
+            case "sbed":
+                switch (checkBEDwindow()) {
+                    case "false":
+                        errorModal("領血單位視窗已開啟");
+                        break;
+                    case "true":
+                        try {
+                            x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNAD&sIdUser=<?php echo $OPID?>"),"輸血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
 
-    $("#Error_btn").click(function () {
-        err.length=0;
-        ErrIndex=0;
-        $('#Errormodal').modal('show');
-    });
-
-    $("#sbed").click(function () {
-        switch (checkBEDwindow()) {
-            case "false":
-                  errorModal("領血單位視窗已開啟");
-                break;
-            case "true":
-                try {
-                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNAD&sIdUser=<?php echo $OPID?>"),"輸血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
-
-                }catch (e) {
-                    errorModal(e);
+                        }catch (e) {
+                            errorModal(e);
+                        }
+                        break;
                 }
+                x.bedcallback=bedcallback;
+                break;
+            case "SerchBtn":
+                switch (checkSerchwindow()) {
+                    case "false":
+                        alert("查詢視窗已開啟");
+                        break;
+                    case "true":
+                        y=window.open("/webservice/NISPWSLKQRY.php?str="+
+                            AESEnCode("sFm=CNAD&PageVal="+""+"&DA_idpt="+
+                                $('#DA_IdPt').val()+"&DA_idinpt="+""+
+                                "&sUser="+"<?php echo $OPID?>"+"&NM_PATIENT="+"")
+                            ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                        break;
+                }
+
+                y.Serchcallback=Serchcallback;
+                break;
+            case "ReStart":
+                err.length=0;
+                ScanTime=0;
+                DefaultData();
+                $('input[type=text]:not("#NURSOPID")').val("");
+                $('button[type=submit]').prop('disabled',false);
+                $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
+                $("#Error_btn").prop("disabled",true);
+                $('#DELMENU').prop('disabled',true);
+                $('#IdPt').focus();
+
+                break;
+            case "Del":
+                let del_ip='/webservice/NISPWSDELILSG.php';
+                console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
+                $.ajax({
+                    url:del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
+                    type:'POST',
+                    dataType:'text',
+                    success:function (json) {
+                        let data=JSON.parse(AESDeCode(json));
+                        console.log(data);
+                        if(data.message=='false'){
+                            errorModal('作廢失敗');
+                            return false;
+                        }else {
+                            $('#DELModal').modal('hide');
+                            DefaultData();
+                            $("#DELMENU").prop('disabled',true);
+                            $("#SubmitBtn").prop('disabled',false);
+                        }
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        errorModal(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                    }
+                });
+                break;
+            case "Error_btn":
+                $('#Errormodal').modal('show');
                 break;
         }
-        x.bedcallback=bedcallback;
     });
+
     $("#form1").submit(function () {
         //$(window).off('beforeunload', reloadmsg);
         var json=GetCheckVal();
@@ -417,7 +341,9 @@ $(document).ready(function () {
             success: function (data) {
                  $("#loading").hide();
                   $("#wrapper").hide();
+
                 var str=AESDeCode(data);
+                console.log(str);
                 var dataObj=JSON.parse(str);
                 var result = dataObj.response;
                 var message = dataObj.message;
@@ -425,7 +351,7 @@ $(document).ready(function () {
                     alert("儲存成功");
                     window.location.reload(true);
                 }else {
-                     errorModal(message);
+                    alert(message);
                  }
             },error:function (XMLHttpResponse,textStatus,errorThrown) {
                 console.log(
@@ -439,65 +365,33 @@ $(document).ready(function () {
         return false;
 
     });
-    $("#SerchBtn").click(function () {
-        switch (checkSerchwindow()) {
-            case "false":
-                alert("查詢視窗已開啟");
-                break;
-            case "true":
-                y=window.open("/webservice/NISPWSLKQRY.php?str="+
-                    AESEnCode("sFm=CNAD&PageVal="+""+"&DA_idpt="+
-                        $('#DA_IdPt').val()+"&DA_idinpt="+""+
-                        "&sUser="+"<?php echo $OPID?>"+"&NM_PATIENT="+"")
-                    ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
-                break;
+
+    function CheckUI(IdPt,ScanNum){
+        ScanTime++;
+        if( $("#"+IdPt+"\\@"+ScanNum).length>0){
+            let top=($("#"+IdPt+"\\@"+ScanNum).offset()).top-400;
+            $("#"+IdPt+"\\@"+ScanNum).prop('checked',true);
+            $("#"+IdPt+"\\@"+ScanNum).parent().parent().css({'background-color':'#BBFF00'});
+            $("#scrollList").scrollTop(top);
+        }else {
+            obj.IDPT=IdPt;
+            obj.BSK_BAGENO=ScanNum;
+            obj.NUM=ScanTime;
+            let copy=Object.assign({},obj);//淺複製錯誤血袋
+            err.push(copy);
         }
-
-        y.Serchcallback=Serchcallback;
-    });
-    $("#ReStart").click(function () {
-        err.length=0;
-        DefaultData();
-        $('input[type=text]:not("#NURSOPID")').val("");
-        $('button[type=submit]').prop('disabled',false);
-        $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
-        $("#Error_btn").prop("disabled",true);
-        $('#DELMENU').prop('disabled',true);
-
-    });
-    $("#Del").click(function() {
-        var del_ip='/webservice/NISPWSDELILSG.php';
-        console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
-        $.ajax({
-            url:del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
-            type:'POST',
-            dataType:'text',
-            success:function (json) {
-                var data=JSON.parse(AESDeCode(json));
-                console.log(data);
-                if(data.message=='false'){
-                    errorModal('作廢失敗');
-                    return false;
-                }else {
-                    $('#DELModal').modal('hide');
-                    DefaultData();
-                    $("#DELMENU").prop('disabled',true);
-                }
-            },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                errorModal(
-                    "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                    "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                    "3 返回失敗,textStatus:"+textStatus+
-                    "4 返回失敗,errorThrown:"+errorThrown
-                );
-            }
-        });
-    });
-
+        if(err.length>0){
+            errUI(err);
+        }
+        $("#IdPt").focus();
+        $("#IdPt").val("");
+        $("#NumId").val("");
+    }
     function DefaultData() {
         $("#loading").show();
         $("#wrapper").show();
         $("#DATAList").children().remove();
+        console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=00FUZZY'));
         $.ajax({
             url:"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=<?php echo $OPID?>'),
             type:"POST",
@@ -530,6 +424,7 @@ $(document).ready(function () {
                     );
 
                 });
+
                 TimerDefault();
 
             },
@@ -559,7 +454,8 @@ $(document).ready(function () {
         TableList(dataObj.BSK_TRANSRECNO,sTraID);
         $('input[type=submit]').prop('disabled',false);
     }
-    function Serchcallback(AESobj){
+    function Serchcallback(AESobj)
+    {
         var str1=AESDeCode(AESobj);
         var objArr=JSON.parse(str1);
         $("#DATAList").children().remove();
@@ -588,6 +484,7 @@ $(document).ready(function () {
                 "</tr>"
             );
         });
+
         $('input[type=checkbox]').prop('disabled',true);
         $('input[type=checkbox]').prop('checked',true);
         $('#DELMENU').prop('disabled',false);
@@ -733,7 +630,6 @@ $(document).ready(function () {
             '<p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word">'+str+'</p>'
         );
         $('#Errormodal').modal('show');
-
     }
     function errUI(err){
         $("#Error_btn").css({"background-color":"#FF0000","border-color":"#FF0000"});
