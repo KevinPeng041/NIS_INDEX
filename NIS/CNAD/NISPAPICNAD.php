@@ -156,16 +156,19 @@ function PosCNADSave($conn,$sTraID,$sDt,$sTm,$sUr){
     if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
         if($ST_DATAB){
             $B=json_decode($ST_DATAB);
-            if(count($B)==0){
-                $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
-                return $response;
+
+            if(GetCNADCheck($ST_DATAB)=="false"){
+                return    $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
+
             }
+
             for ($i=0;$i<count($B);$i++)
             {
                 $BSK_TRANSRECNO=$B[$i]->{"BSK_TRANSRECNO"};
                 $BCK_DATMSEQ=$B[$i]->{"BCK_DATMSEQ"};
                 $BSK_MEDNO=$B[$i]->{"BSK_MEDNO"};
                 $BSK_BAGENO=$B[$i]->{"BSK_BAGENO"};
+
                 $UPDATESQL="UPDATE  TBOBCK SET   BCK_OUTDATE='$sDt',BCK_OUTTIME='$sTm',BCK_OUTOPID='$sUr' 
                             WHERE BCK_DATMSEQ='$BCK_DATMSEQ' AND BCK_MEDNO='$BSK_MEDNO' AND BCK_BAGENO='$BSK_BAGENO'";
 
@@ -255,7 +258,8 @@ function GetCNADJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
     $stid=oci_parse($conn,$sSQL);
     oci_execute($stid);
 
-    while(oci_fetch_array($stid)){
+    while(oci_fetch_array($stid))
+    {
         $BCK_DATMSEQ=oci_result($stid,'BCK_DATMSEQ');
         $BSK_BAGENO=oci_result($stid,'BSK_BAGENO');
 
@@ -319,7 +323,6 @@ function GetCNADJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
 }
 function PosCNADCancel($conn,$sTraID,$sUr){
     //作廢領用血簽收紀錄
-
     $DateTime = date("YmdHis");
     $STR = substr($DateTime, 0, 4);
     $STR1 = substr($DateTime, -10, 10);
@@ -385,5 +388,13 @@ function PosCNADCancel($conn,$sTraID,$sUr){
         }
     }
     oci_commit($conn);
+    return $response;
+}
+function GetCNADCheck($json){
+    $JsonB=json_decode($json);
+    $response="true";
+    if(count($JsonB)==0){
+        $response="false";
+    }
     return $response;
 }
