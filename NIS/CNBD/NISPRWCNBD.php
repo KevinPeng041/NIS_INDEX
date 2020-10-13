@@ -43,17 +43,15 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="text/javascript" src="../../jquery-3.4.1.js"></script>
     <link rel="stylesheet" href="../../bootstrap-4.3.1-dist/css/bootstrap.min.css">
-    <!--<link rel="stylesheet" href="../../css/NIS/CBLD.css">-->
+    <link rel="stylesheet" href="../../css/NIS/CNBD.css">
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
     <script src="../../NISCOMMAPI.js"></script>
     <script>
-        var sfm='<?php echo $sfm?>';
-        console.log(sfm);
+        let sfm='<?php echo $sfm?>';
         if(sfm==""){
-            console.log(123);
-            var ckw=setInterval(function () {
+            let ckw=setInterval(function () {
                 try {
                     if(!window.opener) {
                         alert("此帳號以被登出,請重新登入開啟");
@@ -70,101 +68,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
         }
 
     </script>
-    <style>
-        /* In order to place the tracking correctly */
-        .container{
-            max-width: 1140px;
-        }
-        .container .ListBtn button{
-            color: white;
-            font-size: 4.5vmin;
-        }
-        .container .float-left{
-            font-size: 3.7vmin;
-        }
-        .List{
-            height:50vmin;
-            overflow:auto;
-            position: relative;
 
-        }
-        .btn {
-            margin-top: 5px;
-        }
-
-        body{
-            overscroll-behavior-y:contain;
-        }
-
-        input{
-            border-radius:4px;border:1px solid #DBDBDB;
-        }
-        input[type=checkbox]{
-            width: 4.5vmin;
-            height: 4.5vmin;
-        }
-        .Otimer{
-            margin-top:10px;
-            font-size: 4vmin;
-            background-color: #baeeff;
-            border-radius:3px;
-        }
-        .Otimer  .pageTime #DateVal{
-            width:35vmin;
-            text-align: center;
-            margin-top: 5px;
-
-        }
-        .Otimer .pageTime #TimeVal {
-            width: 15vmin;
-            margin-left: 5px;
-            margin-top: 5px;
-            border: 1px white;
-            text-align: center;
-        }
-        .Parametertable input{
-             display: none;
-            background-color: #00FF00;
-        }
-        #loading{
-            position: absolute;
-            z-index: 9999;
-            top: 50%;
-            left: 50%;
-            background-color: #FFFFFF;
-            color: #000000;
-            font-size: 5vmin;
-            width: 45vmin;
-            height: 12vmin;
-            padding-left:20px;
-            padding-top:10px;
-            border-radius: 5px;
-            margin: -15vmin 0 0 -30vmin;
-
-        }
-        #loading .loadimg{
-            width: 10vmin;
-            height:10vmin;
-        }
-        #wrapper{
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            opacity: 0.5;
-            z-index: 9998;
-        }
-        .input-group{
-            margin-top: 5px;
-        }
-        .Num_input{
-            margin-top: 5px;
-            margin-bottom: 5px;
-            height: 40px;
-            font-size: 20px;
-        }
-
-    </style>
 </head>
 
 <body>
@@ -281,123 +185,66 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 </div>
 </body>
 <script>
-    function isload(t) {
-        if(window.document.readyState=="complete")
-        {
+    $(document).ready(function () {
+
+        (function () {
+            TimerDefault();
+            UIDefault();
             $("#loading").hide();
             $("#wrapper").hide();
-            if(t){
-                window.clearInterval(t);
-            }
-        }
-    }
-    t=window.setInterval(function(){
-        isload(t);
-    },700);
+        }());
 
-    $(document).ready(function () {
-        TimerDefault();
-        UIDefault();
-
-
-        $(document).on("keydown", "form", function(event) {
-            return event.key != "Enter";
-        });
-
-
-       $("#IdPt").bind("input propertychange",function () {
-           if(this.value.length==8)
-           {
-               $("#NumId").focus();
-           }
-        });
-
-        var err=[];
-        var obj={
+        let err=[];
+        let obj={
             IDPT:{},
             BSK_BAGENO:{},
             NUM:{}
         };
-        var a=0;
-        $("#NumId").bind("input propertychange",function () {
-            var BSK_BAGENO=($(this).val()).replace(/\s*/g,"");
-            var id=$("#IdPt").val();
+        let ScanTime=0;
+        let x;//Bed addeventlistener
+        let y;//Serch addeventlistener
 
-           if(BSK_BAGENO.length >=10){
-               if(BSK_BAGENO.indexOf("@")>-1){
-                  var arr= BSK_BAGENO.replace(/,/g,"@").split("@");
-                  var len=arr.length;
-                 for (var i=1;i<len;i++)
-                     {
-                         var checkID=$("#"+arr[0]+"\\@"+arr[i]);
-                         if(checkID.length>0){
-                             checkID.prop("checked",true);
-                             checkID.parent().parent().css({'background-color':'#BBFF00'});
 
-                         }else {
-                             obj.IDPT=arr[0];
-                             obj.BSK_BAGENO=arr[i];
-                             obj.NUM=i;
-                             var copy=Object.assign({},obj);//淺複製錯誤血袋
-                             err.push(copy);
-                         }
 
-                     }
-                         if(err.length>0){
-                             errUI(err);
-                         }
-                 } else{
-                   a++;
-                   if($("#"+id+"\\@"+BSK_BAGENO).length>0){
-                       $("#"+id+"\\@"+BSK_BAGENO).prop("checked",true);
-                       $("#"+id+"\\@"+BSK_BAGENO).parent().parent().css({'background-color':'#BBFF00'});
-                       var top=($("#"+id+"\\@"+BSK_BAGENO).offset()).top-500;
-                       $("#scrollList").scrollTop(top);
-                   }else {
-                       obj.IDPT=id;
-                       obj.BSK_BAGENO=BSK_BAGENO;
-                       obj.NUM=a;
-                       var copy=Object.assign({},obj);//淺複製錯誤血袋
-                       err.push(copy);
-                       var errfilter=err.filter(function (element, index, arr) {
-                           return arr.indexOf(element)===index;
-                       });
-                       errUI(errfilter);
-                   }
-               }
-               $("#IdPt").focus();
-               $("#IdPt").val("");
-               $("#NumId").val("");
+
+        $("#IdPt").bind("input propertychange",function () {
+            if(this.value.length==8)
+            {
+                $("#NumId").focus();
             }
-
+        });
+        $("#NumId").on('paste',function (e) {
+            e.preventDefault();
+            let PasteTxt=e.originalEvent.clipboardData.getData('text');
+            if( PasteTxt.lastIndexOf("#")>-1)
+            {
+                let Arr=PasteTxt.split("@");
+                let IdPt=Arr.shift();
+                Arr.pop();
+                for (let index in Arr)
+                {
+                    CheckUI(IdPt,Arr[index]);
+                }
+            }
+            else
+            {
+                CheckUI($("#IdPt").val(),PasteTxt);
+            }
         });
 
 
-        function errUI(err){
-            $("#Error_btn").css({"background-color":"#FF0000","border-color":"#FF0000"});
-            $("#Error_btn").prop("disabled",false);
-            $("#ErrBlood").children().remove();
-            $.each(err,function (index,val) {
-                $("#ErrBlood").append(
-                    "<tr class='list-item'>"+
-                    "<td>"+val.NUM+"</td>"+
-                    "<td>"+val.IDPT+"</td>"+
-                    "<td>"+val.BSK_BAGENO+"</td>"+
-                    "<tr>"
-                );
-            });
-        }
 
-
-        $("#Error_btn").click(function () {
-            err.length=0;
-            a=0;
-            $('#Errormodal').modal('show');
+        $(document).on("keypress", "form", function(event){
+            let  code = event.keyCode ? event.keyCode : event.which;
+            if(code===13)
+            {
+                CheckUI($("#IdPt").val(),$("#NumId").val());
+                 $("#form1").on("submit",function () {return false;});
+             }
+            return event.key != "Enter";
         });
-
-
         $(document).on('change', 'input[type=checkbox]', function() {
-            var checkbox = $(this);
+            let checkbox = $(this);
 
             if (checkbox.is(':checked')==true)
             {
@@ -407,11 +254,85 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 checkbox.parent().parent().css({'background-color':'#FFFFFF'});
             }
         });
+        $(document).on('click','button',function () {
+            let BtnID=$(this).attr('id');
+            switch (BtnID) {
+                case "sbed":
+                    switch (checkBEDwindow()) {
+                        case "false":
+                            errorModal("領血單位視窗已開啟");
+                            break;
+                        case "true":
+                            try {
+                                x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $sIdUser?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
 
+                            }catch (e) {
+                                console.log(e);
+                            }
+                            break;
+                    }
+                    x.bedcallback=bedcallback;
+                    break;
+                case "SerchBtn":
+                    if(($("#DataTxt").val()).trim()=='')
+                    {
+                        errorModal("請選擇須查詢的病人");
+                        return false;
+                    }
+                    switch (checkSerchwindow()) {
+                        case "false":
+                            errorModal("查詢視窗已開啟");
+                            break;
+                        case "true":
+                            y=window.open("/webservice/NISPWSLKQRY.php?str="+
+                                AESEnCode("sFm=CNBD&PageVal="+$('#BUT_NEEDUNIT').val()+"&DA_idpt="+
+                                    ""+"&DA_idinpt="+""+
+                                    "&sUser="+"<?php echo  $OPID?>"+"&NM_PATIENT="+$('#DataTxt').val())
+                                ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                            break;
+                    }
 
+                    y.Serchcallback=Serchcallback;
+                    break;
+                case "Del":
+                    let del_ip='/webservice/NISPWSDELILSG.php';
+                    console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
+                    $.ajax({
+                        url:del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
+                        type:'POST',
+                        dataType:'text',
+                        success:function (json) {
+                            let data=JSON.parse(AESDeCode(json));
+                            console.log(data);
+                            if(data.message=='false'){
+                                errorModal('作廢失敗');
+                                return false;
+                            }else {
+                                $('#DELModal').modal('hide');
+                                restUI();
+                            }
+                        },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                            errorModal(
+                                "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                                "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                                "3 返回失敗,textStatus:"+textStatus+
+                                "4 返回失敗,errorThrown:"+errorThrown
+                            );
+                        }
+                    });
+                    break;
+                case "restBtn":
+
+                    restUI();
+                    break;
+                case "Error_btn":
+                    $('#Errormodal').modal('show');
+                    break;
+            }
+        });
         $("#form1").submit(function () {
             //$(window).off('beforeunload', reloadmsg);
-            var json=GetCheckVal();
+            let json=GetCheckVal();
 
             $("#loading").show();
             $("#wrapper").show();
@@ -439,16 +360,15 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 success: function (data) {
                     $("#loading").hide();
                     $("#wrapper").hide();
-                   var str=AESDeCode(data);
-                    var dataObj=JSON.parse(str);
-                    console.log(dataObj);
-                    var result = dataObj.response;
-                    var message = dataObj.message;
+                    let str=AESDeCode(data);
+                    let dataObj=JSON.parse(str);
+                    let result = dataObj.response;
+                    let message = dataObj.message;
                     if (result == "success") {
                         alert("儲存成功");
                         window.location.reload(true);
                     }else {
-                        errorModal(message);
+                        alert(message);
                     }
                 },error:function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
@@ -464,181 +384,28 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
         });
 
-        function bedcallback(data)
-        {
-            var str=AESDeCode(data);
-            var dataObj=JSON.parse(str);
-            console.log(dataObj);
-            var  BUT_BUTNAME=dataObj.BUT_BUTNAME;
-            var BUT_PROCDATE=dataObj.BUT_PROCDATE;
-            var BUT_NEEDUNIT=dataObj.BUT_NEEDUNIT;
-            var BUT_PROCOPID=dataObj.BUT_PROCOPID;
-            var  BUT_PROCTIME=dataObj.BUT_PROCTIME;
-            var   sSave=dataObj.sSave;
-            var   sTraID=dataObj.sTraID;
-            if($("#DATAList").children()){
-                $("#DATAList").children().remove();
-            }
-            if($("#DateVal").val()==""||$("#TimeVal").val()==""){
-                TimerDefault();
-            }
 
-            $("#DataTxt").val(BUT_BUTNAME);
-            $("#BUT_PROCDATE").val(BUT_PROCDATE);
-            $("#BUT_NEEDUNIT").val(BUT_NEEDUNIT);
-            $("#BUT_PROCOPID").val(BUT_PROCOPID);
-            $("#BUT_PROCTIME").val(BUT_PROCTIME);
-            $("#sSave").val(sSave);
-            $("#sTraID").val(sTraID);
-            InsertWSST(sTraID,'A',data);
-            TableList(BUT_NEEDUNIT);
-            $("button[type=submit]").prop("disabled",false);
-            $("#SerchBtn").prop("disabled",false);
-            $("#IdPt").prop("disabled",false);
-            $("#ErrBlood").children().remove();
-            $("#Error_btn").prop("disabled",true);
-            $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
-        }
-        var x;
-        $("#sbed").click(function () {
-            switch (checkBEDwindow()) {
-                case "false":
-                    errorModal("領血單位視窗已開啟");
-                    break;
-                case "true":
-                    try {
-                        x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $sIdUser?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
-
-                    }catch (e) {
-                        console.log(e);
-                    }
-                    break;
-            }
-            x.bedcallback=bedcallback;
-        });
-
-
-
-        function Serchcallback(AESobj){
-            var str1=AESDeCode(AESobj);
-            var objArr=JSON.parse(str1);
-            $("#DATAList").children().remove();
-            var  BSK_NURSDATE='';
-            var  BSK_NURSTIME='';
-            var  sTraID='';
-
-            $.each(objArr,function (index,val) {
-                var   BSK_BAGENO=val.BSK_BAGENO;
-                var  BSK_MEDNO=val.BSK_MEDNO;
-                var  BKD_EGCODE=val.BKD_EGCODE;
-                var  BSK_NEEDUNIT=val.BSK_NEEDUNIT;
-                var MH_NAME=val.MH_NAME;
-                var  BSK_BARSIGN=val.BSK_BARSIGN;
-                var  BSK_BLDKIND=val.BSK_BLDKIND;
-                var BSK_INDENTNO=val.BSK_INDENTNO;
-                var BSK_NURSOPID=val.BSK_NURSOPID;
-                var  BSK_TRANSRECNO=val.BSK_TRANSRECNO;
-                sTraID=val.sTraID;
-                BSK_NURSDATE=val.BSK_NURSDATE;
-                BSK_NURSTIME=val.BSK_NURSTIME;
-
-                $("#DATAList").append(
-                    "<tr class='list-item'>"+
-                    "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' " +
-                    "value='"+BSK_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"@"+BSK_BLDKIND+"@"+BSK_INDENTNO+"@"+BSK_NURSOPID+"@"+BSK_TRANSRECNO+"@"+BSK_BARSIGN+"'>"+
-                    "</td>"+
-                    "<td>"+BSK_MEDNO+"</td>"+
-                    "<td>"+MH_NAME+"</td>"+
-                    "<td>"+BKD_EGCODE+"</td>"+
-                    "<td>"+BSK_BAGENO+"</td>"+
-                    "</tr>"
-                );
-
-            });
-            $("#sTraID").val(sTraID);
-            $("#DateVal").val(BSK_NURSDATE);
-            $("#TimeVal").val(BSK_NURSTIME);
-            $("input[type=text]").prop("disabled",true);
-            $("input[type=checkbox]").prop("checked",true);
-            $("input[type=checkbox]").prop("disabled",true);
-            $("button[type=submit]").prop("disabled",true);
-            $("#DELMENU").prop("disabled",false);
-            $('#DateVal').prop('readonly',true);
-            $('#TimeVal').prop('readonly',true);
-        }
-
-        var y;
-        $("#SerchBtn").click(function () {
-            if(($("#DataTxt").val()).trim()=='')
-            {
-                errorModal("請選擇須查詢的病人");
-                return false;
-            }
-            switch (checkSerchwindow()) {
-                case "false":
-                    errorModal("查詢視窗已開啟");
-                    break;
-                case "true":
-                    y=window.open("/webservice/NISPWSLKQRY.php?str="+
-                        AESEnCode("sFm=CNBD&PageVal="+$('#BUT_NEEDUNIT').val()+"&DA_idpt="+
-                            ""+"&DA_idinpt="+""+
-                            "&sUser="+"<?php echo  $OPID?>"+"&NM_PATIENT="+$('#DataTxt').val())
-                        ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
-                    break;
-            }
-
-            y.Serchcallback=Serchcallback;
-        });
-
-
-        function checkSerchwindow() {
-            if(!y){
-                console.log("not open");
-                return "true";
+        function CheckUI(IdPt,ScanNum){
+            ScanTime++;
+            if( $("#"+IdPt+"\\@"+ScanNum).length>0){
+                let top=($("#"+IdPt+"\\@"+ScanNum).offset()).top-400;
+                $("#"+IdPt+"\\@"+ScanNum).prop('checked',true);
+                $("#"+IdPt+"\\@"+ScanNum).parent().parent().css({'background-color':'#BBFF00'});
+                $("#scrollList").scrollTop(top);
             }else {
-                if(y.closed){
-                    console.log("window close");
-                    return "true";
-                }else {
-                    console.log("window not close");
-                    return "false";
-                }
+                obj.IDPT=IdPt;
+                obj.BSK_BAGENO=ScanNum;
+                obj.NUM=ScanTime;
+                let copy=Object.assign({},obj);//淺複製錯誤血袋
+                err.push(copy);
             }
+            if(err.length>0){
+                errUI(err);
+            }
+            $("#IdPt").focus();
+            $("#IdPt").val("");
+            $("#NumId").val("");
         }
-
-        $("#Del").click(function() {
-            var del_ip='/webservice/NISPWSDELILSG.php';
-            console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
-            $.ajax({
-                url:del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
-                type:'POST',
-                dataType:'text',
-                success:function (json) {
-                    var data=JSON.parse(AESDeCode(json));
-                    console.log(data);
-                    if(data.message=='false'){
-                        errorModal('作廢失敗');
-                        return false;
-                    }else {
-                        $('#DELModal').modal('hide');
-                        restUI();
-                    }
-                },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                    errorModal(
-                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                        "3 返回失敗,textStatus:"+textStatus+
-                        "4 返回失敗,errorThrown:"+errorThrown
-                    );
-                }
-            });
-        });
-
-        $("#restBtn").click(function () {
-            restUI();
-        });
-
-
         function TableList(BUT_NEEDUNIT) {
 /*
             console.log("http://localhost"+'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT));
@@ -649,10 +416,10 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 dataType:"text",
                 success:function (data) {
                    /* console.log(data);*/
-                    var sTraID=$("#sTraID").val();
+                    let sTraID=$("#sTraID").val();
                     InsertWSST(sTraID,'B',data);
 
-                    var arr=JSON.parse(AESDeCode(data));
+                    let arr=JSON.parse(AESDeCode(data));
                     if(arr.length==0){
                         $("#DATAList").append(
                             "<tr class='list-item'>"+
@@ -665,10 +432,10 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
                     $.each(arr,function (index,val) {
                         /*checkbod id:病歷號+血袋號碼 value:領血請領單位+病歷號+血袋號碼*/
-                        var   BSK_BAGENO=val.BSK_BAGENO;
-                        var  BSK_MEDNO=val.BSK_MEDNO;
-                        var  MH_NAME=val.MH_NAME;
-                        var  BKD_EGCODE=val.BKD_EGCODE;
+                        let   BSK_BAGENO=val.BSK_BAGENO;
+                        let  BSK_MEDNO=val.BSK_MEDNO;
+                        let  MH_NAME=val.MH_NAME;
+                        let  BKD_EGCODE=val.BKD_EGCODE;
                         $("#DATAList").append(
                             "<tr class='list-item'>"+
                             "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' value='"+BUT_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"'>"+"</td>"+
@@ -700,7 +467,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 type:"POST",
                 dataType:"text",
                 success:function(data){
-                    var json=JSON.parse(AESDeCode(data));
+                    let json=JSON.parse(AESDeCode(data));
                     console.log(json.message);
                 },
                 error:function (XMLHttpResponse,textStatus,errorThrown) {
@@ -715,10 +482,91 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
             });
         }
+        function Serchcallback(AESobj){
+            let str1=AESDeCode(AESobj);
+            let objArr=JSON.parse(str1);
+            $("#DATAList").children().remove();
+            let  BSK_NURSDATE='';
+            let  BSK_NURSTIME='';
+            let  sTraID='';
+
+            $.each(objArr,function (index,val) {
+                let   BSK_BAGENO=val.BSK_BAGENO;
+                let  BSK_MEDNO=val.BSK_MEDNO;
+                let  BKD_EGCODE=val.BKD_EGCODE;
+                let  BSK_NEEDUNIT=val.BSK_NEEDUNIT;
+                let MH_NAME=val.MH_NAME;
+                let  BSK_BARSIGN=val.BSK_BARSIGN;
+                let  BSK_BLDKIND=val.BSK_BLDKIND;
+                let BSK_INDENTNO=val.BSK_INDENTNO;
+                let BSK_NURSOPID=val.BSK_NURSOPID;
+                let  BSK_TRANSRECNO=val.BSK_TRANSRECNO;
+                sTraID=val.sTraID;
+                BSK_NURSDATE=val.BSK_NURSDATE;
+                BSK_NURSTIME=val.BSK_NURSTIME;
+
+                $("#DATAList").append(
+                    "<tr class='list-item'>"+
+                    "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' " +
+                    "value='"+BSK_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"@"+BSK_BLDKIND+"@"+BSK_INDENTNO+"@"+BSK_NURSOPID+"@"+BSK_TRANSRECNO+"@"+BSK_BARSIGN+"'>"+
+                    "</td>"+
+                    "<td>"+BSK_MEDNO+"</td>"+
+                    "<td>"+MH_NAME+"</td>"+
+                    "<td>"+BKD_EGCODE+"</td>"+
+                    "<td>"+BSK_BAGENO+"</td>"+
+                    "</tr>"
+                );
+
+            });
+            $("#sTraID").val(sTraID);
+            $("#DateVal").val(BSK_NURSDATE);
+            $("#TimeVal").val(BSK_NURSTIME);
+            $("input[type=text]").prop("disabled",true);
+            $("input[type=checkbox]").prop("checked",true);
+            $("input[type=checkbox]").prop("disabled",true);
+            $("button[type=submit]").prop("disabled",true);
+            $("#DELMENU").prop("disabled",false);
+            $('#DateVal').prop('readonly',true);
+            $('#TimeVal').prop('readonly',true);
+        }
+        function bedcallback(data){
+            let str=AESDeCode(data);
+            let dataObj=JSON.parse(str);
+            console.log(dataObj);
+            let  BUT_BUTNAME=dataObj.BUT_BUTNAME;
+            let BUT_PROCDATE=dataObj.BUT_PROCDATE;
+            let BUT_NEEDUNIT=dataObj.BUT_NEEDUNIT;
+            let BUT_PROCOPID=dataObj.BUT_PROCOPID;
+            let  BUT_PROCTIME=dataObj.BUT_PROCTIME;
+            let   sSave=dataObj.sSave;
+            let   sTraID=dataObj.sTraID;
+            if($("#DATAList").children()){
+                $("#DATAList").children().remove();
+            }
+            if($("#DateVal").val()==""||$("#TimeVal").val()==""){
+                TimerDefault();
+            }
+
+            $("#DataTxt").val(BUT_BUTNAME);
+            $("#BUT_PROCDATE").val(BUT_PROCDATE);
+            $("#BUT_NEEDUNIT").val(BUT_NEEDUNIT);
+            $("#BUT_PROCOPID").val(BUT_PROCOPID);
+            $("#BUT_PROCTIME").val(BUT_PROCTIME);
+            $("#sSave").val(sSave);
+            $("#sTraID").val(sTraID);
+            InsertWSST(sTraID,'A',data);
+            TableList(BUT_NEEDUNIT);
+            $("button[type=submit]").prop("disabled",false);
+            $("#SerchBtn").prop("disabled",false);
+            $("#IdPt").prop("disabled",false);
+            $("#ErrBlood").children().remove();
+            $("#Error_btn").prop("disabled",true);
+            $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
+        }
         function GetCheckVal() {
             //取checkbox的值
-            var cbxVehicle = new Array();
-            var Json=[];
+            let cbxVehicle = new Array();
+            let Json=[];
             $("input:checkbox:checked[name=BDckbox]").each(function (i) {
                 cbxVehicle[i]=$(this).val();
             });
@@ -726,8 +574,8 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             if(cbxVehicle.length>0){
                 $.each(cbxVehicle,function (index) {
                    /* BSK_BAGENO,BSK_BLDKIND,BSK_MEDNO,BSK_NEEDUNIT,BSK_NURSDATE,BSK_NURSTIME,BSK_NURSOPID,BSK_INDENTNO,BSK_TRANSRECNO,BSK_BARSIGN*/
-                    var str=cbxVehicle[index];
-                    var OBJ=new Object();
+                    let str=cbxVehicle[index];
+                    let OBJ=new Object();
                     OBJ.BUT_NEEDUNIT= str.split("@",8)[0];
                     OBJ.BSK_MEDNO= str.split("@",8)[1];
                     OBJ.BSK_BAGENO= str.split("@",8)[2];
@@ -751,6 +599,20 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 }
             }
         }
+        function checkSerchwindow() {
+            if(!y){
+                console.log("not open");
+                return "true";
+            }else {
+                if(y.closed){
+                    console.log("window close");
+                    return "true";
+                }else {
+                    console.log("window not close");
+                    return "false";
+                }
+            }
+        }
         function errorModal(str) {
             $("#ModalBody table").hide();//隱藏血袋錯誤訊息
 
@@ -761,13 +623,13 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
         }
         function TimerDefault() {
-            var TimeNow=new Date();
-            var yyyy=TimeNow.toLocaleDateString().slice(0,4);
-            var MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
-            var dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
-            var  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
-            var  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
-            var  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
+            let TimeNow=new Date();
+            let yyyy=TimeNow.toLocaleDateString().slice(0,4);
+            let MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
+            let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
+            let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
+            let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
+            let  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
             $("#DateVal").val(yyyy-1911+MM+dd);
             $("#TimeVal").val(h+m);
         }
@@ -777,6 +639,8 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             $("#SubmitBtn").prop("disabled",true);
         }
         function restUI(){
+            ScanTime=0;
+            err.length=0;
             $("form input[type=text]").val("");
             $("input:not(#NURSOPID)").val("");
             $("button").prop("disabled",false);
@@ -788,7 +652,20 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             $("#Error_btn").prop("disabled",true);
             $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
         }
-
+        function errUI(err){
+            $("#Error_btn").css({"background-color":"#FF0000","border-color":"#FF0000"});
+            $("#Error_btn").prop("disabled",false);
+            $("#ErrBlood").children().remove();
+            $.each(err,function (index,val) {
+                $("#ErrBlood").append(
+                    "<tr class='list-item'>"+
+                    "<td>"+val.NUM+"</td>"+
+                    "<td>"+val.IDPT+"</td>"+
+                    "<td>"+val.BSK_BAGENO+"</td>"+
+                    "<tr>"
+                );
+            });
+        }
 
     });
 
