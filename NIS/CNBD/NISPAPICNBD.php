@@ -85,6 +85,11 @@ function PosCNBDSave($conn,$sTraID,$sDt,$sTm,$sUr){
    if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
        if($ST_DATAB){
            $B=json_decode($ST_DATAB);
+           if(GetCNBDCheck($ST_DATAB)=="false"){
+               return    $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
+           }
+
+
            for ($i=0;$i<count($B);$i++){
                $BSK_BAGENO=$B[$i]->{"BSK_BAGENO"};
                $BSK_MEDNO=$B[$i]->{"BSK_MEDNO"};
@@ -310,5 +315,13 @@ function PosCNBDCancel($conn,$sTraID,$sUr){
         }
     }
     oci_commit($conn);
+    return $response;
+}
+function GetCNBDCheck($json){
+    $JsonB=json_decode($json);
+    $response="true";
+    if(count($JsonB)==0){
+        $response="false";
+    }
     return $response;
 }
