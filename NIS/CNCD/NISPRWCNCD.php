@@ -49,9 +49,9 @@ $OPID="00FUZZY";
     <link rel="stylesheet" href="CSS/NISCSSCNCD.css">
     <script src="JS/NISJSCNCD.js"></script>
     <script>
-        var sfm='<?php echo $sfm?>';
+        let sfm='<?php echo $sfm?>';
         /*        if(sfm==""){
-                    var ckw=setInterval(function () {
+                    let ckw=setInterval(function () {
                         try {
                             if(!window.opener) {
                                 alert("此帳號以被登出,請重新登入開啟");
@@ -70,7 +70,6 @@ $OPID="00FUZZY";
     </script>
 
 </head>
-
 
 <body>
 <div id="wrapper"></div>
@@ -168,46 +167,35 @@ $OPID="00FUZZY";
 </body>
 <script>
     $(document).ready(function () {
-        var x;
-        var y;
+        let x;
+        let y;
         (function () {
             $(".Parametertable").children().prop('readonly',true);
             $("#loading").hide();
             $("#wrapper").hide();
         })();
 
-        $("#IdPt").bind("input propertychange",function () {
-            if(this.value.length==8)
-            {
-                if(this.value!=$("#DA_IdPt").val()){
-                    errorModal("與此病人的病歷號不符,是否重新選擇?","Button");
-                    return false;
-                }
-                $("#NumId").focus();
-            }
-        });
-        /* $("#NumId").bind("input propertychange",function () {
-                   CheckUIisset($("#IdPt").val(),$(this).val());
-               });*/
-        var err=[];
-        var obj={
+
+
+        let err=[];
+        let obj={
             IDPT:{},
             BAR_CODE:{},
             NUM:{}
         };
-        var ErrIndex=0;
-        var FocusIndex="";
-        var InputIdArr=['DataTxt','DateVal','TimeVal','IdPt','NumId'];
-        var CheckedTime=0;
-        var ChecekdColor=['#C1CBD7','#FFFAF4'];
+        let ErrIndex=0;
+        let FocusIndex="";
+        let InputIdArr=['DataTxt','DateVal','TimeVal','IdPt','NumId'];
+
+
         $(document).on('focus', 'input[type=text]', function() {
-            var Index=InputIdArr.indexOf($(this).attr('id'));
+            let Index=InputIdArr.indexOf($(this).attr('id'));
             FocusIndex=Index+1;
             return false;
 
         });
         $(document).on('click', 'button', function() {
-            var BtnID=$(this).attr('id');
+            let BtnID=$(this).attr('id');
             switch (BtnID) {
                 case "sbed":
                     switch (checkBEDwindow()) {
@@ -251,14 +239,14 @@ $OPID="00FUZZY";
                     $("#DATAList").children().remove();
                     break;
                 case "Del":
-                    var del_ip='/webservice/NISPWSDELILSG.php';
+                    let del_ip='/webservice/NISPWSDELILSG.php';
                     console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
                     $.ajax({
                         url:del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
                         type:'POST',
                         dataType:'text',
                         success:function (json) {
-                            var data=JSON.parse(AESDeCode(json));
+                            let data=JSON.parse(AESDeCode(json));
                             if(data.response==="false"){
                                 alert('作廢失敗');
                                 return false;
@@ -290,7 +278,7 @@ $OPID="00FUZZY";
                         type:"POST",
                         dataType: 'text',
                         success:function (data) {
-                            var NewBedJson=JSON.parse(data);
+                            let NewBedJson=JSON.parse(data);
                             console.log(NewBedJson);
                             $("#DataTxt").val(NewBedJson[0].DataTxt);
                             $("#DA_IdPt").val(NewBedJson[0].IDPT);
@@ -316,8 +304,9 @@ $OPID="00FUZZY";
                     break;
             }
         });
-        $(document).on("keydown", "form", function(event) {
-             if(event.key=='Enter'){
+        $(document).on("keypress", "form", function(event) {
+          let  code = event.keyCode ? event.keyCode : event.which;
+             if(code===13){
                  if($("input[type=text]:not(.noneEle)").is(":focus")==true)
                  {
                      if(FocusIndex>4){
@@ -327,35 +316,49 @@ $OPID="00FUZZY";
                          $("#"+InputIdArr[FocusIndex]).focus();
                      }
                  }
+                 $("#form1").on("submit",function () {return false;});
              }
-            $("#form1").on("submit",function () {return false;});
             return event.key != "Enter";
         });
-        $(document).on('change', 'input[type=checkbox]', function() {
 
-            var CheckBox= $(this).parent().parent();
 
-            if (CheckedTime>1){
-                CheckedTime=0;
-            }
-
-            if ($(this).prop('checked')==true)
+        $("#IdPt").bind("input propertychange",function () {
+            if(this.value.length==8)
             {
-                CheckBox.css({'background-color':ChecekdColor[CheckedTime]});
-                CheckBox.next('tr').css({'background-color':ChecekdColor[CheckedTime]});
-                CheckedTime++;
-            }else
-            {
-                CheckBox.css({'background-color':'#FFFFFF'});
-                CheckBox.next('tr').css({'background-color':'#FFFFFF'});
-
+                if(this.value!=$("#DA_IdPt").val()){
+                    errorModal("與此病人的病歷號不符,是否重新選擇?","Button");
+                    return false;
+                }
+                $("#NumId").focus();
             }
         });
+
+        $("#NumId").on('paste',function (e) {
+            //prevent paste action
+            e.preventDefault();
+            let PasteTxt=e.originalEvent.clipboardData.getData('text');
+            if( PasteTxt.lastIndexOf("#")>-1){
+                  let Arr=PasteTxt.split("@");
+                  let IdPt=Arr.shift();
+                  Arr.pop();
+                if(IdPt!==$("#IdPt").val()){
+                    alert("與此病人病歷號不符");
+                    return false;
+                }
+
+                for (let index in Arr)
+                {
+                    CheckUIisset(IdPt,Arr[index]);
+                }
+            }
+        });
+
+
         $("#form1").submit(function () {
             //$(window).off('beforeunload', reloadmsg);
             $("#loading").show();
             $("#wrapper").show();
-            var json=GetCheckVal();
+            let json=GetCheckVal();
           console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
                 '&sTraID=' + $('#sTraID').val() +
                 '&sPg=' +"" +
@@ -378,11 +381,11 @@ $OPID="00FUZZY";
                 success: function (data) {
                     $("#loading").hide();
                     $("#wrapper").hide();
-                    var str=AESDeCode(data);
+                    let str=AESDeCode(data);
                     console.log(str);
-                    var dataObj=JSON.parse(str);
-                    var result = dataObj.response;
-                    var message = dataObj.message;
+                    let dataObj=JSON.parse(str);
+                    let result = dataObj.response;
+                    let message = dataObj.message;
                     if (result == "success") {
                         alert("儲存成功");
                         window.location.reload(true);
@@ -404,29 +407,29 @@ $OPID="00FUZZY";
 
         function CheckUIisset(IdPt,NumidStr){
             if($("#"+IdPt+"\\@"+NumidStr).length>0){
-                var top=($("#"+IdPt+"\\@"+NumidStr).offset()).top-400;
+                let top=($("#"+IdPt+"\\@"+NumidStr).offset()).top-400;
                 $("#"+IdPt+"\\@"+NumidStr).prop('checked',true);
-                $("#"+IdPt+"\\@"+NumidStr).parent().parent().css({'background-color':ChecekdColor[CheckedTime]});
-                $("#"+IdPt+"\\@"+NumidStr).parent().parent().next('tr').css({'background-color':ChecekdColor[CheckedTime]});
                 $("#scrollList").scrollTop(top);
-                CheckedTime++;
             }else {
                 ErrIndex++;
                 obj.IDPT=IdPt;
                 obj.BAR_CODE=NumidStr;
                 obj.NUM=ErrIndex;
-                var copy=Object.assign({},obj);//淺複製錯誤血袋
+                let copy=Object.assign({},obj);//淺複製錯誤血袋
                 err.push(copy);
-                var errfilter=err.filter(function (element, index, arr) {
+                let errfilter=err.filter(function (element, index, arr) {
                     return arr.indexOf(element)===index;
                 });
                 errUI(errfilter);
             }
+
+
             $("#NumId").val("");
+
         }
         function bedcallback(AESobj) {
-            var str=AESDeCode(AESobj);
-            var dataObj=JSON.parse(str);
+            let str=AESDeCode(AESobj);
+            let dataObj=JSON.parse(str);
             console.log(dataObj);
             $("#DataTxt").val(dataObj[0].DataTxt);
             $("#DA_IdPt").val(dataObj[0].IDPT);
