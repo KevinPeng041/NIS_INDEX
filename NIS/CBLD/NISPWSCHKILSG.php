@@ -1,7 +1,7 @@
 <?php
 include '../../NISPWSIFSCR.php';
-function GetCBLDCheck($sPg,$sUr,$pwd)
-{    //檢查領輸血核對存檔必要欄位
+function GetCBLDCheckUsr($sPg,$sUr,$pwd)
+{    //檢查領輸血核對帳號密碼
     $HOST_IP=$_SERVER['HTTP_HOST'];
     //帳號認證
     $http="http://".$HOST_IP.'/webservice/';
