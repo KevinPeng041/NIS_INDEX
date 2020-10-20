@@ -1396,7 +1396,7 @@ console.log(data);
                                 $('#ISLN').prop('disabled',true);
                                 $('#Inhibit').prop('disabled',true);
 
-                                timeback(JID_TIME);
+                                TimeSet(JID_TIME);
                                 $('#FORMSEQANCE').val(FORMSEQANCE);
                                 $('#SER_DT').val(SER_DT);
                                 $('#SER_TM').val(SER_TM);
@@ -1570,7 +1570,6 @@ console.log(data);
 
                     }
                     if($("#NM_O"+ "2").val()){
-
                         $("#Isu_C").val($("#NM_O"+"2").val());
                         $("#dose3").val($("#ST_D"+"2").val());
                         $("#tt5").val($("#ID_O"+"2").val());
@@ -1578,7 +1577,7 @@ console.log(data);
                     }
                     $('input[name=part]').prop('disabled',true);
                     $("Part"+ID_REGION.substr(0,1)).prop('checked',true);
-                    timeback(JID_TIME);
+                    TimeSet(JID_TIME);
                     var y=DT_EXCUTE.substr(0,3);
                     var m=DT_EXCUTE.substr(3,2);
                     var d=DT_EXCUTE.substr(5,2);
@@ -2268,35 +2267,13 @@ console.log(data);
     </div>
 </div>
 <script>
-    function timeback(IDTM) {
-        document.getElementById("IDTM").value= IDTM;
-        if(IDTM=="ISTM00000001")
-        {
-            document.getElementById("ISTM00000001").checked= true;
-            document.getElementById("Eating1").disabled = false;
-            document.getElementById("Eating2").disabled = false;
-        }else if(IDTM=="ISTM00000002")
-        {
-            document.getElementById("ISTM00000002").checked= true;
-            document.getElementById("Eating1").disabled = false;
-            document.getElementById("Eating2").disabled = false;
-        }else if(IDTM=="ISTM00000003")
-        {
-            document.getElementById("ISTM00000003").checked= true;
-            document.getElementById("Eating1").disabled = false;
-            document.getElementById("Eating2").disabled = false;
-        }else if(IDTM=="ISTM00000004")
-        {
-            document.getElementById("ISTM00000004").checked= true;
-            document.getElementById("Eating1").disabled = false;
-            document.getElementById("Eating2").disabled = false;
-        }else if(IDTM=="ISTM00000005"){
-            document.getElementById("Eating1").checked = false;
-            document.getElementById("Eating2").checked = false;
-            document.getElementById("ISTM00000005").checked= true;
-            document.getElementById("Eating1").disabled = true;
-            document.getElementById("Eating2").disabled = true;
-
+    function TimeSet(IDTM) {
+        $("input[name=IDGP]").prop('checked',false);
+        $("#"+IDTM).prop('checked',true);
+        if(IDTM=="ISTM00000005"){
+            $("input[name=IDGP]").prop('disabled',true);
+        }else {
+            $("input[name=IDGP]").prop('disabled',false);
         }
     }
     function ISSG_Dateback(DT_EXCUTE,TM_EXCUTE,ST_MEASURE,SPRESS,JID_TIME,CID_MEAL,MM_TPRS) {
@@ -2306,14 +2283,14 @@ console.log(data);
 
         var H=TM_EXCUTE.substr(0,2);
         var M=TM_EXCUTE.substr(2,2);
-        timeback(JID_TIME);
+        TimeSet(JID_TIME);
+        $('#timer').val(y+m+d);
+        $('#timetxt').val(H+M);
+        $('#Textarea').val(MM_TPRS);
 
-        document.getElementById("timer").value=y+m+d;
-        document.getElementById("timetxt").value=H+M;
-        document.getElementById("Textarea").value=MM_TPRS;
         var regExp = new RegExp(/^[a-zA-Z]+$/);
         if(SPRESS.match(regExp)){
-            document.getElementById("sPress").value=SPRESS;
+            $("#sPress").val(SPRESS);
             switch (SPRESS) {
                 case 'LO':
                     $("#P_LO").prop('checked',true);
@@ -2330,88 +2307,22 @@ console.log(data);
             }
         }
         if(ST_MEASURE.trim()){
-            document.getElementById("STVALval").value=ST_MEASURE;
+            $("#STVALval").val(ST_MEASURE);
         }
 
         if (CID_MEAL=='A'){
-            document.getElementById('Eating1').checked=true;
+            $("#Eating1").prop('checked',true);
 
         }else if(CID_MEAL=='B')
         {
-            document.getElementById('Eating2').checked=true;
+            $("#Eating2").prop('checked',true);
+
         }
         else{
-            document.getElementById('Eating1').checked=false;
-            document.getElementById('Eating2').checked=false;
+            $("input[name=IDGP]").prop('checked',false);
         }
     }
-    function ISLN_Dateback(NUM) {
-        /*DT_EXCUTE+TM_EXCUTE+JID_TIME+ID_REGION+ID_ORDER+NM_ORDER+DT_TAKEDRUG+TM_TAKEDRUG+ST_DOSE+ST_USENO*/
 
-        var DT_EXCUTE=document.getElementById("DT_E"+ NUM).value;
-        var TM_EXCUTE=document.getElementById("TM_E"+ NUM).value;
-        var JID_TIME = document.getElementById("JID_T"+ NUM).value;
-        var ID_REGION= document.getElementById("ID_R0").value;
-
-
-        document.getElementById("Isu_A").value=document.getElementById("NM_O"+"0").value;
-        document.getElementById("dose1").value=document.getElementById("ST_D"+ '0').value;
-        document.getElementById("tt1").value=document.getElementById("ID_O0").value;
-        document.getElementById("fUSEF_1").value=document.getElementById("ST_U"+ '0').value;
-
-
-        if(document.getElementById("NM_O"+"1")){
-            document.getElementById("Isu_B").value=document.getElementById("NM_O"+"1").value;
-            document.getElementById("dose2").value=document.getElementById("ST_D"+ '1').value;
-            document.getElementById("tt3").value=document.getElementById("ID_O"+"1").value;
-            document.getElementById("fUSEF_2").value=document.getElementById("ST_U"+ '1').value;
-
-        }
-        if(document.getElementById("NM_O"+"2")){
-            document.getElementById("Isu_C").value=document.getElementById("NM_O"+"2").value;
-            document.getElementById("dose3").value=document.getElementById("ST_D"+ '2').value;
-            document.getElementById("tt5").value=document.getElementById("ID_O"+"2").value;
-            document.getElementById("fUSEF_3").value=document.getElementById("ST_U"+ '2').value;
-        }
-
-        $("input[name=part]").prop('disabled',true);
-        var part =ID_REGION.substr(0,1);
-        switch (part) {
-            case 'A':
-                document.getElementById("PartA").checked= true;
-                break;
-            case 'B':
-                document.getElementById("PartB").checked= true;
-                break;
-            case 'C':
-                document.getElementById("PartC").checked= true;
-                break;
-            case 'D':
-                document.getElementById("PartD").checked= true;
-                break;
-            case 'E':
-                document.getElementById("PartE").checked= true;
-                break;
-            case 'F':
-                document.getElementById("PartF").checked= true;
-                break;
-            case 'G':
-                document.getElementById("PartG").checked= true;
-                break;
-            case 'H':
-                document.getElementById("PartH").checked= true;
-                break;
-        }
-        timeback(JID_TIME);
-        var y=DT_EXCUTE.substr(0,3);
-        var m=DT_EXCUTE.substr(3,2);
-        var d=DT_EXCUTE.substr(5,2);
-        var H=TM_EXCUTE.substr(0,2);
-        var M=TM_EXCUTE.substr(2,2);
-
-        document.getElementById("timer").value=y+m+d;
-        document.getElementById("timetxt").value=H+M;
-    }
     $('#fUSEF_1').click(function(){
         fumadol();
         $('#funum').val(1);
@@ -2438,18 +2349,18 @@ console.log(data);
         $('#FuModal').modal('hide');
     }
     function PersonFuval() {
-        var val=$("#Fuval").val();
+        var Fval=$("#Fuval").val();
         if($('#fut').val()==1){
-            document.getElementById('fUSEF_1').value='';
-            document.getElementById('fUSEF_1').value=val;
+            $("#fUSEF_1").val();
+            $("#fUSEF_1").val(Fval);
         }
         else  if($('#fut').val()==2){
-            document.getElementById('fUSEF_2').value='';
-            document.getElementById('fUSEF_2').value=val;
+            $("#fUSEF_2").val();
+            $("#fUSEF_2").val(Fval);
         }
         else if($('#fut').val()==3){
-            document.getElementById('fUSEF_3').value='';
-            document.getElementById('fUSEF_3').value=val;
+            $("#fUSEF_3").val();
+            $("#fUSEF_3").val(Fval);
         }
         $('#FuModal').modal('hide');
     }
