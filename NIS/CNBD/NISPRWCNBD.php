@@ -67,8 +67,559 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             },500);
         }
 
-    </script>
+        $(document).ready(function () {
 
+            (function () {
+                TimerDefault();
+                UIDefault();
+                $("#loading").hide();
+                $("#wrapper").hide();
+            }());
+
+            let err=[];
+            let obj={
+                IDPT:{},
+                BSK_BAGENO:{},
+                NUM:{}
+            };
+            let ScanTime=0;
+            let x;//Bed addeventlistener
+            let y;//Serch addeventlistener
+
+
+
+
+            $("#IdPt").bind("input propertychange",function () {
+                if(this.value.length==8)
+                {
+                    $("#NumId").focus();
+                }
+            });
+            $('input[type=text]').keypress(function(e) {
+                //enter sumbit return false
+                let  code = e.keyCode ? e.keyCode : e.which;
+                if(code === 13) {
+                    e.preventDefault();
+                }
+            });
+            $("#NumId").on('change paste keyup',function (event) {
+                let  code = event.keyCode ? event.keyCode : event.which;
+                let Numid=$(this).val();
+
+                //HandKey and Enter,Scan
+                if(code===13 && Numid.length===10){
+                    if(CheckHasSpecialStr(Numid)===false){
+                        alert("禁止輸入數字以外的值");
+                        $(this).val("");
+                        return  false;
+                    }
+                    CheckUI($("#IdPt").val(),Numid);
+                }
+                //paste
+                else if( Numid.lastIndexOf("#")>-1)
+                {
+                    let Arr=Numid.split("@");
+                    let IdPt=Arr.shift();
+                    Arr.pop();
+                    for (let index in Arr)
+                    {
+                        CheckUI(IdPt,Arr[index]);
+                    }
+                }
+            });
+
+
+            $(document).on('change', 'input[type=checkbox]', function() {
+                let checkbox = $(this);
+
+                if (checkbox.is(':checked')==true)
+                {
+                    checkbox.parent().parent().css({'background-color':'#BBFF00'});
+                }else
+                {
+                    checkbox.parent().parent().css({'background-color':'#FFFFFF'});
+                }
+            });
+            $(document).on('click','button',function () {
+                let BtnID=$(this).attr('id');
+                switch (BtnID) {
+                    case "sbed":
+                        switch (checkBEDwindow()) {
+                            case "false":
+                                errorModal("領血單位視窗已開啟");
+                                break;
+                            case "true":
+                                try {
+                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $sIdUser?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
+
+                                }catch (e) {
+                                    console.log(e);
+                                }
+                                break;
+                        }
+                        x.bedcallback=bedcallback;
+                        break;
+                    case "SerchBtn":
+                        if(($("#DataTxt").val()).trim()=='')
+                        {
+                            errorModal("請選擇須查詢的病人");
+                            return false;
+                        }
+                        switch (checkSerchwindow()) {
+                            case "false":
+                                errorModal("查詢視窗已開啟");
+                                break;
+                            case "true":
+                                console.log($('#DataTxt').val());
+                                y=window.open("/webservice/NISPWSLKQRY.php?str="+
+                                    AESEnCode("sFm=CNBD&PageVal="+$('#BUT_NEEDUNIT').val()+"&DA_idpt="+
+                                        ""+"&DA_idinpt="+""+
+                                        "&sUser="+"<?php echo  $OPID?>"+"&NM_PATIENT="+$('#DataTxt').val())
+                                    ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                break;
+                        }
+
+                        y.Serchcallback=Serchcallback;
+                        break;
+                    case "Del":
+                        let del_ip='/webservice/NISPWSDELILSG.php';
+                        console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
+                        $.ajax({
+                            url:del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
+                            type:'POST',
+                            dataType:'text',
+                            success:function (json) {
+                                let data=JSON.parse(AESDeCode(json));
+                                console.log(data);
+                                if(data.message=='false'){
+                                    errorModal('作廢失敗');
+                                    return false;
+                                }else {
+                                    $('#DELModal').modal('hide');
+                                    restUI();
+                                }
+                            },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                                errorModal(
+                                    "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                                    "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                                    "3 返回失敗,textStatus:"+textStatus+
+                                    "4 返回失敗,errorThrown:"+errorThrown
+                                );
+                            }
+                        });
+                        break;
+                    case "restBtn":
+
+                        restUI();
+                        break;
+                    case "Error_btn":
+                        $('#Errormodal').modal('show');
+                        break;
+                }
+            });
+            $("#form1").submit(function () {
+                //$(window).off('beforeunload', reloadmsg);
+                let json=GetCheckVal();
+
+                $("#loading").show();
+                $("#wrapper").show();
+
+                console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+ AESEnCode('sFm=' + 'CNBD' +
+                    '&sTraID=' + $('#sTraID').val() +
+                    '&sPg=' + $("#PageVal").val() +
+                    '&sDt=' + $("#DateVal").val() +
+                    '&sTm=' + $("#TimeVal").val()+
+                    '&PASSWD='+""+
+                    '&USER='+"<?php echo $OPID?>"));
+
+                $.ajax({
+                    url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNBD' +
+                        '&sTraID=' + $('#sTraID').val() +
+                        '&sPg=' + $("#PageVal").val() +
+                        '&sDt=' + $("#DateVal").val() +
+                        '&sTm=' + $("#TimeVal").val()+
+                        '&PASSWD='+""+
+                        '&USER=<?php echo $OPID?>')
+                    ,
+                    type: 'POST',
+                    beforeSend: InsertWSST($('#sTraID').val(), 'B', JSON.stringify(json)),
+                    dataType: 'text',
+                    success: function (data) {
+                        $("#loading").hide();
+                        $("#wrapper").hide();
+                        let str=AESDeCode(data);
+                        let dataObj=JSON.parse(str);
+                        let result = dataObj.response;
+                        let message = dataObj.message;
+                        if (result == "success") {
+                            alert("儲存成功");
+                            window.location.reload(true);
+                        }else {
+                            alert(message);
+                        }
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                        return false;
+                    }
+                });
+                return false;
+
+            });
+            function CheckUI(IdPt,ScanNum){
+                ScanTime++;
+                if( $("#"+IdPt+"\\@"+ScanNum).length>0){
+                    let top=($("#"+IdPt+"\\@"+ScanNum).offset()).top-400;
+                    $("#"+IdPt+"\\@"+ScanNum).prop('checked',true);
+                    $("#"+IdPt+"\\@"+ScanNum).parent().parent().css({'background-color':'#BBFF00'});
+                    $("#scrollList").scrollTop(top);
+                }else {
+                    obj.IDPT=IdPt;
+                    obj.BSK_BAGENO=ScanNum;
+                    obj.NUM=ScanTime;
+                    let copy=Object.assign({},obj);//淺複製錯誤血袋
+                    err.push(copy);
+                }
+                if(err.length>0){
+                    errUI(err);
+                }
+                $("#IdPt").focus();
+                $("#IdPt").val("");
+                $("#NumId").val("");
+            }
+            function TableList(BUT_NEEDUNIT) {
+                /*
+                            console.log("http://localhost"+'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT));
+                */
+                $.ajax({
+                    url:'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT),
+                    type:"POST",
+                    dataType:"text",
+                    success:function (data) {
+                        /* console.log(data);*/
+                        let sTraID=$("#sTraID").val();
+                        InsertWSST(sTraID,'B',data);
+
+                        let arr=JSON.parse(AESDeCode(data));
+                        if(arr.length==0){
+                          /*  $("#DATAList").append(
+                                "<tr class='list-item'>"+
+                                "<td>"+"查無資料"+"</td>"+
+                                "</tr>"
+
+                            );*/
+                            $("#DATAList").append(
+                                `
+                                <tr class='list-item'>
+                                     <td>查無資料</td>
+                                </tr>
+                                `
+                            );
+
+
+                            return false;
+                        }
+
+                        $.each(arr,function (index,val) {
+                            /*checkbod id:病歷號+血袋號碼 value:領血請領單位+病歷號+血袋號碼*/
+                            let   BSK_BAGENO=val.BSK_BAGENO;
+                            let  BSK_MEDNO=val.BSK_MEDNO;
+                            let  MH_NAME=val.MH_NAME;
+                            let  BKD_EGCODE=val.BKD_EGCODE;
+
+                            let CheckID=BSK_MEDNO+'@'+BSK_BAGENO;
+                            let CheckBoxVal= BUT_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO;
+
+                            $("#DATAList").append(
+                                `
+                                <tr class='list-item'>
+                                    <td><input type='checkbox'  name='BDckbox' class='form-check-input' id='${CheckID}' value='${CheckBoxVal}'></td>
+                                    <td>${BSK_MEDNO}</td>
+                                    <td>${MH_NAME}</td>
+                                    <td>${BKD_EGCODE}</td>
+                                    <td>${BSK_BAGENO}</td>
+                                </tr>
+                                `
+                            );
+
+
+                   /*
+                            $("#DATAList").append(
+                                "<tr class='list-item'>"+
+                                "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' value='"+BUT_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"'>"+"</td>"+
+                                "<td>"+BSK_MEDNO+"</td>"+
+                                "<td>"+MH_NAME+"</td>"+
+                                "<td>"+BKD_EGCODE+"</td>"+
+                                "<td>"+BSK_BAGENO+"</td>"+
+                                "</tr>"
+                            );*/
+
+                        });
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                        return false;
+                    }
+                });
+            }
+            function InsertWSST(sTraID,page,json) {
+                /*
+                console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CBLD&sTraID='+sTraID+'&sPg='+page+'&sData='+json));
+                 */
+                $.ajax({
+                    'url':'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CNBD&sTraID='+sTraID+'&sPg='+page+'&sData='+json),
+                    type:"POST",
+                    dataType:"text",
+                    success:function(data){
+                        let json=JSON.parse(AESDeCode(data));
+                        console.log(json.message);
+                    },
+                    error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                        return false;
+                    }
+
+                });
+            }
+            function Serchcallback(AESobj){
+                let str1=AESDeCode(AESobj);
+                let objArr=JSON.parse(str1);
+                $("#DATAList").children().remove();
+                let  BSK_NURSDATE='';
+                let  BSK_NURSTIME='';
+                let  sTraID='';
+
+                $.each(objArr,function (index,val) {
+                    let   BSK_BAGENO=val.BSK_BAGENO;
+                    let  BSK_MEDNO=val.BSK_MEDNO;
+                    let  BKD_EGCODE=val.BKD_EGCODE;
+                    let  BSK_NEEDUNIT=val.BSK_NEEDUNIT;
+                    let MH_NAME=val.MH_NAME;
+                    let  BSK_BARSIGN=val.BSK_BARSIGN;
+                    let  BSK_BLDKIND=val.BSK_BLDKIND;
+                    let BSK_INDENTNO=val.BSK_INDENTNO;
+                    let BSK_NURSOPID=val.BSK_NURSOPID;
+                    let  BSK_TRANSRECNO=val.BSK_TRANSRECNO;
+                    let CheckBoxVal=BSK_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"@"+BSK_BLDKIND+"@"+BSK_INDENTNO+"@"+BSK_NURSOPID+"@"+BSK_TRANSRECNO+"@"+BSK_BARSIGN
+                    let CheckID=BSK_MEDNO+'@'+BSK_BAGENO
+
+                    sTraID=val.sTraID;
+                    BSK_NURSDATE=val.BSK_NURSDATE;
+                    BSK_NURSTIME=val.BSK_NURSTIME;
+/*
+                    $("#DATAList").append(
+                        "<tr class='list-item'>"+
+                        "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' " +
+                        "value='"+BSK_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"@"+BSK_BLDKIND+"@"+BSK_INDENTNO+"@"+BSK_NURSOPID+"@"+BSK_TRANSRECNO+"@"+BSK_BARSIGN+"'>"+
+                        "</td>"+
+                        "<td>"+BSK_MEDNO+"</td>"+
+                        "<td>"+MH_NAME+"</td>"+
+                        "<td>"+BKD_EGCODE+"</td>"+
+                        "<td>"+BSK_BAGENO+"</td>"+
+                        "</tr>"
+                    );*/
+                    $("#DATAList").append(
+                        `<tr class='list-item'>
+                            <td><input type='checkbox'  name='BDckbox' class='form-check-input' id='${CheckID}'  value='${CheckBoxVal}'></td>
+                            <td>${BSK_MEDNO}</td>
+                            <td>${MH_NAME}</td>
+                            <td>${BKD_EGCODE}</td>
+                            <td>${BSK_BAGENO}</td>
+                        </tr>
+                        `
+                    )
+                });
+                $("#sTraID").val(sTraID);
+                $("#DateVal").val(BSK_NURSDATE);
+                $("#TimeVal").val(BSK_NURSTIME);
+                $("input[type=text]").prop("disabled",true);
+                $("input[type=checkbox]").prop("checked",true);
+                $("input[type=checkbox]").prop("disabled",true);
+                $("button[type=submit]").prop("disabled",true);
+                $("#DELMENU").prop("disabled",false);
+                $('#DateVal').prop('readonly',true);
+                $('#TimeVal').prop('readonly',true);
+            }
+            function bedcallback(data){
+                let str=AESDeCode(data);
+                let dataObj=JSON.parse(str);
+                console.log(dataObj);
+                let  BUT_BUTNAME=dataObj.BUT_BUTNAME;
+                let BUT_PROCDATE=dataObj.BUT_PROCDATE;
+                let BUT_NEEDUNIT=dataObj.BUT_NEEDUNIT;
+                let BUT_PROCOPID=dataObj.BUT_PROCOPID;
+                let  BUT_PROCTIME=dataObj.BUT_PROCTIME;
+                let   sSave=dataObj.sSave;
+                let   sTraID=dataObj.sTraID;
+                if($("#DATAList").children()){
+                    $("#DATAList").children().remove();
+                }
+                if($("#DateVal").val()==""||$("#TimeVal").val()==""){
+                    TimerDefault();
+                }
+
+                $("#DataTxt").val(BUT_BUTNAME.trim());
+                $("#BUT_PROCDATE").val(BUT_PROCDATE);
+                $("#BUT_NEEDUNIT").val(BUT_NEEDUNIT);
+                $("#BUT_PROCOPID").val(BUT_PROCOPID);
+                $("#BUT_PROCTIME").val(BUT_PROCTIME);
+                $("#sSave").val(sSave);
+                $("#sTraID").val(sTraID);
+                InsertWSST(sTraID,'A',data);
+                TableList(BUT_NEEDUNIT);
+                $("button[type=submit]").prop("disabled",false);
+                $("#SerchBtn").prop("disabled",false);
+                $("#IdPt").prop("disabled",false);
+                $("#ErrBlood").children().remove();
+                $("#Error_btn").prop("disabled",true);
+                $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
+            }
+            function GetCheckVal() {
+                //取checkbox的值
+                let cbxVehicle = new Array();
+                let Json=[];
+                $("input:checkbox:checked[name=BDckbox]").each(function (i) {
+                    cbxVehicle[i]=$(this).val();
+                });
+                /*01349277@0076126888*/
+                if(cbxVehicle.length>0){
+                    $.each(cbxVehicle,function (index) {
+                        /* BSK_BAGENO,BSK_BLDKIND,BSK_MEDNO,BSK_NEEDUNIT,BSK_NURSDATE,BSK_NURSTIME,BSK_NURSOPID,BSK_INDENTNO,BSK_TRANSRECNO,BSK_BARSIGN*/
+                        let str=cbxVehicle[index];
+                        let OBJ=new Object();
+                        OBJ.BUT_NEEDUNIT= str.split("@",8)[0];
+                        OBJ.BSK_MEDNO= str.split("@",8)[1];
+                        OBJ.BSK_BAGENO= str.split("@",8)[2];
+                        Json.push(OBJ);
+                    });
+                }
+                return Json;
+            }
+            function checkBEDwindow() {
+
+                if(!x){
+                    console.log("not open");
+                    return "true";
+                }else {
+                    if(x.closed){
+                        console.log("window close");
+                        return "true";
+                    }else {
+                        console.log("window not close");
+                        return "false";
+                    }
+                }
+            }
+            function checkSerchwindow() {
+                if(!y){
+                    console.log("not open");
+                    return "true";
+                }else {
+                    if(y.closed){
+                        console.log("window close");
+                        return "true";
+                    }else {
+                        console.log("window not close");
+                        return "false";
+                    }
+                }
+            }
+            function errorModal(str) {
+                $("#ModalBody table").hide();//隱藏血袋錯誤訊息
+
+                $("#ModalBody").append(
+                    `
+                         <p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word">${str}</p>
+                    `
+
+
+                );
+
+
+
+                $('#Errormodal').modal('show');
+
+            }
+            function TimerDefault() {
+                let TimeNow=new Date();
+                let yyyy=TimeNow.toLocaleDateString().slice(0,4);
+                let MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
+                let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
+                let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
+                let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
+                let  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
+                $("#DateVal").val(yyyy-1911+MM+dd);
+                $("#TimeVal").val(h+m);
+            }
+            function UIDefault() {
+                $("#DELMENU").prop("disabled",true);
+                $("#SerchBtn").prop("disabled",true);
+                $("#SubmitBtn").prop("disabled",true);
+            }
+            function restUI(){
+                ScanTime=0;
+                err.length=0;
+                $("form input[type=text]").val("");
+                $("input:not(#NURSOPID)").val("");
+                $("button").prop("disabled",false);
+                $("#DATAList").children().remove();
+                $("#SubmitBtn").prop("disabled",true);
+                $("#SerchBtn").prop("disabled",true);
+                $("#DELMENU").prop("disabled",true);
+                $("#ErrBlood").children().remove();
+                $("#Error_btn").prop("disabled",true);
+                $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
+            }
+            function errUI(err){
+                $("#Error_btn").css({"background-color":"#FF0000","border-color":"#FF0000"});
+                $("#Error_btn").prop("disabled",false);
+                $("#ErrBlood").children().remove();
+                $.each(err,function (index,val) {
+
+                    let NUM=val.NUM;
+                    let IDPT=val.IDPT;
+                    let BSK_BAGENO=val.BSK_BAGENO;
+                    $("#ErrBlood").append(
+                       `
+                       <tr class='list-item'>
+                          <td>${NUM}</td>
+                          <td>${IDPT}</td>
+                          <td>${BSK_BAGENO}</td>
+                       </tr>
+                       `
+                    );
+
+
+                 /*   $("#ErrBlood").append(
+                        "<tr class='list-item'>"+
+                        "<td>"+val.NUM+"</td>"+
+                        "<td>"+val.IDPT+"</td>"+
+                        "<td>"+val.BSK_BAGENO+"</td>"+
+                        "<tr>"
+                    );*/
+                });
+            }
+            function CheckHasSpecialStr(val){
+                let strReg=/^[0-9]*$/;
+                return  val.match(strReg)==null?false:true;
+
+            }
+        });
+
+    </script>
 </head>
 
 <body>
@@ -83,7 +634,6 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <input id="sTraID" type="text" value="" placeholder="sTraID">
     <input id="NURSOPID" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
 </div>
-
 <div class="container">
     <h2>領用血簽收單作業</h2>
     <form id="form1">
@@ -114,8 +664,8 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
         <div>
             <div>
-                <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8">
-                <input id="NumId" class="Num_input"  type="text" placeholder="輸入血袋號碼" >
+                <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8" autocomplete="off">
+                <input id="NumId" class="Num_input"  type="text" placeholder="輸入血袋號碼" autocomplete="off">
                 <button id="Error_btn" type="button" class="btn btn-secondary btn-md Num_input"  style="margin-bottom: 15px;" disabled>錯誤查詢</button>
             </div>
             <table class="table" style="table-layout: fixed;text-align: center;margin-bottom: 0rem;">
@@ -184,490 +734,4 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     </div>
 </div>
 </body>
-<script>
-    $(document).ready(function () {
-
-        (function () {
-            TimerDefault();
-            UIDefault();
-            $("#loading").hide();
-            $("#wrapper").hide();
-        }());
-
-        let err=[];
-        let obj={
-            IDPT:{},
-            BSK_BAGENO:{},
-            NUM:{}
-        };
-        let ScanTime=0;
-        let x;//Bed addeventlistener
-        let y;//Serch addeventlistener
-
-
-
-
-        $("#IdPt").bind("input propertychange",function () {
-            if(this.value.length==8)
-            {
-                $("#NumId").focus();
-            }
-        });
-        $("#NumId").on('paste',function (e) {
-            e.preventDefault();
-            let PasteTxt=e.originalEvent.clipboardData.getData('text');
-            if( PasteTxt.lastIndexOf("#")>-1)
-            {
-                let Arr=PasteTxt.split("@");
-                let IdPt=Arr.shift();
-                Arr.pop();
-                for (let index in Arr)
-                {
-                    CheckUI(IdPt,Arr[index]);
-                }
-            }
-            else
-            {
-                CheckUI($("#IdPt").val(),PasteTxt);
-            }
-        });
-
-
-
-        $(document).on("keypress", "form", function(event){
-            let  code = event.keyCode ? event.keyCode : event.which;
-            if(code===13)
-            {
-                CheckUI($("#IdPt").val(),$("#NumId").val());
-                 $("#form1").on("submit",function () {return false;});
-             }
-            return event.key != "Enter";
-        });
-        $(document).on('change', 'input[type=checkbox]', function() {
-            let checkbox = $(this);
-
-            if (checkbox.is(':checked')==true)
-            {
-                checkbox.parent().parent().css({'background-color':'#BBFF00'});
-            }else
-            {
-                checkbox.parent().parent().css({'background-color':'#FFFFFF'});
-            }
-        });
-        $(document).on('click','button',function () {
-            let BtnID=$(this).attr('id');
-            switch (BtnID) {
-                case "sbed":
-                    switch (checkBEDwindow()) {
-                        case "false":
-                            errorModal("領血單位視窗已開啟");
-                            break;
-                        case "true":
-                            try {
-                                x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $sIdUser?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
-
-                            }catch (e) {
-                                console.log(e);
-                            }
-                            break;
-                    }
-                    x.bedcallback=bedcallback;
-                    break;
-                case "SerchBtn":
-                    if(($("#DataTxt").val()).trim()=='')
-                    {
-                        errorModal("請選擇須查詢的病人");
-                        return false;
-                    }
-                    switch (checkSerchwindow()) {
-                        case "false":
-                            errorModal("查詢視窗已開啟");
-                            break;
-                        case "true":
-                            y=window.open("/webservice/NISPWSLKQRY.php?str="+
-                                AESEnCode("sFm=CNBD&PageVal="+$('#BUT_NEEDUNIT').val()+"&DA_idpt="+
-                                    ""+"&DA_idinpt="+""+
-                                    "&sUser="+"<?php echo  $OPID?>"+"&NM_PATIENT="+$('#DataTxt').val())
-                                ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
-                            break;
-                    }
-
-                    y.Serchcallback=Serchcallback;
-                    break;
-                case "Del":
-                    let del_ip='/webservice/NISPWSDELILSG.php';
-                    console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
-                    $.ajax({
-                        url:del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
-                        type:'POST',
-                        dataType:'text',
-                        success:function (json) {
-                            let data=JSON.parse(AESDeCode(json));
-                            console.log(data);
-                            if(data.message=='false'){
-                                errorModal('作廢失敗');
-                                return false;
-                            }else {
-                                $('#DELModal').modal('hide');
-                                restUI();
-                            }
-                        },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                            errorModal(
-                                "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                                "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                                "3 返回失敗,textStatus:"+textStatus+
-                                "4 返回失敗,errorThrown:"+errorThrown
-                            );
-                        }
-                    });
-                    break;
-                case "restBtn":
-
-                    restUI();
-                    break;
-                case "Error_btn":
-                    $('#Errormodal').modal('show');
-                    break;
-            }
-        });
-        $("#form1").submit(function () {
-            //$(window).off('beforeunload', reloadmsg);
-            let json=GetCheckVal();
-
-            $("#loading").show();
-            $("#wrapper").show();
-
-            console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+ AESEnCode('sFm=' + 'CNBD' +
-                '&sTraID=' + $('#sTraID').val() +
-                '&sPg=' + $("#PageVal").val() +
-                '&sDt=' + $("#DateVal").val() +
-                '&sTm=' + $("#TimeVal").val()+
-                '&PASSWD='+""+
-                '&USER='+"<?php echo $OPID?>"));
-
-            $.ajax({
-                url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNBD' +
-                    '&sTraID=' + $('#sTraID').val() +
-                    '&sPg=' + $("#PageVal").val() +
-                    '&sDt=' + $("#DateVal").val() +
-                    '&sTm=' + $("#TimeVal").val()+
-                    '&PASSWD='+""+
-                    '&USER=<?php echo $OPID?>')
-                ,
-                type: 'POST',
-                beforeSend: InsertWSST($('#sTraID').val(), 'B', JSON.stringify(json)),
-                dataType: 'text',
-                success: function (data) {
-                    $("#loading").hide();
-                    $("#wrapper").hide();
-                    let str=AESDeCode(data);
-                    let dataObj=JSON.parse(str);
-                    let result = dataObj.response;
-                    let message = dataObj.message;
-                    if (result == "success") {
-                        alert("儲存成功");
-                        window.location.reload(true);
-                    }else {
-                        alert(message);
-                    }
-                },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                    console.log(
-                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                        "3 返回失敗,textStatus:"+textStatus+
-                        "4 返回失敗,errorThrown:"+errorThrown
-                    );
-                    return false;
-                }
-            });
-            return false;
-
-        });
-
-
-        function CheckUI(IdPt,ScanNum){
-            ScanTime++;
-            if( $("#"+IdPt+"\\@"+ScanNum).length>0){
-                let top=($("#"+IdPt+"\\@"+ScanNum).offset()).top-400;
-                $("#"+IdPt+"\\@"+ScanNum).prop('checked',true);
-                $("#"+IdPt+"\\@"+ScanNum).parent().parent().css({'background-color':'#BBFF00'});
-                $("#scrollList").scrollTop(top);
-            }else {
-                obj.IDPT=IdPt;
-                obj.BSK_BAGENO=ScanNum;
-                obj.NUM=ScanTime;
-                let copy=Object.assign({},obj);//淺複製錯誤血袋
-                err.push(copy);
-            }
-            if(err.length>0){
-                errUI(err);
-            }
-            $("#IdPt").focus();
-            $("#IdPt").val("");
-            $("#NumId").val("");
-        }
-        function TableList(BUT_NEEDUNIT) {
-/*
-            console.log("http://localhost"+'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT));
-*/
-            $.ajax({
-                url:'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT),
-                type:"POST",
-                dataType:"text",
-                success:function (data) {
-                   /* console.log(data);*/
-                    let sTraID=$("#sTraID").val();
-                    InsertWSST(sTraID,'B',data);
-
-                    let arr=JSON.parse(AESDeCode(data));
-                    if(arr.length==0){
-                        $("#DATAList").append(
-                            "<tr class='list-item'>"+
-                            "<td>"+"查無資料"+"</td>"+
-                            "</tr>"
-
-                        );
-                        return false;
-                    }
-
-                    $.each(arr,function (index,val) {
-                        /*checkbod id:病歷號+血袋號碼 value:領血請領單位+病歷號+血袋號碼*/
-                        let   BSK_BAGENO=val.BSK_BAGENO;
-                        let  BSK_MEDNO=val.BSK_MEDNO;
-                        let  MH_NAME=val.MH_NAME;
-                        let  BKD_EGCODE=val.BKD_EGCODE;
-                        $("#DATAList").append(
-                            "<tr class='list-item'>"+
-                            "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' value='"+BUT_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"'>"+"</td>"+
-                            "<td>"+BSK_MEDNO+"</td>"+
-                            "<td>"+MH_NAME+"</td>"+
-                            "<td>"+BKD_EGCODE+"</td>"+
-                            "<td>"+BSK_BAGENO+"</td>"+
-                            "</tr>"
-                        );
-
-                    });
-                },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                    console.log(
-                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                        "3 返回失敗,textStatus:"+textStatus+
-                        "4 返回失敗,errorThrown:"+errorThrown
-                    );
-                    return false;
-                }
-            });
-        }
-        function InsertWSST(sTraID,page,json) {
-                   /*
-                   console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CBLD&sTraID='+sTraID+'&sPg='+page+'&sData='+json));
-                    */
-            $.ajax({
-                'url':'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CNBD&sTraID='+sTraID+'&sPg='+page+'&sData='+json),
-                type:"POST",
-                dataType:"text",
-                success:function(data){
-                    let json=JSON.parse(AESDeCode(data));
-                    console.log(json.message);
-                },
-                error:function (XMLHttpResponse,textStatus,errorThrown) {
-                    console.log(
-                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                        "3 返回失敗,textStatus:"+textStatus+
-                        "4 返回失敗,errorThrown:"+errorThrown
-                    );
-                    return false;
-                }
-
-            });
-        }
-        function Serchcallback(AESobj){
-            let str1=AESDeCode(AESobj);
-            let objArr=JSON.parse(str1);
-            $("#DATAList").children().remove();
-            let  BSK_NURSDATE='';
-            let  BSK_NURSTIME='';
-            let  sTraID='';
-
-            $.each(objArr,function (index,val) {
-                let   BSK_BAGENO=val.BSK_BAGENO;
-                let  BSK_MEDNO=val.BSK_MEDNO;
-                let  BKD_EGCODE=val.BKD_EGCODE;
-                let  BSK_NEEDUNIT=val.BSK_NEEDUNIT;
-                let MH_NAME=val.MH_NAME;
-                let  BSK_BARSIGN=val.BSK_BARSIGN;
-                let  BSK_BLDKIND=val.BSK_BLDKIND;
-                let BSK_INDENTNO=val.BSK_INDENTNO;
-                let BSK_NURSOPID=val.BSK_NURSOPID;
-                let  BSK_TRANSRECNO=val.BSK_TRANSRECNO;
-                sTraID=val.sTraID;
-                BSK_NURSDATE=val.BSK_NURSDATE;
-                BSK_NURSTIME=val.BSK_NURSTIME;
-
-                $("#DATAList").append(
-                    "<tr class='list-item'>"+
-                    "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' " +
-                    "value='"+BSK_NEEDUNIT+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"@"+BSK_BLDKIND+"@"+BSK_INDENTNO+"@"+BSK_NURSOPID+"@"+BSK_TRANSRECNO+"@"+BSK_BARSIGN+"'>"+
-                    "</td>"+
-                    "<td>"+BSK_MEDNO+"</td>"+
-                    "<td>"+MH_NAME+"</td>"+
-                    "<td>"+BKD_EGCODE+"</td>"+
-                    "<td>"+BSK_BAGENO+"</td>"+
-                    "</tr>"
-                );
-
-            });
-            $("#sTraID").val(sTraID);
-            $("#DateVal").val(BSK_NURSDATE);
-            $("#TimeVal").val(BSK_NURSTIME);
-            $("input[type=text]").prop("disabled",true);
-            $("input[type=checkbox]").prop("checked",true);
-            $("input[type=checkbox]").prop("disabled",true);
-            $("button[type=submit]").prop("disabled",true);
-            $("#DELMENU").prop("disabled",false);
-            $('#DateVal').prop('readonly',true);
-            $('#TimeVal').prop('readonly',true);
-        }
-        function bedcallback(data){
-            let str=AESDeCode(data);
-            let dataObj=JSON.parse(str);
-            console.log(dataObj);
-            let  BUT_BUTNAME=dataObj.BUT_BUTNAME;
-            let BUT_PROCDATE=dataObj.BUT_PROCDATE;
-            let BUT_NEEDUNIT=dataObj.BUT_NEEDUNIT;
-            let BUT_PROCOPID=dataObj.BUT_PROCOPID;
-            let  BUT_PROCTIME=dataObj.BUT_PROCTIME;
-            let   sSave=dataObj.sSave;
-            let   sTraID=dataObj.sTraID;
-            if($("#DATAList").children()){
-                $("#DATAList").children().remove();
-            }
-            if($("#DateVal").val()==""||$("#TimeVal").val()==""){
-                TimerDefault();
-            }
-
-            $("#DataTxt").val(BUT_BUTNAME);
-            $("#BUT_PROCDATE").val(BUT_PROCDATE);
-            $("#BUT_NEEDUNIT").val(BUT_NEEDUNIT);
-            $("#BUT_PROCOPID").val(BUT_PROCOPID);
-            $("#BUT_PROCTIME").val(BUT_PROCTIME);
-            $("#sSave").val(sSave);
-            $("#sTraID").val(sTraID);
-            InsertWSST(sTraID,'A',data);
-            TableList(BUT_NEEDUNIT);
-            $("button[type=submit]").prop("disabled",false);
-            $("#SerchBtn").prop("disabled",false);
-            $("#IdPt").prop("disabled",false);
-            $("#ErrBlood").children().remove();
-            $("#Error_btn").prop("disabled",true);
-            $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
-        }
-        function GetCheckVal() {
-            //取checkbox的值
-            let cbxVehicle = new Array();
-            let Json=[];
-            $("input:checkbox:checked[name=BDckbox]").each(function (i) {
-                cbxVehicle[i]=$(this).val();
-            });
-            /*01349277@0076126888*/
-            if(cbxVehicle.length>0){
-                $.each(cbxVehicle,function (index) {
-                   /* BSK_BAGENO,BSK_BLDKIND,BSK_MEDNO,BSK_NEEDUNIT,BSK_NURSDATE,BSK_NURSTIME,BSK_NURSOPID,BSK_INDENTNO,BSK_TRANSRECNO,BSK_BARSIGN*/
-                    let str=cbxVehicle[index];
-                    let OBJ=new Object();
-                    OBJ.BUT_NEEDUNIT= str.split("@",8)[0];
-                    OBJ.BSK_MEDNO= str.split("@",8)[1];
-                    OBJ.BSK_BAGENO= str.split("@",8)[2];
-                    Json.push(OBJ);
-                });
-            }
-            return Json;
-        }
-        function checkBEDwindow() {
-
-            if(!x){
-                console.log("not open");
-                return "true";
-            }else {
-                if(x.closed){
-                    console.log("window close");
-                    return "true";
-                }else {
-                    console.log("window not close");
-                    return "false";
-                }
-            }
-        }
-        function checkSerchwindow() {
-            if(!y){
-                console.log("not open");
-                return "true";
-            }else {
-                if(y.closed){
-                    console.log("window close");
-                    return "true";
-                }else {
-                    console.log("window not close");
-                    return "false";
-                }
-            }
-        }
-        function errorModal(str) {
-            $("#ModalBody table").hide();//隱藏血袋錯誤訊息
-
-            $("#ModalBody").append(
-            '<p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word">'+str+'</p>'
-            );
-            $('#Errormodal').modal('show');
-
-        }
-        function TimerDefault() {
-            let TimeNow=new Date();
-            let yyyy=TimeNow.toLocaleDateString().slice(0,4);
-            let MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
-            let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
-            let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
-            let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
-            let  s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
-            $("#DateVal").val(yyyy-1911+MM+dd);
-            $("#TimeVal").val(h+m);
-        }
-        function UIDefault() {
-            $("#DELMENU").prop("disabled",true);
-            $("#SerchBtn").prop("disabled",true);
-            $("#SubmitBtn").prop("disabled",true);
-        }
-        function restUI(){
-            ScanTime=0;
-            err.length=0;
-            $("form input[type=text]").val("");
-            $("input:not(#NURSOPID)").val("");
-            $("button").prop("disabled",false);
-            $("#DATAList").children().remove();
-            $("#SubmitBtn").prop("disabled",true);
-            $("#SerchBtn").prop("disabled",true);
-            $("#DELMENU").prop("disabled",true);
-            $("#ErrBlood").children().remove();
-            $("#Error_btn").prop("disabled",true);
-            $("#Error_btn").css({"background-color":"#6c757d","border-color":"#6c757d"});
-        }
-        function errUI(err){
-            $("#Error_btn").css({"background-color":"#FF0000","border-color":"#FF0000"});
-            $("#Error_btn").prop("disabled",false);
-            $("#ErrBlood").children().remove();
-            $.each(err,function (index,val) {
-                $("#ErrBlood").append(
-                    "<tr class='list-item'>"+
-                    "<td>"+val.NUM+"</td>"+
-                    "<td>"+val.IDPT+"</td>"+
-                    "<td>"+val.BSK_BAGENO+"</td>"+
-                    "<tr>"
-                );
-            });
-        }
-
-    });
-
-</script>
 </html>
