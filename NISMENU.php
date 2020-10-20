@@ -87,7 +87,7 @@ $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
 
 </body>
 <script>
-    var x=[
+    const BtnName=[
         {
             sFm:'ILSG',name:'血糖胰島素作業'
         },{
@@ -96,20 +96,24 @@ $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
             sFm:'CNBD',name:'領用血袋簽收單作業'
         },{
             sFm:'CNAD',name:'發血覆核作業'
+        },
+        {
+            sFm:'CNCD',name:'檢驗採檢辨識作業'
         }
 
     ];
-    $.each(x,function (index) {
-        var a=x[index].sFm;
+    $.each(BtnName,function (index) {
+        let sFm=BtnName[index].sFm;
         $('#MenuBtn').append(
-            "<div class='col col-12 col-sm-6 col-md-4 col-lg-2'>"+
-                "<button class='btn btn-primary btn-lg btn-block' id='"+a+"' onclick='openwindow("+'"'+a+'"'+")'  >"+x[index].name+
-                "</button>"+
-                "</div>"
+            `
+            <div class='col col-12 col-sm-6 col-md-4 col-lg-2'>
+                 <button class='btn btn-primary btn-lg btn-block'  onclick='openwindow("${sFm}")'>${BtnName[index].name}</button>
+            </div>
+            `
         );
     });
 
-var  myWindow='';
+let  myWindow='';
 function openwindow(sFm) {
    myWindow= window.open("NIS/"+sFm+"/NISPRW"+sFm+".php?str="+AESEnCode('<?PHP echo $parameter?>'),$("#"+sFm).text(),'width=850px,height=750px,scrollbars=yes,resizable=no');
    console.log("http://10.10.230.73:8080/"+"NIS/"+sFm+"/NISPRW"+sFm+".php?str="+AESEnCode('<?PHP echo $parameter?>'));
@@ -138,10 +142,9 @@ $("#LogOutModleUI").click(function () {
 function CancellLogOut() {
     $('#LogOutmodal').modal('hide');
 }
-function WindowCloes() {
-/*
+function WindowCloes(){
+
     window.close();
-*/
 }
 </script>
 </html>
