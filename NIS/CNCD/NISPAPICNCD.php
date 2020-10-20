@@ -82,7 +82,6 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
              RETURNING ST_DATAA INTO :ST_DATAA");
     $lob=oci_new_descriptor($conn,OCI_D_LOB);
     oci_bind_by_name($stm,':ST_DATAA',$lob,-1,OCI_B_CLOB);
-
     if ($stm) {
         $result =  oci_execute($stm,OCI_NO_AUTO_COMMIT);
         if(!$result){
