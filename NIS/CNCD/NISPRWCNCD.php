@@ -70,101 +70,6 @@ $OPID="00FUZZY";
     </script>
 
 </head>
-
-<body>
-<div id="wrapper"></div>
-<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
-
-<div class="Parametertable" >
-    <input id="sSave" class="noneEle" type="text" value="" placeholder="sSave" >
-    <input id="sTraID"  class="noneEle" type="text" value="" placeholder="sTraID">
-    <input id="DA_InPt"  class="noneEle" type="text" value="" placeholder="DA_InPt">
-    <input id="DA_IdPt"  class="noneEle" type="text" value="" placeholder="DA_IdPt">
-    <input id="SBED"  class="noneEle" type="text" value="" placeholder="SBED">
-    <input id="NURSOPID"  class="noneEle" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
-</div>
-
-<div class="container">
-    <h2>檢驗採檢辨識作業</h2>
-    <form id="form1">
-        <div class="ListBtn">
-            <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" disabled>儲存</button>
-            <button type="button" id="SerchBtn" class="btn btn-primary btn-md" disabled>查詢</button>
-            <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal" disabled>作廢</button>
-            <button type="button" id="ReStart" class="btn btn-primary btn-md" >清除</button>
-            <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button>
-        </div>
-        <div class="PatientName">
-            <input id="DataTxt"  value="" type="text" readonly="readonly">
-        </div>
-        <div class="Otimer">
-            <div class="pageTime">
-                <label style="font-size: 4vmin">評估時間:</label>
-                <input  type="text" id="DateVal" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
-                <input type="text" id="TimeVal" value="" placeholder="HHMM" maxlength="4" autocomplete="off">
-            </div>
-        </div>
-
-        <div class="DataTable">
-            <div>
-                <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8" autocomplete="off">
-                <input id="NumId" class="Num_input"  type="text" placeholder="輸入採血編號" autocomplete="off">
-                <button id="Error_btn" type="button" class="btn btn-secondary btn-md Num_input"  style="margin-bottom: 15px;" disabled>錯誤查詢</button>
-            </div>
-            <div id="scrollList" data-spy="scroll" data-target="#navbar-example" data-offset="0" class="List" style="overflow:auto;">
-                <table class="table" style="table-layout: fixed;text-align: center">
-                    <tbody style=" font-size: 3.0vmin;" id="DATAList" >
-
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </form>
-</div>
-<div class="modal fade" id="DELModal" tabindex="-1" role="dialog" aria-labelledby="DELModalCenterTitle" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
-        <div class="modal-content" style="height: 30%;">
-            <div class="modal-header">
-                <h5 class="modal-title" id="DELModalCenterTitle">作廢提醒</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body" style="overflow-y: hidden;overflow-x: hidden;">
-                <p>請確認是否要作廢此清單!!!</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="Del" class="btn btn-primary btn-md">作廢</button>
-                <button type="button" class="btn btn-secondary btn-md" data-dismiss="modal">取消</button>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="modal fade" id="Errormodal" tabindex="-1" aria-labelledby="ErrormodalCenterTitle" role="dialog" aria-hidden="true" data-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="ErrormodalCenterTitle">錯誤訊息</h5>
-            </div>
-            <div class="modal-body"   id="ModalBody" style="overflow-y: auto">
-                <table class="table" style="table-layout: fixed;text-align: center;margin-bottom: 0rem;">
-                    <thead id="ErrorTitle" class="theadtitle" style=" font-size: 2.5vmin;">
-                    <th style=" padding-bottom: 5px !important">序號</th>
-                    <th style=" padding-bottom: 5px !important">病歷號</th>
-                    <th style="text-align: center ;padding-bottom: 5px !important">採血編號</th>
-                    </thead>
-                    <tbody style=" font-size: 3.5vmin;" id="ErrBlood">
-
-                    </tbody>
-                </table>
-            </div>
-            <div class="modal-footer">
-                <button type="button" id="ErorFocus" class="btn btn-secondary" data-dismiss="modal">關閉</button>
-            </div>
-        </div>
-    </div>
-</div>
-</body>
 <script>
     $(document).ready(function () {
         let x;
@@ -267,11 +172,6 @@ $OPID="00FUZZY";
                         }
                     });
                     break;
-                case "ErorFocus":
-                    if( $("#BedChange").length>0){
-                        $("#BedChange").remove();
-                    }
-                    break;
                 case "BedChange":
                     $.ajax({
                         url:"/webservice/NISCNCDRECALLBED.php",
@@ -284,10 +184,9 @@ $OPID="00FUZZY";
                             $("#DA_IdPt").val(NewBedJson[0].IDPT);
                             $("#DA_InPt").val(NewBedJson[0].IDINPT);
                             $("#SBED").val(NewBedJson[0].SBED);
-
                             DefaultData(NewBedJson[0].IDPT,NewBedJson[0].IDINPT,"<?php echo $OPID?>");
                             TimerDefault();
-                            $("#IdPt").val("");
+                            errRestar(err);
                         },
                         error:function (XMLHttpResponse,textStatus,errorThrown) {
                             console.log(
@@ -300,51 +199,56 @@ $OPID="00FUZZY";
                     });
                     break;
                 case "Error_btn":
-                    $("#Errormodal").modal('show');
+                    errorModal("",false);
                     break;
             }
         });
         $(document).on("keypress", "form", function(event) {
-          let  code = event.keyCode ? event.keyCode : event.which;
-             if(code===13){
-                 if($("input[type=text]:not(.noneEle)").is(":focus")==true)
-                 {
-                     if(FocusIndex>4){
-                         $("#"+InputIdArr[FocusIndex-1]).focus();
-                         CheckUIisset($("#IdPt").val(),$("#NumId").val());
-                     }else {
-                         $("#"+InputIdArr[FocusIndex]).focus();
-                     }
-                 }
-                 $("#form1").on("submit",function () {return false;});
-             }
+            let  code = event.keyCode ? event.keyCode : event.which;
+            if(code===13){
+                if(CheckHasSpecialStr($("#NumId").val())===false){
+                    alert("禁止輸入數字以外的值");
+                    $("#NumId").val("");
+                    return  false;
+                }
+
+                if($("input[type=text]:not(.noneEle)").is(":focus")==true)
+                {
+                    if(FocusIndex>4){
+                        $("#"+InputIdArr[FocusIndex-1]).focus();
+
+                        CheckUIisset($("#IdPt").val(),$("#NumId").val());
+                    }else {
+                        $("#"+InputIdArr[FocusIndex]).focus();
+                    }
+                }
+                $("#form1").on("submit",function () {return false;});
+            }
             return event.key != "Enter";
         });
-
 
         $("#IdPt").bind("input propertychange",function () {
             if(this.value.length==8)
             {
                 if(this.value!=$("#DA_IdPt").val()){
-                    errorModal("與此病人的病歷號不符,是否重新選擇?","Button");
+                    errorModal("與此病人的病歷號不符,是否重新選擇?",true);
                     return false;
                 }
                 $("#NumId").focus();
             }
         });
-
         $("#NumId").on('paste',function (e) {
             //prevent paste action
             e.preventDefault();
             let PasteTxt=e.originalEvent.clipboardData.getData('text');
             if( PasteTxt.lastIndexOf("#")>-1){
-                  let Arr=PasteTxt.split("@");
-                  let IdPt=Arr.shift();
-                  Arr.pop();
-                if(IdPt!==$("#IdPt").val()){
+                let Arr=PasteTxt.split("@");
+                let IdPt=Arr.shift();
+                Arr.pop();
+                /*if(IdPt!==$("#IdPt").val() && $("#IdPt").val()!==""){
                     alert("與此病人病歷號不符");
                     return false;
-                }
+                }*/
 
                 for (let index in Arr)
                 {
@@ -352,14 +256,12 @@ $OPID="00FUZZY";
                 }
             }
         });
-
-
         $("#form1").submit(function () {
             //$(window).off('beforeunload', reloadmsg);
             $("#loading").show();
             $("#wrapper").show();
             let json=GetCheckVal();
-          console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
+            console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
                 '&sTraID=' + $('#sTraID').val() +
                 '&sPg=' +"" +
                 '&sDt=' + $("#DateVal").val() +
@@ -385,7 +287,7 @@ $OPID="00FUZZY";
                     console.log(str);
                     let dataObj=JSON.parse(str);
                     let result = dataObj.response;
-                    let message = dataObj.message;
+                    let message =dataObj.message;
                     if (result == "success") {
                         alert("儲存成功");
                         window.location.reload(true);
@@ -406,6 +308,7 @@ $OPID="00FUZZY";
         });
 
         function CheckUIisset(IdPt,NumidStr){
+            console.log($("#"+IdPt+"\\@"+NumidStr).length);
             if($("#"+IdPt+"\\@"+NumidStr).length>0){
                 let top=($("#"+IdPt+"\\@"+NumidStr).offset()).top-400;
                 $("#"+IdPt+"\\@"+NumidStr).prop('checked',true);
@@ -422,15 +325,13 @@ $OPID="00FUZZY";
                 });
                 errUI(errfilter);
             }
-
-
             $("#NumId").val("");
 
         }
         function bedcallback(AESobj) {
             let str=AESDeCode(AESobj);
             let dataObj=JSON.parse(str);
-            console.log(dataObj);
+            errRestar(err);
             $("#DataTxt").val(dataObj[0].DataTxt);
             $("#DA_IdPt").val(dataObj[0].IDPT);
             $("#DA_InPt").val(dataObj[0].IDINPT);
@@ -466,5 +367,113 @@ $OPID="00FUZZY";
                 }
             }
         }
+        function CheckHasSpecialStr(val){
+            let strReg=/^[0-9]*$/;
+            return  val.match(strReg)==null?false:true;
+        }
+        function errRestar(err) {
+            err.length=0;
+            ErrIndex=0;
+            $(".Num_input").val("");
+            $("#Error_btn").css({"background-color":"#6c757d"});
+            $("#Error_btn").prop('disabled',true);
+        }
+
     });
 </script>
+<body>
+<div id="wrapper"></div>
+<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
+
+<div class="Parametertable" >
+    <input id="sSave" class="noneEle" type="text" value="" placeholder="sSave" >
+    <input id="sTraID"  class="noneEle" type="text" value="" placeholder="sTraID">
+    <input id="DA_InPt"  class="noneEle" type="text" value="" placeholder="DA_InPt">
+    <input id="DA_IdPt"  class="noneEle" type="text" value="" placeholder="DA_IdPt">
+    <input id="SBED"  class="noneEle" type="text" value="" placeholder="SBED">
+    <input id="NURSOPID"  class="noneEle" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
+</div>
+
+<div class="container">
+    <h2>檢驗採檢辨識作業</h2>
+    <form id="form1" >
+        <div class="ListBtn">
+            <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" disabled>儲存</button>
+            <button type="button" id="SerchBtn" class="btn btn-primary btn-md" disabled>查詢</button>
+            <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal" disabled>作廢</button>
+            <button type="button" id="ReStart" class="btn btn-primary btn-md" >清除</button>
+            <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button>
+        </div>
+        <div class="PatientName">
+            <input id="DataTxt"  value="" type="text" readonly="readonly">
+        </div>
+        <div class="Otimer">
+            <div class="pageTime">
+                <label style="font-size: 4vmin">評估時間:</label>
+                <input  type="text" id="DateVal" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
+                <input type="text" id="TimeVal" value="" placeholder="HHMM" maxlength="4" autocomplete="off">
+            </div>
+        </div>
+
+        <div class="DataTable">
+            <div>
+                <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8" autocomplete="off">
+                <input id="NumId" class="Num_input"  type="text" placeholder="輸入採血編號" autocomplete="off">
+                <button id="Error_btn" type="button" class="btn btn-secondary btn-md Num_input"  style="margin-bottom: 15px;" disabled>錯誤查詢</button>
+            </div>
+            <div id="scrollList" data-spy="scroll" data-target="#navbar-example" data-offset="0" class="List" style="overflow:auto;">
+                <table class="table" style="table-layout: fixed;text-align: center">
+                    <tbody style=" font-size: 3.0vmin;" id="DATAList" >
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="modal fade" id="DELModal" tabindex="-1" role="dialog" aria-labelledby="DELModalCenterTitle" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+        <div class="modal-content" style="height: 30%;">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DELModalCenterTitle">作廢提醒</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow-y: hidden;overflow-x: hidden;">
+                <p>請確認是否要作廢此清單!!!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="Del" class="btn btn-primary btn-md">作廢</button>
+                <button type="button" class="btn btn-secondary btn-md" data-dismiss="modal">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="Errormodal" tabindex="-1" aria-labelledby="ErrormodalCenterTitle" role="dialog" aria-hidden="true" data-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-md" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="ErrormodalCenterTitle">錯誤訊息</h5>
+            </div>
+            <div class="modal-body"   id="ModalBody" style="overflow-y: auto">
+                <table class="table" style="table-layout: fixed;text-align: center;margin-bottom: 0rem;">
+                    <thead id="ErrorTitle" class="theadtitle" style=" font-size: 2.5vmin;">
+                    <th style=" padding-bottom: 5px !important">序號</th>
+                    <th style=" padding-bottom: 5px !important">病歷號</th>
+                    <th style="text-align: center ;padding-bottom: 5px !important">採血編號</th>
+                    </thead>
+                    <tbody style=" font-size: 3.5vmin;" id="ErrBlood">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="BedChange" class="btn btn-primary" data-dismiss="modal" disabled>確定</button>
+                <button type="button" id="ErorFocus" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
