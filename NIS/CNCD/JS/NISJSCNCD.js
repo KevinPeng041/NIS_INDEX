@@ -16,7 +16,28 @@ function DefaultData(idPt,INPt,sUr) {
             }
 
             $.each(objArr,function (index,val){
+                let ChecBoxkID=val.MEDNO+'@'+val.BARCODE;
+                let CheckBoxVal=val.LOOKDT+"@"+val.MEDNO+"@"+INPt+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO;
+                let BARCODE=val.BARCODE;
+                let SPENAME=val.SPENAME;
+                let CONNAME=val.CONNAME;
+                let EGNAME= (val.EGNAME).replaceAll(',',",<br>");
                 $("#DATAList").append(
+                    `
+                        <tr class='list-item'>
+                         <td>
+                         <input type='checkbox'  name='BDckbox' class='form-check-input' id='${ChecBoxkID}' value='${CheckBoxVal}'>
+                        </td>
+                        <td  colspan='4' style='text-align:left;font-weight: bold'>採血編號:${BARCODE} 檢體:${SPENAME} 試管:${CONNAME}    </td>
+                        </tr>
+                        <tr>
+                        <td style='font-weight: bold'>檢驗項目</td>
+                        <td colspan='4' style='text-align:left;'>${EGNAME}</td>
+                        </tr>
+                     `
+                );
+
+             /*   $("#DATAList").append(
                         "<tr class='list-item'>"+
                             "<td>"+
                             "<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+val.MEDNO+'@'+val.BARCODE+"' value='"+val.LOOKDT+"@"+val.MEDNO+"@"+$('#DA_InPt').val()+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO+"'>"+
@@ -28,10 +49,7 @@ function DefaultData(idPt,INPt,sUr) {
                             "<td colspan='4' style='text-align:left;'>"+(val.EGNAME).replaceAll(',',",<br>")+"</td>"+
                         "</tr>"
 
-                );
-
-
-
+                );*/
 
             });
 
@@ -77,19 +95,30 @@ function Serchcallback(AESobj){
         $("#DATAList").children().remove();
     }
 
+
+
+
+
+
     $.each(objArr,function (index,val) {
+        let ChecBoxkID=val.MEDNO+'@'+val.BARCODE;
+        let CheckBoxVal=val.LOOKDT+"@"+val.MEDNO+"@"+$('#DA_InPt').val()+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO;
+        let BARCODE=val.BARCODE;
+        let SPENAME=val.SPENAME;
+        let CONNAME=val.CONNAME;
+        let EGNAME= (val.EGNAME).replaceAll(',',",<br>");
 
         $("#DATAList").append(
-            "<tr class='list-item'>"+
-            "<td>"+
-            "<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+val.MEDNO+'@'+val.BARCODE+"' value='"+val.LOOKDT+"@"+val.MEDNO+"@"+$('#DA_InPt').val()+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO+"'>"+
-            "</td>"+
-            "<td  colspan='4' style='text-align:left;font-weight: bold'>"+"採血編號:"+" "+val.BARCODE+" 檢體:"+val.SPENAME+" 試管:"+val.CONNAME+"</td>"+
-            "</tr>"+
-            "<tr>"+
-            "<td style='font-weight: bold''>"+"檢驗項目:"+"</td>"+
-            "<td colspan='4' style='text-align:left;'>"+(val.EGNAME).replaceAll(',',",<br>")+"</td>"+
-            "</tr>"
+            `
+                 <tr class='list-item'>
+                    <td><input type='checkbox'  name='BDckbox' class='form-check-input' id='${ChecBoxkID}' value='${CheckBoxVal}'></td>
+                    <td  colspan='4' style='text-align:left;font-weight: bold'>採血編號:${BARCODE} 檢體:${SPENAME} 試管:${CONNAME}</td>
+                 </tr>
+                 <tr>
+                     <td style='font-weight: bold'>檢驗項目</td>
+                     <td colspan='4' style='text-align:left;'>${EGNAME}</td>
+                 </tr>
+             `
         );
     });
 
@@ -176,33 +205,43 @@ function GetCheckVal() {
     }
     return Json;
 }
-function errorModal(str,AddEle) {
-    if(AddEle){
-        $("#BedChange").remove();
-        $("#ErorFocus").before(
-            '<button type="button" id="BedChange" class="btn btn-primary" data-dismiss="modal">'+'確定'+'</button>'
-        )
-    }
+function errorModal(str,type) {
     $("#ModalBody").children().remove("#ErrorText");
-    $("#ErrorTitle").hide();
-    $("#ErrBlood").hide();
+    if(type===true){
+        $("#BedChange").prop('disabled',false);
+        $("#ErrorTitle").hide();
+        $("#ErrBlood").hide();
+    }else {
+        $("#BedChange").prop('disabled',true);
+        $("#ErrorTitle").show();
+        $("#ErrBlood").show();
+
+    }
     $("#ModalBody").append(
-        '<p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word">'+str+'</p>'
-    );
+        `
+          <p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word">${str}</p>
+        `);
     $('#Errormodal').modal('show');
 
 }
 function errUI(Arr){
+    //錯誤血袋
     $("#Error_btn").css({"background-color":"#FF0000","border-color":"#FF0000"});
     $("#Error_btn").prop("disabled",false);
     $("#ErrBlood").children().remove();
     $.each(Arr,function (index,val) {
+        let NUM=val.NUM;
+        let IDPT=val.IDPT;
+        let BSK_BAGENO=val.BSK_BAGENO;
+
         $("#ErrBlood").append(
-            "<tr class='list-item'>"+
-            "<td>"+val.NUM+"</td>"+
-            "<td>"+val.IDPT+"</td>"+
-            "<td>"+val.BAR_CODE+"</td>"+
-            "<tr>"
+            `
+               <tr class='list-item'>
+                    <td>${NUM}</td>
+                    <td>${IDPT}</td>
+                    <td>${BSK_BAGENO}</td>
+                </tr>
+            `
         );
     });
 }
