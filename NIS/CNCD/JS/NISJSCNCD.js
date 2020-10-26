@@ -25,51 +25,18 @@ function DefaultData(idPt,INPt,sUr) {
                 $("#DATAList").append(
                     `
                         <tr class='list-item'>
-                         <td>
-                         <input type='checkbox'  name='BDckbox' class='form-check-input' id='${ChecBoxkID}' value='${CheckBoxVal}'>
-                        </td>
-                        <td  colspan='4' style='text-align:left;font-weight: bold'>採血編號:${BARCODE} 檢體:${SPENAME} 試管:${CONNAME}    </td>
+                             <td><input type='checkbox'  name='BDckbox' class='form-check-input' id='${ChecBoxkID}' value='${CheckBoxVal}'></td>
+                             <td  colspan='4' style='text-align:left;font-weight: bold'>採血編號:${BARCODE} 檢體:${SPENAME} 試管:${CONNAME}</td>
                         </tr>
                         <tr>
-                        <td style='font-weight: bold'>檢驗項目</td>
-                        <td colspan='4' style='text-align:left;'>${EGNAME}</td>
+                            <td style='font-weight: bold'>檢驗項目</td>
+                            <td colspan='4' style='text-align:left;'>${EGNAME}</td>
                         </tr>
                      `
                 );
-
-             /*   $("#DATAList").append(
-                        "<tr class='list-item'>"+
-                            "<td>"+
-                            "<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+val.MEDNO+'@'+val.BARCODE+"' value='"+val.LOOKDT+"@"+val.MEDNO+"@"+$('#DA_InPt').val()+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO+"'>"+
-                            "</td>"+
-                            "<td  colspan='4' style='text-align:left;font-weight: bold'>"+"採血編號:"+" "+val.BARCODE+" 檢體:"+val.SPENAME+" 試管:"+val.CONNAME+"</td>"+
-                        "</tr>"+
-                        "<tr>"+
-                            "<td style='font-weight: bold'>"+"檢驗項目:"+"</td>"+
-                            "<td colspan='4' style='text-align:left;'>"+(val.EGNAME).replaceAll(',',",<br>")+"</td>"+
-                        "</tr>"
-
-                );*/
-
             });
 
-            let ele=group($("#DATAList").children('tr'),2) ;
-            let ChecekdColor=['#F2EFE9','#FFFAF4'];
-             $.each(ele,function (index,val) {
-                 if(index%2===0){
-                     val.css({'background-color':ChecekdColor[0]});
-                     val.next('tr').css({'background-color':ChecekdColor[0]});
-                 }else {
-                     val.css({'background-color':ChecekdColor[1]});
-                     val.next('tr').css({'background-color':ChecekdColor[1]});
-                 }
-
-             });
-
-
-
-
-
+            GroupEle($("#DATAList").children('tr'),2) ;
 
             $("#sTraID").val(TraObj.sTraID);
             $("#sSave").val(TraObj.sSave);
@@ -96,10 +63,6 @@ function Serchcallback(AESobj){
     }
 
 
-
-
-
-
     $.each(objArr,function (index,val) {
         let ChecBoxkID=val.MEDNO+'@'+val.BARCODE;
         let CheckBoxVal=val.LOOKDT+"@"+val.MEDNO+"@"+$('#DA_InPt').val()+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO;
@@ -122,6 +85,7 @@ function Serchcallback(AESobj){
         );
     });
 
+    GroupEle($("#DATAList").children('tr'),2) ;
 
     $("#sTraID").val(TraObj.sTraID);
     $("#sSave").val(TraObj.sSave);
@@ -245,14 +209,23 @@ function errUI(Arr){
         );
     });
 }
-function group(array,subGroupLength) {
+function GroupEle(array,subGroupLength) {
     let index=0;
     let newArray=[];
-
+    let ChecekdColor=['#F2EFE9','#FFFAF4'];
     while (index<array.length){
         newArray.push(array.slice(index,index+=subGroupLength));
     }
 
-    return newArray;
+    for(let index in newArray){
+        if(index%2==0){
+            newArray[index].css({'background-color':ChecekdColor[0]});
+        }else {
+            newArray[index].css({'background-color':ChecekdColor[1]});
+        }
+
+    }
+
+    /*return newArray;*/
 
 }
