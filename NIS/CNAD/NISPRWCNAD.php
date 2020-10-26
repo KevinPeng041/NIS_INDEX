@@ -193,33 +193,37 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     $("#NumId").focus();
                 }
             });
-            $("#NumId").on('change paste keyup',function (event) {
-                let  code = event.keyCode ? event.keyCode : event.which;
-                let Numid=$(this).val();
 
-              //HandKey and Enter,Scan
-                if(code===13 && Numid.length===10){
-                    if(CheckHasSpecialStr(Numid)===false){
-                        alert("禁止輸入數字以外的值");
-                        $(this).val("");
-                        return  false;
+            $(document).on("keydown","input",function (e) {
+                let Numid=$(this).val();
+                if(e.keyCode===13){
+                    e.preventDefault();//prevent enter to submit
+                    if($("#NumId").is(":focus")==true){
+                        CheckUI($("#IdPt").val(),Numid);
                     }
-                    CheckUI($("#IdPt").val(),Numid);
+
+                    return false;
                 }
-                //paste
-               else if( Numid.lastIndexOf("#")>-1)
-                {
-                    let Arr=Numid.split("@");
+            });
+            $("#NumId").on('paste',function (e) {
+                //prevent paste action
+                e.preventDefault();
+                let PasteTxt=e.originalEvent.clipboardData.getData('text');
+                if( PasteTxt.lastIndexOf("#")>-1){
+                    let Arr=PasteTxt.split("@");
                     let IdPt=Arr.shift();
                     Arr.pop();
+                    /*if(IdPt!==$("#IdPt").val() && $("#IdPt").val()!==""){
+                        alert("與此病人病歷號不符");
+                        return false;
+                    }*/
                     for (let index in Arr)
                     {
                         CheckUI(IdPt,Arr[index]);
                     }
+
                 }
-             });
-
-
+            });
 
 
             $("#form1").submit(function () {
@@ -272,25 +276,30 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
             });
             function CheckUI(IdPt,ScanNum){
-                ScanTime++;
-                if( $("#"+IdPt+"\\@"+ScanNum).length>0){
-                    let top=($("#"+IdPt+"\\@"+ScanNum).offset()).top-400;
-                    $("#"+IdPt+"\\@"+ScanNum).prop('checked',true);
-                    $("#"+IdPt+"\\@"+ScanNum).parent().parent().css({'background-color':'#BBFF00'});
-                    $("#scrollList").scrollTop(top);
-                }else {
-                    obj.IDPT=IdPt;
-                    obj.BSK_BAGENO=ScanNum;
-                    obj.NUM=ScanTime;
-                    let copy=Object.assign({},obj);//淺複製錯誤血袋
-                    err.push(copy);
+                try {
+                    ScanTime++;
+                    if( $("#"+IdPt+"\\@"+ScanNum).length>0){
+                        let top=($("#"+IdPt+"\\@"+ScanNum).offset()).top-400;
+                        $("#"+IdPt+"\\@"+ScanNum).prop('checked',true);
+                        $("#"+IdPt+"\\@"+ScanNum).parent().parent().css({'background-color':'#BBFF00'});
+                        $("#scrollList").scrollTop(top);
+                    }else {
+                        obj.IDPT=IdPt;
+                        obj.BSK_BAGENO=ScanNum;
+                        obj.NUM=ScanTime;
+                        let copy=Object.assign({},obj);//淺複製錯誤血袋
+                        err.push(copy);
+                    }
+                    if(err.length>0){
+                        errUI(err);
+                    }
+                    $("#IdPt").focus();
+                    $("#IdPt").val("");
+                    $("#NumId").val("");
+                }catch (e) {
+                    return false;
                 }
-                if(err.length>0){
-                    errUI(err);
-                }
-                $("#IdPt").focus();
-                $("#IdPt").val("");
-                $("#NumId").val("");
+
             }
             function DefaultData() {
                 $("#loading").show();
