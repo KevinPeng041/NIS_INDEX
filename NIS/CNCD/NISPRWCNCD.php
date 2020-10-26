@@ -4,29 +4,21 @@ $str=$_GET['str'];
 $replaceSpace=str_replace(' ','+',$str);//空白先替換+
 $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
 preg_match('/(sfm)/',AESDeCode($replaceSpace),$matches);
-
 $sfm_STR='';
 $sfm_value='';
 $sfm='';
-
-
 if(count($matches)>0){
     $sfm_STR=$EXPLODE_data[0];
     $sfm_value=explode('=',$sfm_STR);
     $sfm=trim($sfm_value[1]);
 }
-
 $n=count($matches)>0?1:0;
 $sIdUser_STR=$EXPLODE_data[$n];
 $passwd_STR=$EXPLODE_data[$n+1];
 $user_STR=$EXPLODE_data[$n+2];
-
-
 $sIdUser_value=explode('=',$sIdUser_STR);
 $passwd_value=explode('=',$passwd_STR);
 $user_value=explode('=',$user_STR);
-
-
 $sIdUser=trim($sIdUser_value[1]);
 $passwd=trim($passwd_value[1]);
 $sUr=trim($user_value[1]);
@@ -145,7 +137,6 @@ $OPID="00FUZZY";
                     break;
                 case "Del":
                     let del_ip='/webservice/NISPWSDELILSG.php';
-                    console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
                     $.ajax({
                         url:del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
                         type:'POST',
@@ -179,7 +170,6 @@ $OPID="00FUZZY";
                         dataType: 'text',
                         success:function (data) {
                             let NewBedJson=JSON.parse(data);
-                            console.log(NewBedJson);
                             $("#DataTxt").val(NewBedJson[0].DataTxt);
                             $("#DA_IdPt").val(NewBedJson[0].IDPT);
                             $("#DA_InPt").val(NewBedJson[0].IDINPT);
@@ -203,29 +193,22 @@ $OPID="00FUZZY";
                     break;
             }
         });
-        $(document).on("keypress", "form", function(event) {
-            let  code = event.keyCode ? event.keyCode : event.which;
-            if(code===13){
-                if(CheckHasSpecialStr($("#NumId").val())===false){
-                    alert("禁止輸入數字以外的值");
-                    $("#NumId").val("");
-                    return  false;
-                }
-
+        $(document).on("keydown","input",function (e) {
+            if(e.keyCode===13){
+                e.preventDefault();//prevent enter to submit
                 if($("input[type=text]:not(.noneEle)").is(":focus")==true)
                 {
                     if(FocusIndex>4){
                         $("#"+InputIdArr[FocusIndex-1]).focus();
-
                         CheckUIisset($("#IdPt").val(),$("#NumId").val());
                     }else {
                         $("#"+InputIdArr[FocusIndex]).focus();
                     }
                 }
-                $("#form1").on("submit",function () {return false;});
+                return false;
             }
-            return event.key != "Enter";
         });
+
 
         $("#IdPt").bind("input propertychange",function () {
             if(this.value.length==8)
@@ -261,13 +244,7 @@ $OPID="00FUZZY";
             $("#loading").show();
             $("#wrapper").show();
             let json=GetCheckVal();
-            console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
-                '&sTraID=' + $('#sTraID').val() +
-                '&sPg=' +"" +
-                '&sDt=' + $("#DateVal").val() +
-                '&sTm=' + $("#TimeVal").val()+
-                '&PASSWD='+""+
-                '&USER=<?php echo $OPID?>'));
+
             $.ajax({
                 url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
                     '&sTraID=' + $('#sTraID').val() +
@@ -284,7 +261,6 @@ $OPID="00FUZZY";
                     $("#loading").hide();
                     $("#wrapper").hide();
                     let str=AESDeCode(data);
-                    console.log(str);
                     let dataObj=JSON.parse(str);
                     let result = dataObj.response;
                     let message =dataObj.message;
@@ -308,26 +284,31 @@ $OPID="00FUZZY";
         });
 
         function CheckUIisset(IdPt,NumidStr){
-            console.log($("#"+IdPt+"\\@"+NumidStr).length);
-            if($("#"+IdPt+"\\@"+NumidStr).length>0){
-                let top=($("#"+IdPt+"\\@"+NumidStr).offset()).top-400;
-                $("#"+IdPt+"\\@"+NumidStr).prop('checked',true);
-                $("#scrollList").scrollTop(top);
-            }else {
-                ErrIndex++;
-                obj.IDPT=IdPt;
-                obj.BAR_CODE=NumidStr;
-                obj.NUM=ErrIndex;
-                let copy=Object.assign({},obj);//淺複製錯誤血袋
-                err.push(copy);
-                let errfilter=err.filter(function (element, index, arr) {
-                    return arr.indexOf(element)===index;
-                });
-                errUI(errfilter);
+            try {
+                let CheckBoxId=$("#"+IdPt+"\\@"+NumidStr);
+                if(CheckBoxId.length>0){
+                    let top=(CheckBoxId.offset()).top-400;
+                    CheckBoxId.prop('checked',true);
+                    $("#scrollList").scrollTop(top);
+                }else {
+                    ErrIndex++;
+                    obj.IDPT=IdPt;
+                    obj.BAR_CODE=NumidStr;
+                    obj.NUM=ErrIndex;
+                    let copy=Object.assign({},obj);//淺複製錯誤血袋
+                    err.push(copy);
+                    let errfilter=err.filter(function (element, index, arr) {
+                        return arr.indexOf(element)===index;
+                    });
+                    errUI(errfilter);
+                }
+                $("#NumId").val("");
+            }catch (e) {
+                console.log(e);
+                return false;
             }
-            $("#NumId").val("");
-
         }
+
         function bedcallback(AESobj) {
             let str=AESDeCode(AESobj);
             let dataObj=JSON.parse(str);
@@ -339,6 +320,7 @@ $OPID="00FUZZY";
             DefaultData(dataObj[0].IDPT,dataObj[0].IDINPT,"<?php echo $OPID?>");
             TimerDefault();
         }
+
         function checkBEDwindow() {
             if(!x){
                 console.log("not open");
@@ -367,10 +349,7 @@ $OPID="00FUZZY";
                 }
             }
         }
-        function CheckHasSpecialStr(val){
-            let strReg=/^[0-9]*$/;
-            return  val.match(strReg)==null?false:true;
-        }
+
         function errRestar(err) {
             err.length=0;
             ErrIndex=0;
@@ -476,4 +455,3 @@ $OPID="00FUZZY";
     </div>
 </div>
 </body>
-
