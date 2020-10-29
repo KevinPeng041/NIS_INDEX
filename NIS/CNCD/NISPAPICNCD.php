@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Taipei');
-function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
+function GetCNCDIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
     $sql=" SELECT 
             MH_NAME AS NAME,
             MH_MEDNO AS MEDNO,
@@ -10,14 +10,15 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
             DT_LOOKDT AS LOOKDT,
              WMSYS.WM_CONCAT(DT_DIACODE) AS DIACODE,
             ITW_BARCODE AS BARCODE ,
-        WMSYS.WM_CONCAT((SELECT   CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE))AS CONNAME, 
-         WMSYS.WM_CONCAT((SELECT  SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND SPE_SPECODE = SCR_SPECODE))     AS SPENAME,
+            WMSYS.WM_CONCAT('S' || DT_INPSEQ || '@' || DT_LOOKDT || '@' || DT_SEQ || '@' || DT_NO) AS ID_HISORDKEY ,
+            WMSYS.WM_CONCAT((SELECT   CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE))AS CONNAME, 
+            WMSYS.WM_CONCAT((SELECT  SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND SPE_SPECODE = SCR_SPECODE))     AS SPENAME,
             WMSYS.WM_CONCAT(DT_DIACODE  || ':' || DA_EGNAME)  AS EGNAME,
             WMSYS.WM_CONCAT(TO_CHAR(ITW_WORKNO))  AS MACHINENO,
             WMSYS.WM_CONCAT(DT_SENDCD)AS SENDCD, 
            WMSYS.WM_CONCAT('http://192.168.16.77:8005/InExam/pic/' || SUBSTR(DT_SENDCD,1,1) ||  SCR_CONCODE || '.JPG')  AS PICURL, 
            WMSYS.WM_CONCAT('http://192.168.16.77/labinfo/web/LabInfo.asp?DIACODE=' || DT_DIACODE)  AS DETAILURL,
-             TO_CHAR(DT_SEQ) AS ORDERSEQ,
+            TO_CHAR(DT_SEQ) AS ORDERSEQ,
            WMSYS.WM_CONCAT(TO_CHAR(DT_NO) )  AS ORDERNO,
              DT_PROCDATE AS ORDERDATE,
              DT_PROCTIME AS ORDERTIME,
@@ -51,6 +52,7 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
         $SEX=oci_result($stid,"SEX");//性別
         $BEDNO=oci_result($stid,"BEDNO");//床位號
         $INPSEQ=oci_result($stid,"INPSEQ");//住院序號
+        $HISORDKEY=oci_result($stid,"ID_HISORDKEY");
         $LOOKDT=oci_result($stid,"LOOKDT");//診療日期
         $EGNAME=oci_result($stid,"EGNAME");//藥品英文名稱(商品名)
         $BARCODE=oci_result($stid,"BARCODE");//採血編號
@@ -65,7 +67,7 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
         $WORKNO=oci_result($stid,"WORKNO");//申請序號
         $arr[]=array("NAME"=>$NAME,"MEDNO"=>$MEDNO,"SEX"=>$SEX,"BEDNO"=>$BEDNO,"INPSEQ"=>$INPSEQ,"LOOKDT"=>$LOOKDT,"EGNAME"=>$EGNAME,"BARCODE"=>$BARCODE,
             "CONNAME"=>explode(",",$CONNAME)[0],"SPENAME"=>explode(",",$SPENAME)[0],"DIACODE"=>$DIACODE,"MACHINENO"=>$MACHINENO,"SENDCD"=>$SENDCD,
-            "ORDERSEQ"=>$ORDERSEQ,"ORDERNO"=>$ORDERNO,"SORTNUM"=>$SORTNUM,"WORKNO"=>$WORKNO);
+            "ORDERSEQ"=>$ORDERSEQ,"ORDERNO"=>$ORDERNO,"SORTNUM"=>$SORTNUM,"WORKNO"=>$WORKNO,"HISORDKEY"=>$HISORDKEY);
     }
     /*無資料:push交易序號回傳,有資料:unshift加到陣列[0]*/
     count($arr)==0?array_push($arr,'{"sSave":"'.$sSave.'","sTraID":"'.$sTraID.'"}'):array_unshift($arr,'{"sSave":"'.$sSave.'","sTraID":"'.$sTraID.'"}');
@@ -75,10 +77,10 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
             INSERT INTO HIS803.NISWSTP(
                     ID_TABFORM,ID_TRANSACTION,ID_PATIENT,ID_INPATIENT,
                     DT_EXCUTE,TM_EXCUTE,ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_PREA,ST_PREB,
-                    ST_PREC,ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
+                    ST_PREC,DM_PROCESS,UR_PROCESS,ID_BED,JID_NSRANK,FORMSEQANCE_WT)
              VALUES ('CNCD','$sTraID','$Idpt','$INPt',
              ' ',' ',EMPTY_CLOB(),' ',' ',' ',' ',' ',
-             ' ',' ','$date','$sUr','$JID_NSRANK','$FORMSEQANCE_WT')
+             ' ','$date','$sUr','$ID_BED','$JID_NSRANK','$FORMSEQANCE_WT')
              RETURNING ST_DATAA INTO :ST_DATAA");
     $lob=oci_new_descriptor($conn,OCI_D_LOB);
     oci_bind_by_name($stm,':ST_DATAA',$lob,-1,OCI_B_CLOB);
@@ -91,41 +93,55 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,
             print htmlentities($e['sqltext']);
             printf("\n%".($e['offset']+1)."s", "^");
             print  "\n</pre>\n";
+            return false;
+        }else{
+            $lob->save($ST_DATAA);
+            oci_commit($conn);
         }
-        $lob->save($ST_DATAA);
-        oci_commit($conn);
+
     } else {
         oci_rollback($conn);
     }
 
     return $ST_DATAA;
 }
-function GetCNCDPageJson($conn,$sTraID){
 
-
-}
 function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
+
     $DateTime = date("YmdHis");
     $STR = substr($DateTime, 0, 4);
     $STR1 = substr($DateTime, -10, 10);
     $str = $STR - 1911;
-    $dm_cand = $str . $STR1;
-    $LBT_PROCDATE=substr($dm_cand,0,7);
-    $LBT_PROCTIME=substr($dm_cand,7,4);
+    $DateTime_NOW = $str . $STR1;
+    $LBT_DATE=substr($DateTime_NOW,0,7);
+    $LBT_TIME=substr($DateTime_NOW,7,4);
 
-    $Ssql="SELECT ST_DATAA,DT_EXCUTE,TM_EXCUTE from HIS803.NISWSTP
+    $Ssql="SELECT ID_PATIENT,ID_INPATIENT,ST_DATAA,DT_EXCUTE,TM_EXCUTE,ID_BED,JID_NSRANK,FORMSEQANCE_WT from HIS803.NISWSTP
         WHERE ID_TABFORM = 'CNCD'  AND ID_TRANSACTION = '$sTraID'";
+
     $stid=oci_parse($conn,$Ssql);
     oci_execute($stid);
+    $IDPT='';
+    $IDINPT='';
     $ST_DATAA='';
     $DT_EXCUTE='';
     $TM_EXCUTE='';
+    $ID_BED='';
+    $JID_NSRANK='';
+    $FORMSEQANCE_WT='';
     while (oci_fetch_array($stid)){
+        $IDPT=oci_result($stid,"ID_PATIENT");
+        $IDINPT=oci_result($stid,"ID_INPATIENT");
         $ST_DATAA=oci_result($stid,"ST_DATAA")->read(2000);
         $DT_EXCUTE=oci_result($stid,"DT_EXCUTE");
         $TM_EXCUTE=oci_result($stid,"TM_EXCUTE");
+        $ID_BED=oci_result($stid,"ID_BED");
+        $JID_NSRANK=oci_result($stid,"JID_NSRANK");
+        $FORMSEQANCE_WT=oci_result($stid,"FORMSEQANCE_WT");
     }
     $response='';
+
+
     if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
         if($ST_DATAA){
             $A=json_decode($ST_DATAA);
@@ -141,14 +157,19 @@ function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
                 $LBT_DIACODE=$A[$i]->{"DIACODE"};
                 $LBT_WORKNO=$A[$i]->{"WORKNO"};
                 $LBT_MACHINENO=$A[$i]->{"MACHINENO"};
-
+                $OrDerKey=$A[$i]->{"ORDERKEY"};
 
                 $INSERT_SQL="INSERT INTO TOPLBT(LBT_DATETIMESEQ,LBT_LOOKDT,LBT_MEDNO,LBT_SEQ,LBT_DIACODE,LBT_WORKNO,
                                 LBT_MACHINENO,LBT_TYPE,LBT_EXECDATE,LBT_EXECTIME,LBT_PROCDATE,LBT_PROCTIME,LBT_PRCOPID,
                                 LBT_CANDATE,LBT_CANTIME,LBT_CANOPID) 
                                 VALUES(his803.NIS_DATETIMESEQ,'$LBT_LOOKDT','$LBT_MEDNO','$LBT_SEQ','$LBT_DIACODE','$LBT_WORKNO'
-                                ,'$LBT_MACHINENO','A','$sDt','$sTm','$LBT_PROCDATE','$LBT_PROCTIME','$sUr'
+                                ,'$LBT_MACHINENO','A','$sDt','$sTm','$LBT_DATE','$LBT_TIME','$sUr'
                                 ,' ',' ',' ')";
+
+               if (PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$OrDerKey,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FORMSEQANCE_WT,$DateTime_NOW,$sUr)!==true){
+                   $response=json_encode(array("response" => "false","message" =>"檢體NSMARS存檔錯誤訊息:"),JSON_UNESCAPED_UNICODE);
+                   return $response;
+                }
 
                 $stid=oci_parse($conn,$INSERT_SQL);
                 if (!$stid){
@@ -221,19 +242,20 @@ function GetCNCDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
 
     $Arr=[];
     $sSQL="SELECT  LBT_EXECDATE,LBT_EXECTIME,LBT_PRCOPID ,ITW_BARCODE AS BARCODE ,
+         WMSYS.WM_CONCAT('S' || DT_INPSEQ || '@' || DT_LOOKDT || '@' || DT_SEQ || '@' || DT_NO) AS ID_HISORDKEY ,
          WMSYS.WM_CONCAT((SELECT   CON_CONNAME FROM TOPCON WHERE CON_LCSKIND = SCR_LCSKIND AND CON_CONCODE = SCR_CONCODE))  AS CONNAME, 
          WMSYS.WM_CONCAT((SELECT  SPE_MELTHOD FROM TOPSPE WHERE SPE_LCSKIND = SCR_LCSKIND AND SPE_SPECODE = SCR_SPECODE))   AS SPENAME,
-            WMSYS.WM_CONCAT(DT_DIACODE  || ':' || DA_EGNAME )  AS EGNAME,
-            WMSYS.WM_CONCAT(TO_CHAR(ITW_WORKNO))  AS MACHINENO,
-            WMSYS.WM_CONCAT(DT_SENDCD)AS SENDCD, 
-           WMSYS.WM_CONCAT('http://192.168.16.77:8005/InExam/pic/' || SUBSTR(DT_SENDCD,1,1) ||  SCR_CONCODE || '.JPG')  AS PICURL, 
-           WMSYS.WM_CONCAT('http://192.168.16.77/labinfo/web/LabInfo.asp?DIACODE=' || DT_DIACODE)  AS DETAILURL,
-             TO_CHAR(DT_SEQ) AS ORDERSEQ,
-           WMSYS.WM_CONCAT(TO_CHAR(DT_NO) )  AS ORDERNO,
-             DT_PROCDATE AS ORDERDATE,
-             DT_PROCTIME AS ORDERTIME,
-           WMSYS.WM_CONCAT(DT_WORKNO) AS WORKNO,
-           WMSYS.WM_CONCAT(CASE ED_CLASS WHEN '0B' THEN 1 WHEN '0A' THEN 2  WHEN '0D' THEN 3 WHEN '0J' THEN 4  WHEN '0Y' THEN 5  WHEN '0C' THEN 6 WHEN '0H' THEN 7 WHEN '0L' THEN 8
+         WMSYS.WM_CONCAT(DT_DIACODE  || ':' || DA_EGNAME )  AS EGNAME,
+         WMSYS.WM_CONCAT(TO_CHAR(ITW_WORKNO))  AS MACHINENO,
+         WMSYS.WM_CONCAT(DT_SENDCD)AS SENDCD, 
+         WMSYS.WM_CONCAT('http://192.168.16.77:8005/InExam/pic/' || SUBSTR(DT_SENDCD,1,1) ||  SCR_CONCODE || '.JPG')  AS PICURL, 
+         WMSYS.WM_CONCAT('http://192.168.16.77/labinfo/web/LabInfo.asp?DIACODE=' || DT_DIACODE)  AS DETAILURL,
+         TO_CHAR(DT_SEQ) AS ORDERSEQ,
+         WMSYS.WM_CONCAT(TO_CHAR(DT_NO) )  AS ORDERNO,
+         DT_PROCDATE AS ORDERDATE,
+         DT_PROCTIME AS ORDERTIME,
+         WMSYS.WM_CONCAT(DT_WORKNO) AS WORKNO,
+         WMSYS.WM_CONCAT(CASE ED_CLASS WHEN '0B' THEN 1 WHEN '0A' THEN 2  WHEN '0D' THEN 3 WHEN '0J' THEN 4  WHEN '0Y' THEN 5  WHEN '0C' THEN 6 WHEN '0H' THEN 7 WHEN '0L' THEN 8
               WHEN '0M' THEN 9 WHEN '0V' THEN 10 WHEN '0Z' THEN 11 WHEN '0G' THEN 12 WHEN '0I' THEN 13 WHEN '0O' THEN 13 WHEN '0U' THEN 14 WHEN '0F' THEN 15 
               WHEN '0X' THEN 15 WHEN '0S' THEN 16 WHEN '0E' THEN 17 WHEN '0K' THEN 18 WHEN '0P' THEN 19 WHEN '0N' THEN 20 WHEN '0T' THEN 21 WHEN '1A' THEN 22
                WHEN '0Q' THEN 23 WHEN '0R' THEN 24 WHEN '1S' THEN 25 WHEN '2S' THEN 26 END)   as sort_num 
@@ -271,9 +293,12 @@ function GetCNCDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
         $ORDERNO=oci_result($stid,"ORDERNO");//資料序號
         $SORTNUM=oci_result($stid,"SORT_NUM");//檢驗類別
         $WORKNO=oci_result($stid,"WORKNO");//申請序號
-        $Arr[]=array("EXECDATE"=>$LBT_EXECDATE,"EXECTIME"=>$LBT_EXECTIME,"PRCOPID"=>$LBT_PRCOPID,"NAME"=>$NAME,"MEDNO"=>$MEDNO,"SEX"=>$SEX,"BEDNO"=>$BEDNO,"INPSEQ"=>$INPSEQ,
-            "LOOKDT"=>$LOOKDT,"EGNAME"=>$EGNAME,"BARCODE"=>$BARCODE,"CONNAME"=>explode(",",$CONNAME)[0],"SPENAME"=>explode(",",$SPENAME)[0],
-            "DIACODE"=>$DIACODE,"MACHINENO"=>$MACHINENO,"SENDCD"=>$SENDCD,"ORDERSEQ"=>$ORDERSEQ,"ORDERNO"=>$ORDERNO,"SORTNUM"=>$SORTNUM,"WORKNO"=>$WORKNO);
+        $HISORDKEY=oci_result($stid,"ID_HISORDKEY");
+        $Arr[]=array("EXECDATE"=>$LBT_EXECDATE,"EXECTIME"=>$LBT_EXECTIME,"PRCOPID"=>$LBT_PRCOPID,"NAME"=>$NAME,"MEDNO"=>$MEDNO,"SEX"=>$SEX,
+            "BEDNO"=>$BEDNO,"INPSEQ"=>$INPSEQ,"LOOKDT"=>$LOOKDT,"EGNAME"=>$EGNAME,"BARCODE"=>$BARCODE,
+            "CONNAME"=>explode(",",$CONNAME)[0],"SPENAME"=>explode(",",$SPENAME)[0],
+            "DIACODE"=>$DIACODE,"MACHINENO"=>$MACHINENO,"SENDCD"=>$SENDCD,"ORDERSEQ"=>$ORDERSEQ,"
+            ORDERNO"=>$ORDERNO,"SORTNUM"=>$SORTNUM,"WORKNO"=>$WORKNO,"HISORDKEY"=>$HISORDKEY);
     }
     array_unshift($Arr,'{"sSave":"'.$ID_COMFIRM.'","sTraID":"'.$TransKey.'"}');
     $ST_DATAA=json_encode($Arr,JSON_UNESCAPED_UNICODE);
@@ -316,13 +341,15 @@ function PosCNCDCancel($conn,$sTraID,$sUr){
     $CANDATE=substr($dm_cand,0,7);
     $CANTIME=substr($dm_cand,7,4);
 
-    $sSQL="SELECT ST_DATAA FROM HIS803.NISWSTP WHERE ID_TABFORM='CNCD'AND ID_TRANSACTION='$sTraID'";
+    $sSQL="SELECT ID_PATIENT,ST_DATAA FROM HIS803.NISWSTP WHERE ID_TABFORM='CNCD'AND ID_TRANSACTION='$sTraID'";
 
     $sid=oci_parse($conn,$sSQL);
     oci_execute($sid);
     $ST_DATAA='';
+    $IDPT='';
     while (oci_fetch_array($sid)){
         $ST_DATAA=oci_result($sid,"ST_DATAA")->load();
+        $IDPT=oci_result($sid,"ID_PATIENT");
     }
     $DATAA=json_decode($ST_DATAA);
     array_shift($DATAA);
@@ -345,13 +372,18 @@ function PosCNCDCancel($conn,$sTraID,$sUr){
             $e=oci_error($conn);
             $response=json_encode(array("response" => "false","message" =>"作廢錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
         }else{
+           if(PosCNCDCancelNSMARS($conn,$IDPT,$sUr,$CANDATE,$EXECDATE,$EXECTIME,$PRCOPID)!==true){
+               ocirollback($conn);
+               $response=json_encode(array("response" => "false","message" =>"作廢錯誤訊息:"),JSON_UNESCAPED_UNICODE);
+               break;
+           }
             $response=json_encode(array("response" => "success"),JSON_UNESCAPED_UNICODE);
         }
     }
     oci_commit($conn);
     return $response;
 }
-function GetCNCDChangeBed($conn){
+function GetCNCDChangeBed($conn,$sUr,$IDPT){
     $sql="SELECT   ID_INPATIENT, ID_STATION, ID_BED,ID_PATIENT, NM_PATIENT, PAT.ID_NUMBER,
                      CASE PAT.JID_SEX WHEN '1' THEN '男' WHEN '2' THEN '女' ELSE '不分' END AS JID_SEX,
                                             PAT.DT_BIRTHDATE, DT_INPATIENT, DT_OUTPATIENT, 
@@ -360,11 +392,13 @@ function GetCNCDChangeBed($conn){
                                     FROM HIS803.NIS_V_HIPT_Q0 PAT, his803.NIS_V_HUSR_Q0
                                     WHERE ID_BED IN (SELECT ID_BED
                                                         FROM HIS803.NIS_V_WKBD_Q0
-                                                        WHERE ID_USER = '00FUZZY')
+                                                        WHERE ID_USER = '$sUr')
                                         AND (   DT_OUTPATIENT = ' '
                                          OR (DT_OUTPATIENT <> ' ' AND DT_OUTPATIENT >='1090929') )
-                                        AND UR_DOCTORVS = ID_USER AND ID_PATIENT='00000044'
+                                        AND UR_DOCTORVS = ID_USER AND ID_PATIENT='$IDPT'
                                          ORDER BY ID_BED";
+
+
     $stid=oci_parse($conn,$sql);
     oci_execute($stid);
     $Arr=[];
@@ -394,4 +428,53 @@ function GetCNCDCheck($json){
         $response="false";
     }
     return $response;
+}
+function PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$ORDERKEY,$DT_NOW,$TM_NOW,$BED,$JID,$FSEQ,$PROCESS,$sUr){
+    $ORKEY=str_replace("#","@",$ORDERKEY);
+    $sql="INSERT INTO NSMARS
+        (DATESEQANCE,ID_PATIENT,ID_INPATIENT,NO_OPDSEQ,CID_MAR,ID_HISORDKEY,DT_EXCUTE,
+        TM_EXCUTE,ID_ORDER,JID_REFUSERSN,JID_DELAYRSN,DT_TAKEDRUG,TM_TAKEDRUG,MM_MAR,ID_BED,JID_NSRANK,
+        FORMSEQANCE_WT,FORMSEQANCE_FM,DM_PROCESS,UR_PROCESS,DM_CANCD,UR_CANCD,CID_EXCUTE,ID_FROMSYS)
+        VALUES
+        (his803.NIS_DATETIMESEQ,'$IDPT','$IDINPT',0,'EM','$ORKEY','$DT_NOW',
+        '$TM_NOW',' ',' ',' ','$DT_NOW','$TM_NOW',' ','$BED','$JID',
+        '$FSEQ',' ','$PROCESS','$sUr',' ',' ',' ','RWD')";
+    $responce=true;
+    $stid=oci_parse($conn,$sql);
+    if (!$stid){
+        $e=oci_error($conn);
+        echo $e['message'];
+        return false;
+    }
+
+    $result=oci_execute($stid,OCI_NO_AUTO_COMMIT);
+    if(!$result){
+        oci_rollback($conn);
+        $result=oci_error($stid);
+        echo $result['message'];
+        return false;
+    }
+    oci_commit($conn);
+    return $responce;
+
+}
+function PosCNCDCancelNSMARS($conn,$IDPT,$sUr,$CAN_DATE,$DT_EXE,$TM_EXE,$PRCOPID)
+{
+    $Sql="UPDATE NSMARS SET DM_CANCD='$CAN_DATE',UR_CANCD='$sUr' 
+            where 
+            ID_PATIENT='$IDPT' AND DT_EXCUTE='$DT_EXE' AND
+             TM_EXCUTE='$TM_EXE' AND UR_PROCESS='$PRCOPID'
+             AND DM_CANCD=' '";
+
+    $stid=oci_parse($conn,$Sql);
+    $r=oci_execute($stid,OCI_NO_AUTO_COMMIT);
+    if (!$r){
+        ocirollback($conn);
+        $e=oci_error($conn);
+         echo $e['message'];
+        return false;
+    }else{
+        oci_commit($conn);
+        return true;
+    }
 }
