@@ -324,10 +324,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       $(window).on('beforeunload', function () {
           return '確認要重新整理嗎?';
       });
-      
+
       TimerDefault();
       DefaultElement();
-      
+
       $('#NumB').bind("input propertychange",function(){
           //領血
           NumBind('B');
@@ -349,9 +349,9 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
       let  DATAval='';
       let  arr=[];
 
-        $(document).on("keydown", "form", function(event) {
-        return event.key != "Enter";
-    });
+        $(document).on("keydown", "form", function(event){
+            return event.key != "Enter";
+        });
         $(document).on('change', 'input[type=checkbox]', function() {
             let  checkbox = $(this);
             let  page=$("#PageVal").val();
@@ -558,60 +558,60 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
       $('#PBList').on('change',CheckBOXChang);/*歷次發血選擇*/
       $("#form1").submit(function () {
-       /*   $(window).off('beforeunload', reloadmsg);*/
-          $(window).off('beforeunload');
-          let  json='';
-          let  page=$('#PageVal').val();
-          switch (page) {
-              case 'B':
-                  json=GetCheckVal('B');
-                  break;
-              case 'C':
-                  json=GetCheckVal('C');
-                  break;
-          }
-          $("#loading").show();
-          $("#wrapper").show();
-         /*  console.log(json) ;*/
-          console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+ AESEnCode('sFm=' + 'CBLD' +
-              '&sTraID=' + $('#sTraID').val() +
-              '&sPg=' + $("#PageVal").val() +
-              '&sDt=' + $("#DateVal").val() +
-              '&sTm=' + $("#TimeVal").val()+
-              '&PASSWD='+$("#"+page+"_CPWD").val()+
-              '&USER='+paddingLeft($("#"+page+"_CUR").val().toUpperCase(),7))
-              );
-          $.ajax({
-              url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CBLD' +
+           /*$(window).off('beforeunload', reloadmsg);*/
+              $(window).off('beforeunload');
+              let  json='';
+              let  page=$('#PageVal').val();
+              switch (page) {
+                  case 'B':
+                      json=GetCheckVal('B');
+                      break;
+                  case 'C':
+                      json=GetCheckVal('C');
+                      break;
+              }
+              $("#loading").show();
+              $("#wrapper").show();
+             /*  console.log(json) ;*/
+              console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+ AESEnCode('sFm=' + 'CBLD' +
                   '&sTraID=' + $('#sTraID').val() +
                   '&sPg=' + $("#PageVal").val() +
                   '&sDt=' + $("#DateVal").val() +
                   '&sTm=' + $("#TimeVal").val()+
                   '&PASSWD='+$("#"+page+"_CPWD").val()+
                   '&USER='+paddingLeft($("#"+page+"_CUR").val().toUpperCase(),7))
-                  ,
-              type: 'POST',
-              beforeSend: InsertWSST($('#sTraID').val(), $("#PageVal").val(), JSON.stringify(json)),
-              dataType: 'text',
-              success: function (data) {
-                  $("#loading").hide();
-                  $("#wrapper").hide();
-                  let  str=AESDeCode(data);
-                  let  dataObj=JSON.parse(str);
-                  console.log(dataObj);
-                  let  result = dataObj.response;
-                  let  message = dataObj.message;
-                  if (result == "success") {
-                      alert("儲存成功");
-                      window.location.reload(true);
-                  } else {
-                      errorModal(message);
+                  );
+              $.ajax({
+                  url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CBLD' +
+                      '&sTraID=' + $('#sTraID').val() +
+                      '&sPg=' + $("#PageVal").val() +
+                      '&sDt=' + $("#DateVal").val() +
+                      '&sTm=' + $("#TimeVal").val()+
+                      '&PASSWD='+$("#"+page+"_CPWD").val()+
+                      '&USER='+paddingLeft($("#"+page+"_CUR").val().toUpperCase(),7))
+                      ,
+                  type: 'POST',
+                  beforeSend: InsertWSST($('#sTraID').val(), $("#PageVal").val(), JSON.stringify(json)),
+                  dataType: 'text',
+                  success: function (data) {
+                      $("#loading").hide();
+                      $("#wrapper").hide();
+                      let  str=AESDeCode(data);
+                      let  dataObj=JSON.parse(str);
+                      console.log(dataObj);
+                      let  result = dataObj.response;
+                      let  message = dataObj.message;
+                      if (result == "success") {
+                          alert("儲存成功");
+                          window.location.reload(true);
+                      } else {
+                          errorModal(message);
+                      }
                   }
-              }
-          });
-          return false;
+              });
+              return false;
 
-        });
+            });
 
       function NumBind(page){
           let Cval2= $('#Num'+page).val();
@@ -1138,7 +1138,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             $("#DateVal").val(yyyy-1911+MM+dd);
             $("#TimeVal").val(h+m);
       }
-     
+
   });
 
 
