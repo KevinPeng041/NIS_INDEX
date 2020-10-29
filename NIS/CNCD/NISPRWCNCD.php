@@ -1,7 +1,7 @@
 <?php
-/*include '../../NISPWSIFSCR.php';
+include '../../NISPWSIFSCR.php';
 $str=$_GET['str'];
-$replaceSpace=str_replace(' ','+',$str);//空白先替換+
+$replaceSpace=str_replace(' ','+',$str);
 $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
 preg_match('/(sfm)/',AESDeCode($replaceSpace),$matches);
 $sfm_STR='';
@@ -22,14 +22,14 @@ $user_value=explode('=',$user_STR);
 $sIdUser=trim($sIdUser_value[1]);
 $passwd=trim($passwd_value[1]);
 $sUr=trim($user_value[1]);
-$OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));*/
-$OPID="00FUZZY";
+$OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
+/*$OPID="00FUZZY";*/
 ?>
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-    <title>NISPRWCNCD</title>
+    <title>檢驗採檢辨識作業</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="text/javascript" src="../../jquery-3.4.1.js"></script>
@@ -38,328 +38,342 @@ $OPID="00FUZZY";
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
     <script src="../../NISCOMMAPI.js"></script>
-    <link rel="stylesheet" href="CSS/NISCSSCNCD.css">
+    <link rel="stylesheet" href="../../css/NIS/CNCD.css">
     <script src="JS/NISJSCNCD.js"></script>
     <script>
         let sfm='<?php echo $sfm?>';
-        /*        if(sfm==""){
-                    let ckw=setInterval(function () {
-                        try {
-                            if(!window.opener) {
-                                alert("此帳號以被登出,請重新登入開啟");
-                                window.close();
-                            }
-                        }catch (e) {
-                            $("#wrapper").show();
-                            alert(e);
-                            window.close();
-                            clearInterval(ckw);
-                            return false;
-                        }
-                    },500);
-                }*/
-
-    </script>
-
-</head>
-<script>
-    $(document).ready(function () {
-        let x;
-        let y;
-        (function () {
-            $(".Parametertable").children().prop('readonly',true);
-            $("#loading").hide();
-            $("#wrapper").hide();
-        })();
-
-
-
-        let err=[];
-        let obj={
-            IDPT:{},
-            BAR_CODE:{},
-            NUM:{}
-        };
-        let ErrIndex=0;
-        let FocusIndex="";
-        let InputIdArr=['DataTxt','DateVal','TimeVal','IdPt','NumId'];
-
-
-        $(document).on('focus', 'input[type=text]', function() {
-            let Index=InputIdArr.indexOf($(this).attr('id'));
-            FocusIndex=Index+1;
-            return false;
-
-        });
-        $(document).on('click', 'button', function() {
-            let BtnID=$(this).attr('id');
-            switch (BtnID) {
-                case "sbed":
-                    switch (checkBEDwindow()) {
-                        case "false":
-                            /*  errorModal("責任床位視窗已開啟");*/
-                            break;
-                        case "true":
-                            try {
-                                x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNCD&sIdUser=<?php echo $OPID?>"),"責任床位",'width=850px,height=650px,scrollbars=yes,resizable=no');
-
-                            }catch (e) {
-                                console.log(e);
-                            }
-                            break;
+        if(sfm==""){
+            let ckw=setInterval(function () {
+                try {
+                    if(!window.opener) {
+                        alert("此帳號以被登出,請重新登入開啟");
+                        window.close();
                     }
-                    x.bedcallback=bedcallback;
-                    break;
-                case "SerchBtn":
-                    switch (checkSerchwindow()) {
-                        case "false":
-                            alert("查詢視窗已開啟");
-                            break;
-                        case "true":
-                            y=window.open("/webservice/NISPWSLKQRY.php?str="+
-                                AESEnCode("sFm=CNCD&PageVal="+""+"&DA_idpt="+
-                                    $('#DA_IdPt').val()+"&DA_idinpt="+$('#DA_InPt').val()+
-                                    "&sUser="+"<?php echo $OPID?>"+"&NM_PATIENT="+"")
-                                ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
-                            break;
-                    }
-
-                    y.Serchcallback=Serchcallback;
-                    break;
-                case "ReStart":
-                    err.length=0;
-                    ErrIndex=0;
-                    $("input[type=text]:not(.Parametertable)").prop('disabled',false);
-                    $("button:not(#ReStart,#sbed)").prop('disabled',true);
-                    $("#Error_btn").css({"background-color":"#6c757d"});
-                    $("input[type=text]:not(#NURSOPID)").val("");
-                    $("#DATAList").children().remove();
-                    break;
-                case "Del":
-                    let del_ip='/webservice/NISPWSDELILSG.php';
-                    $.ajax({
-                        url:del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
-                        type:'POST',
-                        dataType:'text',
-                        success:function (json) {
-                            let data=JSON.parse(AESDeCode(json));
-                            if(data.response==="false"){
-                                alert('作廢失敗');
-                                return false;
-                            }
-                            $('#DELMENU').prop('disabled',true);
-                            $('#DELModal').modal('hide');
-                            $("input[type=text]:not(.Parametertable)").prop('disabled',false);
-                            $("button:not(#ReStart,#sbed)").prop('disabled',true);
-                            $("input[type=text]:not(#NURSOPID)").val("");
-                            $("#DATAList").children().remove();
-                        },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                            console.log(
-                                "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                                "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                                "3 返回失敗,textStatus:"+textStatus+
-                                "4 返回失敗,errorThrown:"+errorThrown
-                            );
-                        }
-                    });
-                    break;
-                case "BedChange":
-                    $.ajax({
-                        url:"/webservice/NISCNCDRECALLBED.php",
-                        type:"POST",
-                        dataType: 'text',
-                        success:function (data) {
-                            let NewBedJson=JSON.parse(data);
-                            $("#DataTxt").val(NewBedJson[0].DataTxt);
-                            $("#DA_IdPt").val(NewBedJson[0].IDPT);
-                            $("#DA_InPt").val(NewBedJson[0].IDINPT);
-                            $("#SBED").val(NewBedJson[0].SBED);
-                            DefaultData(NewBedJson[0].IDPT,NewBedJson[0].IDINPT,"<?php echo $OPID?>");
-                            TimerDefault();
-                            errRestar(err);
-                        },
-                        error:function (XMLHttpResponse,textStatus,errorThrown) {
-                            console.log(
-                                "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                                "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                                "3 返回失敗,textStatus:"+textStatus+
-                                "4 返回失敗,errorThrown:"+errorThrown
-                            );
-                        }
-                    });
-                    break;
-                case "Error_btn":
-                    errorModal("",false);
-                    break;
-            }
-        });
-        $(document).on("keydown","input",function (e) {
-            if(e.keyCode===13){
-                e.preventDefault();//prevent enter to submit
-                if($("input[type=text]:not(.noneEle)").is(":focus")==true)
-                {
-                    if(FocusIndex>4){
-                        $("#"+InputIdArr[FocusIndex-1]).focus();
-                        CheckUIisset($("#IdPt").val(),$("#NumId").val());
-                    }else {
-                        $("#"+InputIdArr[FocusIndex]).focus();
-                    }
+                }catch (e) {
+                    $("#wrapper").show();
+                    alert(e);
+                    window.close();
+                    clearInterval(ckw);
+                    return false;
                 }
+            },500);
+        }
+        $(document).ready(function () {
+            let x;
+            let y;
+            (function () {
+                $(".Parametertable").children().prop('readonly',true);
+                $("#loading").hide();
+                $("#wrapper").hide();
+            })();
+
+            let err=[];
+            let obj={
+                IDPT:{},
+                BAR_CODE:{},
+                NUM:{}
+            };
+            let ErrIndex=0;
+            let FocusIndex="";
+            let InputIdArr=['DataTxt','DateVal','TimeVal','IdPt','NumId'];
+
+
+            $(document).on('focus', 'input[type=text]', function() {
+                let Index=InputIdArr.indexOf($(this).attr('id'));
+                FocusIndex=Index+1;
                 return false;
-            }
-        });
+            });
+            $(document).on('click', 'button', function() {
+                let BtnID=$(this).attr('id');
+                switch (BtnID) {
+                    case "sbed":
+                        switch (checkBEDwindow()) {
+                            case "false":
+                                alert("責任床位視窗已開啟");
+                                break;
+                            case "true":
+                                try {
+                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNCD&sIdUser=<?php echo $OPID?>"),"責任床位",'width=850px,height=650px,scrollbars=yes,resizable=no');
+
+                                }catch (e) {
+                                    console.log(e);
+                                }
+                                break;
+                        }
+                        x.bedcallback=bedcallback;
+                        break;
+                    case "SerchBtn":
+                        switch (checkSerchwindow()) {
+                            case "false":
+                                alert("查詢視窗已開啟");
+                                break;
+                            case "true":
+                                y=window.open("/webservice/NISPWSLKQRY.php?str="+
+                                    AESEnCode("sFm=CNCD&PageVal="+""+"&DA_idpt="+
+                                        $('#DA_IdPt').val()+"&DA_idinpt="+$('#DA_InPt').val()+
+                                        "&sUser="+"<?php echo $OPID?>"+"&NM_PATIENT="+"")
+                                    ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                break;
+                        }
+
+                        y.Serchcallback=Serchcallback;
+                        break;
+                    case "ReStart":
+                        err.length=0;
+                        ErrIndex=0;
+                        $("input[type=text]:not(.Parametertable)").prop('disabled',false);
+                        $("button:not(#ReStart,#sbed)").prop('disabled',true);
+                        $("#Error_btn").css({"background-color":"#6c757d"});
+                        $("input[type=text]:not(#NURSOPID)").val("");
+                        $("#DATAList").children().remove();
+                        break;
+                    case "Del":
+                        let del_ip='/webservice/NISPWSDELILSG.php';
+                        console.log("http://localhost"+del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
+                        $.ajax({
+                            url:del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
+                            type:'POST',
+                            dataType:'text',
+                            success:function (json) {
+                                let data=JSON.parse(AESDeCode(json));
+                                if(data.response==="false"){
+                                    alert('作廢失敗');
+                                    return false;
+                                }
+                                $('#DELMENU').prop('disabled',true);
+                                $('#DELModal').modal('hide');
+                                $("input[type=text]:not(.Parametertable)").prop('disabled',false);
+                                $("button:not(#ReStart,#sbed)").prop('disabled',true);
+                                $("input[type=text]:not(#NURSOPID)").val("");
+                                $("#DATAList").children().remove();
+                            },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                                console.log(
+                                    "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                                    "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                                    "3 返回失敗,textStatus:"+textStatus+
+                                    "4 返回失敗,errorThrown:"+errorThrown
+                                );
+                            }
+                        });
+                        break;
+                    case "BedChange":
+                        CallPatientData("<?php echo $OPID?>",$("#IdPt").val());
+                        break;
+                    case "Error_btn":
+                        errorModal("",false);
+                        break;
+                }
+            });
+            $(document).on("keydown","input",function (e) {
+                let focusID=$(this).attr('id');
+
+                if(e.keyCode===13){
+                    e.preventDefault();//prevent enter to submit
+                    if($("input[type=text]:not(.noneEle)").is(":focus")===true)
+                    {
+                        if(FocusIndex>4){
+                            if (focusID==="NumId")
+                            {
+
+                                CheckUIisset($("#IdPt").val(),$("#NumId").val());
+                            }
+
+                            $("#"+InputIdArr[FocusIndex-1]).focus();
+
+                        }else {
+                            if (focusID==="IdPt" && $("#DataTxt").val()===""){
+                                CallPatientData("<?PHP echo $OPID?>",$("#IdPt").val());
+                            }else if(focusID==="IdPt" && $("#DataTxt").val()!==""){
+                                errorModal("是否要異動病人資料",true);
+                            }
 
 
-        $("#IdPt").bind("input propertychange",function () {
-            if(this.value.length==8)
-            {
-                if(this.value!=$("#DA_IdPt").val()){
-                    errorModal("與此病人的病歷號不符,是否重新選擇?",true);
+                            $("#"+InputIdArr[FocusIndex]).focus();
+                        }
+
+
+                    }
                     return false;
                 }
-                $("#NumId").focus();
-            }
-        });
-        $("#NumId").on('paste',function (e) {
-            //prevent paste action
-            e.preventDefault();
-            let PasteTxt=e.originalEvent.clipboardData.getData('text');
-            if( PasteTxt.lastIndexOf("#")>-1){
-                let Arr=PasteTxt.split("@");
-                let IdPt=Arr.shift();
-                Arr.pop();
-                /*if(IdPt!==$("#IdPt").val() && $("#IdPt").val()!==""){
-                    alert("與此病人病歷號不符");
-                    return false;
-                }*/
+            });
 
-                for (let index in Arr)
-                {
-                    CheckUIisset(IdPt,Arr[index]);
+            $("#NumId").on('paste',function (e) {
+                //prevent paste action
+                e.preventDefault();
+                let PasteTxt=e.originalEvent.clipboardData.getData('text');
+                if( PasteTxt.lastIndexOf("#")>-1){
+                    let Arr=PasteTxt.split("@");
+                    let IdPt=Arr.shift();
+                    Arr.pop();
+                    /*if(IdPt!==$("#IdPt").val() && $("#IdPt").val()!==""){
+                        alert("與此病人病歷號不符");
+                        return false;
+                    }*/
+
+                    for (let index in Arr)
+                    {
+                        CheckUIisset(IdPt,Arr[index]);
+                    }
                 }
-            }
-        });
-        $("#form1").submit(function () {
-            //$(window).off('beforeunload', reloadmsg);
-            $("#loading").show();
-            $("#wrapper").show();
-            let json=GetCheckVal();
-
-            $.ajax({
-                url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
+            });
+            $("#form1").submit(function () {
+                //$(window).off('beforeunload', reloadmsg);
+                $("#loading").show();
+                $("#wrapper").show();
+                let json=GetCheckVal();
+                console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
                     '&sTraID=' + $('#sTraID').val() +
                     '&sPg=' +"" +
                     '&sDt=' + $("#DateVal").val() +
                     '&sTm=' + $("#TimeVal").val()+
                     '&PASSWD='+""+
-                    '&USER=<?php echo $OPID?>')
-                ,
-                type: 'POST',
-                beforeSend: InsertWSST($('#sTraID').val(), 'A', JSON.stringify(json)),
-                dataType: 'text',
-                success: function (data) {
-                    $("#loading").hide();
-                    $("#wrapper").hide();
-                    let str=AESDeCode(data);
-                    let dataObj=JSON.parse(str);
-                    let result = dataObj.response;
-                    let message =dataObj.message;
-                    if (result == "success") {
-                        alert("儲存成功");
-                        window.location.reload(true);
-                    }else {
-                        alert(message);
+                    '&USER=<?php echo $OPID?>'));
+                $.ajax({
+                    url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
+                        '&sTraID=' + $('#sTraID').val() +
+                        '&sPg=' +"" +
+                        '&sDt=' + $("#DateVal").val() +
+                        '&sTm=' + $("#TimeVal").val()+
+                        '&PASSWD='+""+
+                        '&USER=<?php echo $OPID?>')
+                    ,
+                    type: 'POST',
+                    beforeSend: InsertWSST($('#sTraID').val(), 'A', JSON.stringify(json)),
+                    dataType: 'text',
+                    success: function (data) {
+                        $("#loading").hide();
+                        $("#wrapper").hide();
+                        let str=AESDeCode(data);
+                        let dataObj=JSON.parse(str);
+                        let result = dataObj.response;
+                        let message =dataObj.message;
+                        if (result == "success") {
+                            alert("儲存成功");
+                            window.location.reload(true);
+                        }else {
+                            alert(message);
+                        }
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
                     }
-                },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                    console.log(
-                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                        "3 返回失敗,textStatus:"+textStatus+
-                        "4 返回失敗,errorThrown:"+errorThrown
-                    );
-                }
+                });
+                return false;
+
             });
-            return false;
+            function CheckUIisset(IdPt,NumidStr){
+                try {
+                    let CheckBoxId=$("#"+IdPt+"\\@"+NumidStr);
+                    if(CheckBoxId.length>0){
+                        let top=(CheckBoxId.offset()).top-400;
+                        CheckBoxId.prop('checked',true);
+                        $("#scrollList").scrollTop(top);
+                    }else {
+                        ErrIndex++;
+                        obj.IDPT=IdPt;
+                        obj.BAR_CODE=NumidStr;
+                        obj.NUM=ErrIndex;
+                        let copy=Object.assign({},obj);//複製錯誤血袋
+                        err.push(copy);
+                        let errfilter=err.filter(function (element, index, arr) {
+                            return arr.indexOf(element)===index;
+                        });
+                        errUI(errfilter);
+                    }
+                    $("#NumId").val("");
+                }catch (e) {
+                    console.log(e);
+                    return false;
+                }
+            }
+            function bedcallback(AESobj) {
+                let str=AESDeCode(AESobj);
+                let dataObj=JSON.parse(str);
+                errRestar(err);
+                $("#DataTxt").val(dataObj[0].DataTxt);
+                $("#DA_IdPt").val(dataObj[0].IDPT);
+                $("#DA_InPt").val(dataObj[0].IDINPT);
+                $("#SBED").val(dataObj[0].SBED);
+                DefaultData(dataObj[0].IDPT,dataObj[0].IDINPT,"<?php echo $OPID?>");
+                TimerDefault();
+            }
+            function checkBEDwindow() {
+                if(!x){
+                    console.log("not open");
+                    return "true";
+                }else {
+                    if(x.closed){
+                        console.log("window close");
+                        return "true";
+                    }else {
+                        console.log("window not close");
+                        return "false";
+                    }
+                }
+            }
+            function checkSerchwindow() {
+                if(!y){
+                    console.log("not open");
+                    return "true";
+                }else {
+                    if(y.closed){
+                        console.log("window close");
+                        return "true";
+                    }else {
+                        console.log("window not close");
+                        return "false";
+                    }
+                }
+            }
+            function CallPatientData(sUr,IDPT) {
+                /*  console.log("http://localhost"+"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+IDPT+"&sUr="+sUr));*/
+                $.ajax({
+                    url:"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+IDPT+"&sUr="+sUr),
+                    type:"POST",
+                    dataType: 'text',
+                    success:function (data) {
+                        let NewBedJson=JSON.parse(AESDeCode(data));
+                        if (NewBedJson.length<1){
+                            alert("查無此病人");
+                            $("#IdPt").focus();
+                            return false;
+                        }
+                        $("#DataTxt").val(NewBedJson[0].DataTxt);
+                        $("#DA_IdPt").val(NewBedJson[0].IDPT);
+                        $("#DA_InPt").val(NewBedJson[0].IDINPT);
+                        $("#SBED").val(NewBedJson[0].SBED);
+
+                        DefaultData(NewBedJson[0].IDPT,NewBedJson[0].IDINPT,"<?php echo $OPID?>");
+                        TimerDefault();
+                        errRestar(err);
+                    },
+                    error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                    }
+                });
+            }
+            function errRestar(err) {
+                err.length=0;
+                ErrIndex=0;
+                $(".Num_input:not('#IdPt')").val("");
+                $("#Error_btn").css({"background-color":"#6c757d"});
+                $("#Error_btn").prop('disabled',true);
+            }
 
         });
+    </script>
 
-        function CheckUIisset(IdPt,NumidStr){
-            try {
-                let CheckBoxId=$("#"+IdPt+"\\@"+NumidStr);
-                if(CheckBoxId.length>0){
-                    let top=(CheckBoxId.offset()).top-400;
-                    CheckBoxId.prop('checked',true);
-                    $("#scrollList").scrollTop(top);
-                }else {
-                    ErrIndex++;
-                    obj.IDPT=IdPt;
-                    obj.BAR_CODE=NumidStr;
-                    obj.NUM=ErrIndex;
-                    let copy=Object.assign({},obj);//淺複製錯誤血袋
-                    err.push(copy);
-                    let errfilter=err.filter(function (element, index, arr) {
-                        return arr.indexOf(element)===index;
-                    });
-                    errUI(errfilter);
-                }
-                $("#NumId").val("");
-            }catch (e) {
-                console.log(e);
-                return false;
-            }
-        }
+</head>
 
-        function bedcallback(AESobj) {
-            let str=AESDeCode(AESobj);
-            let dataObj=JSON.parse(str);
-            errRestar(err);
-            $("#DataTxt").val(dataObj[0].DataTxt);
-            $("#DA_IdPt").val(dataObj[0].IDPT);
-            $("#DA_InPt").val(dataObj[0].IDINPT);
-            $("#SBED").val(dataObj[0].SBED);
-            DefaultData(dataObj[0].IDPT,dataObj[0].IDINPT,"<?php echo $OPID?>");
-            TimerDefault();
-        }
-
-        function checkBEDwindow() {
-            if(!x){
-                console.log("not open");
-                return "true";
-            }else {
-                if(x.closed){
-                    console.log("window close");
-                    return "true";
-                }else {
-                    console.log("window not close");
-                    return "false";
-                }
-            }
-        }
-        function checkSerchwindow() {
-            if(!y){
-                console.log("not open");
-                return "true";
-            }else {
-                if(y.closed){
-                    console.log("window close");
-                    return "true";
-                }else {
-                    console.log("window not close");
-                    return "false";
-                }
-            }
-        }
-
-        function errRestar(err) {
-            err.length=0;
-            ErrIndex=0;
-            $(".Num_input").val("");
-            $("#Error_btn").css({"background-color":"#6c757d"});
-            $("#Error_btn").prop('disabled',true);
-        }
-
-    });
-</script>
 <body>
 <div id="wrapper"></div>
 <div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
