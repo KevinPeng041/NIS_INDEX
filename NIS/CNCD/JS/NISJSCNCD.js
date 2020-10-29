@@ -1,7 +1,7 @@
 function DefaultData(idPt,INPt,sUr) {
     $("#loading").show();
     $("#wrapper").show();
-    /*  console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNCD&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr));*/
+      console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNCD&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr));
     $.ajax({
         url:"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNCD&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr),
         type:"POST",
@@ -11,27 +11,30 @@ function DefaultData(idPt,INPt,sUr) {
             $("#wrapper").hide();
             let objArr=JSON.parse(AESDeCode(data));
             let TraObj=JSON.parse(objArr.shift());
+            console.log(objArr);
             if( $("#DATAList").children().length>0){
                 $("#DATAList").children().remove();
             }
 
             $.each(objArr,function (index,val){
                 let ChecBoxkID=val.MEDNO+'@'+val.BARCODE;
-                let CheckBoxVal=val.LOOKDT+"@"+val.MEDNO+"@"+INPt+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO;
                 let BARCODE=val.BARCODE;
                 let SPENAME=val.SPENAME;
                 let CONNAME=val.CONNAME;
                 let EGNAME= (val.EGNAME).replaceAll(',',",<br>");
+                let CheckBoxVal=val.LOOKDT+"@"+val.MEDNO+"@"+INPt+"@"+val.DIACODE+"@"+val.MACHINENO+"@"+val.WORKNO+"@"+(val.HISORDKEY).replaceAll('@','#');
                 $("#DATAList").append(
                     `
                         <tr class='list-item'>
                              <td><input type='checkbox'  name='BDckbox' class='form-check-input' id='${ChecBoxkID}' value='${CheckBoxVal}'></td>
                              <td  colspan='4' style='text-align:left;font-weight: bold'>採血編號:${BARCODE} 檢體:${SPENAME} 試管:${CONNAME}</td>
+                           
                         </tr>
                         <tr>
                             <td style='font-weight: bold'>檢驗項目</td>
                             <td colspan='4' style='text-align:left;'>${EGNAME}</td>
                         </tr>
+                                            
                      `
                 );
             });
@@ -76,6 +79,7 @@ function Serchcallback(AESobj){
                  <tr class='list-item'>
                     <td><input type='checkbox'  name='BDckbox' class='form-check-input' id='${ChecBoxkID}' value='${CheckBoxVal}'></td>
                     <td  colspan='4' style='text-align:left;font-weight: bold'>採血編號:${BARCODE} 檢體:${SPENAME} 試管:${CONNAME}</td>
+                   
                  </tr>
                  <tr>
                      <td style='font-weight: bold'>檢驗項目</td>
@@ -148,12 +152,14 @@ function GetCheckVal() {
                 IDINPT:'',
                 DIACODE:'',
                 MACHINENO:'',
-                WORKNO:''
+                WORKNO:'',
+                ORDERKEY:''
             };
             //LOOKDT@MEDNO@IDINPT@DIACODE@MACHINENO@A@WORKNO
-            let DIACODEarr= str.split("@",6)[3].split(",");
-            let MACHINENOarr= str.split("@",6)[4].split(",");
-            let WORKNOarr= str.split("@",6)[5].split(",");
+            let DIACODEarr= str.split("@",7)[3].split(",");
+            let MACHINENOarr= str.split("@",7)[4].split(",");
+            let WORKNOarr= str.split("@",7)[5].split(",");
+            let Okeyarr= str.split("@",7)[6].split(",");
             $.each(DIACODEarr,function (index) {
                 let DeepCopy={};
                 $.extend(true,OBJ,DeepCopy);
@@ -163,6 +169,7 @@ function GetCheckVal() {
                 DeepCopy.DIACODE=DIACODEarr[index];
                 DeepCopy.MACHINENO= MACHINENOarr[index];
                 DeepCopy.WORKNO=WORKNOarr[index];
+                DeepCopy.ORDERKEY=Okeyarr[index];
                 Json.push(DeepCopy);
             });
         });
@@ -225,7 +232,5 @@ function GroupEle(array,subGroupLength) {
         }
 
     }
-
-    /*return newArray;*/
 
 }
