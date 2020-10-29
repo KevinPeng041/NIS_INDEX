@@ -36,7 +36,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 <html lang="en">
 
 <head>
-    <title>NISPRWCNAD</title>
+    <title>發血覆核作業</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="text/javascript" src="../../jquery-3.4.1.js"></script>
