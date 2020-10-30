@@ -166,7 +166,7 @@ function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
                                 ,'$LBT_MACHINENO','A','$sDt','$sTm','$LBT_DATE','$LBT_TIME','$sUr'
                                 ,' ',' ',' ')";
 
-               if (PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$OrDerKey,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FORMSEQANCE_WT,$DateTime_NOW,$sUr)!==true){
+               if (PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$OrDerKey,$LBT_DIACODE,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FORMSEQANCE_WT,$DateTime_NOW,$sUr)!==true){
                    $response=json_encode(array("response" => "false","message" =>"檢體NSMARS存檔錯誤訊息:"),JSON_UNESCAPED_UNICODE);
                    return $response;
                 }
@@ -429,7 +429,7 @@ function GetCNCDCheck($json){
     }
     return $response;
 }
-function PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$ORDERKEY,$DT_NOW,$TM_NOW,$BED,$JID,$FSEQ,$PROCESS,$sUr){
+function PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$ORDERKEY,$ID_ORDER,$DT_NOW,$TM_NOW,$BED,$JID,$FSEQ,$PROCESS,$sUr){
     $ORKEY=str_replace("#","@",$ORDERKEY);
     $sql="INSERT INTO NSMARS
         (DATESEQANCE,ID_PATIENT,ID_INPATIENT,NO_OPDSEQ,CID_MAR,ID_HISORDKEY,DT_EXCUTE,
@@ -437,7 +437,7 @@ function PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$ORDERKEY,$DT_NOW,$TM_NOW,$BED,$J
         FORMSEQANCE_WT,FORMSEQANCE_FM,DM_PROCESS,UR_PROCESS,DM_CANCD,UR_CANCD,CID_EXCUTE,ID_FROMSYS)
         VALUES
         (his803.NIS_DATETIMESEQ,'$IDPT','$IDINPT',0,'EM','$ORKEY','$DT_NOW',
-        '$TM_NOW',' ',' ',' ','$DT_NOW','$TM_NOW',' ','$BED','$JID',
+        '$TM_NOW','$ID_ORDER',' ',' ','$DT_NOW','$TM_NOW',' ','$BED','$JID',
         '$FSEQ',' ','$PROCESS','$sUr',' ',' ',' ','RWD')";
     $responce=true;
     $stid=oci_parse($conn,$sql);
