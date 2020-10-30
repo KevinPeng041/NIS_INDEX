@@ -121,11 +121,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     case "ReStart":
                         err.length=0;
                         ErrIndex=0;
-                        $("input[type=text]:not(.Parametertable)").prop('disabled',false);
-                        $("button:not(#ReStart,#sbed)").prop('disabled',true);
-                        $("#Error_btn").css({"background-color":"#6c757d"});
-                        $("input[type=text]:not(#NURSOPID)").val("");
-                        $("#DATAList").children().remove();
+                        ReStartELE();
                         break;
                     case "Del":
                         let del_ip='/webservice/NISPWSDELILSG.php';
@@ -166,7 +162,6 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             });
             $(document).on("keydown","input",function (e) {
                 let focusID=$(this).attr('id');
-
                 if(e.keyCode===13){
                     e.preventDefault();//prevent enter to submit
                     if($("input[type=text]:not(.noneEle)").is(":focus")===true)
@@ -187,7 +182,6 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 errorModal("是否要異動病人資料",true);
                             }
 
-
                             $("#"+InputIdArr[FocusIndex]).focus();
                         }
 
@@ -205,15 +199,17 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     let Arr=PasteTxt.split("@");
                     let IdPt=Arr.shift();
                     Arr.pop();
-                    /*if(IdPt!==$("#IdPt").val() && $("#IdPt").val()!==""){
+                    if(IdPt!==$("#IdPt").val() && $("#IdPt").val()!==""){
                         alert("與此病人病歷號不符");
                         return false;
-                    }*/
+                    }
 
                     for (let index in Arr)
                     {
                         CheckUIisset(IdPt,Arr[index]);
                     }
+                }else {
+                    alert("格式錯誤")
                 }
             });
             $("#form1").submit(function () {
@@ -330,7 +326,9 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 }
             }
             function CallPatientData(sUr,IDPT) {
-                /*  console.log("http://localhost"+"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+IDPT+"&sUr="+sUr));*/
+/*
+                  console.log("http://localhost"+"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+IDPT+"&sUr="+sUr));
+*/
                 $.ajax({
                     url:"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+IDPT+"&sUr="+sUr),
                     type:"POST",
@@ -339,6 +337,9 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         let NewBedJson=JSON.parse(AESDeCode(data));
                         if (NewBedJson.length<1){
                             alert("查無此病人");
+                            err.length=0;
+                            ErrIndex=0;
+                            ReStartELE();
                             $("#IdPt").focus();
                             return false;
                         }
@@ -368,7 +369,13 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $("#Error_btn").css({"background-color":"#6c757d"});
                 $("#Error_btn").prop('disabled',true);
             }
-
+            function ReStartELE() {
+                $("input[type=text]:not(.Parametertable)").prop('disabled',false);
+                $("button:not(#ReStart,#sbed)").prop('disabled',true);
+                $("#Error_btn").css({"background-color":"#6c757d"});
+                $("input[type=text]:not(#NURSOPID)").val("");
+                $("#DATAList").children().remove();
+            }
         });
     </script>
 
@@ -395,7 +402,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" disabled>查詢</button>
             <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal" disabled>作廢</button>
             <button type="button" id="ReStart" class="btn btn-primary btn-md" >清除</button>
-            <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button>
+            <button type="button" id="sbed"  class="btn btn-warning btn-md" style="margin-left: 1px;display: none">責任床位</button>
         </div>
         <div class="PatientName">
             <input id="DataTxt"  value="" type="text" readonly="readonly">
