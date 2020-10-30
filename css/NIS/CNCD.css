@@ -1,0 +1,107 @@
+.container{
+    max-width: 1140px;
+}
+.container .ListBtn button{
+    color: white;
+    font-size: 4.5vmin;
+}
+.List{
+    height:50vh;
+    overflow:auto;
+    position: relative;
+
+}
+
+.btn {
+    margin-top: 5px;
+}
+
+body{
+    overscroll-behavior-y:contain;
+}
+
+input{
+    border-radius:4px;border:1px solid #DBDBDB;
+}
+input[type=checkbox]{
+    width: 4.5vmin;
+    height: 4.5vmin;
+}
+
+th{
+    padding-bottom: 5px !important;
+}
+h1{
+    margin-top:5px;
+}
+td{
+    overflow-wrap: break-word;
+}
+.Otimer{
+    margin-top:10px;
+    font-size: 4vmin;
+    background-color: #baeeff;
+    border-radius:3px;
+}
+.Otimer  .pageTime #DateVal{
+    width:35vmin;
+    text-align: center;
+    margin-top: 5px;
+
+}
+.Otimer .pageTime #TimeVal {
+    width: 15vmin;
+    margin-left: 5px;
+    margin-top: 5px;
+    border: 1px white;
+    text-align: center;
+}
+.Parametertable input{
+    display: none;
+    background-color: #00FF00;
+}
+#loading{
+    position: absolute;
+    z-index: 9999;
+    top: 50%;
+    left: 50%;
+    background-color: #FFFFFF;
+    color: #000000;
+    font-size: 5vmin;
+    width: 45vmin;
+    height: 12vmin;
+    padding-left:20px;
+    padding-top:10px;
+    border-radius: 5px;
+    margin: -15vmin 0 0 -30vmin;
+
+}
+#loading .loadimg{
+    width: 10vmin;
+    height:10vmin;
+}
+#wrapper{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.5;
+    z-index: 9998;
+}
+.input-group{
+    margin-top: 5px;
+}
+.Num_input{
+    margin-top: 5px;
+    margin-bottom: 5px;
+    height: 40px;
+    font-size: 20px;
+}
+.PatientName input{
+    border:1px white;
+    font-size: 4vmin;
+    width:100vmin;
+    background-color: #FFFBCC;
+    border-radius:3px;
+    margin-top: 10px;
+}
