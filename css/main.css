@@ -1,0 +1,45 @@
+.menu{
+    height: 100vh;
+    width: 300px;
+    background-color: #00FFFF;
+    float: left;
+}
+.content{
+    width: 100vw;
+    height: 100vh;
+
+}
+.menu .title .titleimg{
+    width: 50%;
+}
+.title{
+    width: 100%;
+    height: 100px;
+    background-color:#4A4A4A; ;
+}
+.menu  ul{
+    list-style: none;
+}
+.menu .link{
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+}
+.menu .link div{
+    height: 20px;
+    width: 20px;
+    display: inline-block;
+}
+.menu .link .fb{
+    background: url("../img/f_logo_RGB-Black_1024.png")no-repeat;
+    background-size: auto 20px;
+}
+.menu .link .github{
+    background: url("../img/github-log.png")no-repeat;
+    background-size: auto 20px;
+}
+.menu .link .twitter{
+    background: url("../img/twitter-logo.png")no-repeat;
+    background-size: auto 20px;
+}
