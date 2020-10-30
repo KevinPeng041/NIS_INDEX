@@ -358,7 +358,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 return false;
                                 break;
                             case "true":
-                                x=window.open("/webservice/NISPWSLKCBD.php?str="+AESEnCode("sFm=ILSG&sIdUser=<?php echo $Account?>"),"責任床位(血)",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                x=window.open("/webservice/NISPWSLKCBD.php?str="+AESEnCode("sFm=ILSGA&sIdUser=<?php echo $Account?>"),"責任床位(血)",'width=850px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
                         x.bedcallback=bedcallback;
@@ -553,6 +553,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                     focustext(3);
                                     return false;
                                 }
+                                json=ISSG_jsonStr;
+                                spg='A';
                                 break;
                             case "B":
                                 if($("input[name=part]:checked").val()=='' || $("input[name=part]:checked").val()==null || $("input[name=part]:checked").val()=='undefined'){
@@ -636,6 +638,19 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                         return false;
                                     }
                                 }
+
+                                if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
+                                    json=ISSN_jsonStr1;
+
+                                }
+                                if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
+                                    json=ISSN_jsonStr2;
+
+                                }
+                                if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
+                                    json=ISSN_jsonStr3;
+                                }
+                                spg='B';
                                 break;
                             case "C":
                                 if( $("input[name='forbid[]']").is(":checked")===true && $("input[name=NO_MMVAL]").is(":checked")===false){
@@ -655,40 +670,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 break;
                         }
 
-
-
-                        if($("#STVALval").val()!='' || $("#sPress").val()!=''){
-                            json=ISSG_jsonStr;
-                            spg='A';
-                            if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
-                                json=ISSN_jsonStr1;
-                                spg='B';
-                            }
-                            if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
-                                json=ISSN_jsonStr2;
-                                spg='B';
-                            }
-                            if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
-                                json=ISSN_jsonStr3;
-                                spg='B';
-                            }
-                        }else if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
-                            json=ISSN_jsonStr1;
-                            spg='B';
-                        } else  if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
-                            json=ISSN_jsonStr2;
-                            spg='B';
-                        }else  if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
-                            json=ISSN_jsonStr3;
-                            spg='B';
-                        }
-
-                        console.log("http://localhost"+submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+$("#PageVal").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
-                        console.log(json);
+                        console.log("http://localhost"+submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
                         $("#loading").show();
                         $("#wrapper").show();
                         $.ajax({
-                            url:submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+$("#PageVal").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'),
+                            url:submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'),
                             type:'POST',
                             beforeSend: UPDATEDATA(spg, JSON.stringify(json)),
                             dataType:'text',
@@ -856,49 +842,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     });
                 }
             }
-            function ISLN_Dateback(idPt,NUM) {
-                /*DT_EXCUTE+TM_EXCUTE+JID_TIME+ID_REGION+ID_ORDER+NM_ORDER+DT_TAKEDRUG+TM_TAKEDRUG+ST_DOSE+ST_USENO*/
-                if(idPt!=$("#DA_idpt").val()){
-                    errorModal("病人資訊已異動,請先重新操作一次");
-                    return false;
-                }
 
-                let DT_EXCUTE=$("#DT_E"+ NUM).val();
-                let TM_EXCUTE= $("#TM_E"+ NUM).val();
-                let JID_TIME = $("#JID_T"+ NUM).val();
-                let ID_REGION=$("#ID_R0").val();
-
-                $("#Isu_A").val($("#NM_O"+"0").val());
-                $("#dose1").val($("#ST_D"+"0").val());
-                $("#tt1").val($("#ID_O0").val());
-                $("#fUSEF_1").val($("#ST_U"+"0").val());
-
-
-                if($("#NM_O"+ "1").val()){
-                    $("#Isu_B").val($("#NM_O"+"1").val());
-                    $("#dose2").val($("#ST_D"+"1").val());
-                    $("#tt3").val($("#ID_O"+"1").val());
-                    $("#fUSEF_2").val($("#ST_U"+"1").val());
-
-                }
-                if($("#NM_O"+ "2").val()){
-                    $("#Isu_C").val($("#NM_O"+"2").val());
-                    $("#dose3").val($("#ST_D"+"2").val());
-                    $("#tt5").val($("#ID_O"+"2").val());
-                    $("#fUSEF_3").val($("#ST_U"+"2").val());
-                }
-                $('input[name=part]').prop('disabled',true);
-                $("Part"+ID_REGION.substr(0,1)).prop('checked',true);
-
-                TimeSet(JID_TIME);
-                let y=DT_EXCUTE.substr(0,3);
-                let m=DT_EXCUTE.substr(3,2);
-                let d=DT_EXCUTE.substr(5,2);
-                let H=TM_EXCUTE.substr(0,2);
-                let M=TM_EXCUTE.substr(2,2);
-                $("#timer").val(y+m+d);
-                $("#timetxt").val(H+M);
-            }
             function Forbid_Dateback(idPt,DT,TM,NO_MMAL,sTraID) {
                 if(idPt!=$("#DA_idpt").val()){
                     errorModal("病人資訊已異動,請先重新操作一次");
@@ -1205,6 +1149,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             function UPDATEDATA(spg,Json) {
                 let  trsKey=$('#transKEY').val();
                 let UPDATEDATA_ip="/webservice/NISPWSSETDATA.php";
+                console.log(Json);
                 console.log(UPDATEDATA_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+spg+'&sData='+Json));
                 $.ajax({
                     url:UPDATEDATA_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+spg+'&sData='+Json),
@@ -1239,7 +1184,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                     return false;
                                 }else {
                                     $('#DELModal').modal('hide');
-
                                     Reset(2);
                                 }
 
@@ -1321,7 +1265,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         let obj=(JSON.parse(ST_PREAAry.ST_PREA))[0];
 
                         $("#ISTM").append(
-
                             `
                         <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000001"}' value='${obj.ISTM00000001}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000001}</label>
                         <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000002"}' value='${obj.ISTM00000002}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000002}</label>
@@ -1340,30 +1283,38 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     }
                 });
             }
-
-            function AESEnCode(text){
-                let key = CryptoJS.enc.Latin1.parse('1234567890654321'); //為了避免補位，直接用16位的金鑰
-                let iv = CryptoJS.enc.Latin1.parse('1234567890123456'); //16位初始向量
-                let encrypted = CryptoJS.AES.encrypt(JSON.stringify(text), key, {
-                    iv: iv,
-                    mode:CryptoJS.mode.CBC,
-                    padding:CryptoJS.pad.ZeroPadding
-                });
-                return encrypted.toString();
-            }
             function AESDeCode(text){
-                let encrypted=text.toString();//先轉utf8字串
-                let key = CryptoJS.enc.Latin1.parse('1234567890654321'); //為了避免補位，直接用16位的金鑰
-                let iv = CryptoJS.enc.Latin1.parse('1234567890123456'); //16位初始向量
-                let decrypted = CryptoJS.AES.decrypt(encrypted,key,{
+                let key = CryptoJS.enc.Utf8.parse('1234567890654321'); //為了避免補位，直接用16位的金鑰
+                let iv = CryptoJS.enc.Utf8.parse('1234567890123456'); //16位初始向量
+                let decrypted = CryptoJS.AES.decrypt(text,key,{
                     iv: iv,
                     mode: CryptoJS.mode.CBC,
                     padding:CryptoJS.pad.Pkcs7
                 });
-                decrypted=CryptoJS.enc.Utf8.stringify(decrypted);
-                return decrypted;
-            }
 
+                let decryptedStr=decrypted.toString(CryptoJS.enc.Utf8);
+                let value=decryptedStr.toString();
+                return value;
+            }
+            function AESEnCode(text){
+                let key = CryptoJS.enc.Utf8.parse('1234567890654321'); //為了避免補位，直接用16位的金鑰
+                let iv = CryptoJS.enc.Utf8.parse('1234567890123456'); //16位初始向量
+                let encrypted = CryptoJS.AES.encrypt(text, key, {
+                    iv: iv,
+                    mode:CryptoJS.mode.CBC,
+                    padding:CryptoJS.pad.Pkcs7
+                });
+
+
+                //若上面加密返回的hexStr,需打開下面兩行，再次處理
+                //var encryptedHexStr = CryptoJS.enc.Hex.parse(word);
+                // var srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr);
+
+                let hexstr=encrypted.ciphertext.toString().toUpperCase();
+                let oldHexStr=CryptoJS.enc.Hex.parse(hexstr);
+                let base64Str=CryptoJS.enc.Base64.stringify(oldHexStr);
+                return  base64Str;
+            }
             function Reset(num) {
                 switch (num) {
                     case 1:
@@ -1469,7 +1420,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             let FORMSEQANCE=data.FORMSEQANCE;
                             let SER_DT=data.SER_DT;
                             let SER_TM=data.SER_TM;
-
+                            console.log(data);
                             if(idPt!=$("#DA_idpt").val()){
                                 errorModal("病人資訊已異動,請先重新操作一次");
                                 return false;
@@ -1510,7 +1461,22 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         case 'B':
                             let DT='';
                             let TM='';
+                            let txt_index='';
+                            let num_index='';
+                            console.log(data);
                             $.each(data,function (index) {
+                                if(index==0){
+                                    txt_index='A';
+                                    num_index=index+1;
+                                }
+                                if(index==1){
+                                    txt_index='B';
+                                    num_index=index+1;
+                                }
+                                if (index==2){
+                                    txt_index='C';
+                                    num_index=index+1;
+                                }
                                 DT=data[index].DT_EXCUTE;
                                 TM=data[index].TM_EXCUTE;
                                 let idPt=data[index].idPt;
@@ -1523,34 +1489,50 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 let ST_USENO=data[index].ST_USENO; //頻率
                                 let LSTPT=data[index].LSTPT; //頻率
 
+                                if(idPt!=$("#DA_idpt").val()){
+                                    errorModal("病人資訊已異動,請先重新操作一次");
+                                    return false;
+                                }
+
+
                                 $('#isuling').show();
                                 $('#ISSG').prop('disabled',true);
                                 $('#Inhibit').prop('disabled',true);
-
                                 $("#SERCH_Click").val("2");
                                 $("#DT_EXE").val(DT);
                                 $("#TM_EXE").val(TM);
                                 $("#LastPart").val(LSTPT);
                                 $("#transKEY").val(data[index].sTraID);
-
+                                $("#Isu_"+txt_index).val(NM_ORDER);
+                                $("#dose"+num_index).val(ST_DOSE);
+                                $("#fUSEF_"+num_index).val(ST_USENO);
+                                $("#ISLNLi").children().remove();
                                 $("#ISLNLi").append(
                                     `
-                                <li style="display: none">
-                                 <input type="text"   id='${"DT_E"+index}' value='${DT}'>
-                                 <input type="text"   id='${"TM_E"+index}' value='${TM}'>
-                                 <input type="text"   id='${"JID_T"+index}' value='${JID_TIME}'>
-                                 <input type="text"   id='${"ID_R"+index}' value='${ID_REGION}'>
-                                 <input type="text"   id='${"ID_O"+index}' value='${ID_ORDER}'>
-                                 <input type="text"   id='${"ST_D"+index}' value='${ST_DOSE}'>
-                                 <input type="text"   id='${"NM_O"+index}' value='${NM_ORDER}'>
-                                 <input type="text"   id='${"ST_U"+index}' value='${ST_USENO}'>
-                                 <input type="text"   id='${"LSTPT"+index}' value='${LSTPT}'>
-                                </li>
+                                    <li style="display: none">
+                                     <input type="text"   id='${"DT_E"+index}' value='${DT}'>
+                                     <input type="text"   id='${"TM_E"+index}' value='${TM}'>
+                                     <input type="text"   id='${"JID_T"+index}' value='${JID_TIME}'>
+                                     <input type="text"   id='${"ID_R"+index}' value='${ID_REGION}'>
+                                     <input type="text"   id='${"ID_O"+index}' value='${ID_ORDER}'>
+                                     <input type="text"   id='${"ST_D"+index}' value='${ST_DOSE}'>
+                                     <input type="text"   id='${"NM_O"+index}' value='${NM_ORDER}'>
+                                     <input type="text"   id='${"ST_U"+index}' value='${ST_USENO}'>
+                                     <input type="text"   id='${"LSTPT"+index}' value='${LSTPT}'>
+                                    </li>
                                 `
                                 );
-
-                                ISLN_Dateback(idPt,index);
+                                $("#Part"+ID_REGION).prop('checked',true);
+                                TimeSet(JID_TIME);
+                                let y=DT.substr(0,3);
+                                let m=DT.substr(3,2);
+                                let d=DT.substr(5,2);
+                                let H=TM.substr(0,2);
+                                let M=TM.substr(2,2);
+                                $("#timer").val(y+m+d);
+                                $("#timetxt").val(H+M);
                             });
+                            $('input[name=part]').prop('disabled',true);
                             break;
                         case 'C':
 
@@ -1641,10 +1623,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
 
             }
-            function TimeSet(IDTM) {
+            function TimeSet(JID_TIME) {
                 $("input[name=IDGP]").prop('checked',false);
-                $("#"+IDTM).prop('checked',true);
-                if(IDTM=="ISTM00000005"){
+                $("#IDTM").val(JID_TIME);
+                $("#"+JID_TIME).prop('checked',true);
+                if(JID_TIME=="ISTM00000005"){
                     $("input[name=IDGP]").prop('disabled',true);
                 }else {
                     $("input[name=IDGP]").prop('disabled',false);
@@ -1661,7 +1644,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $("#fUSEF_"+index).val(Fval);
                 $('#FuModal').modal('hide');
             }
-
             function  reloadmsg() {
                 return '確認要重新整理嗎?';
             }
@@ -1714,7 +1696,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
         }
         function fuval(val){
             let num=$('#funum').val();
-            console.log(num,val);
             $("#fUSEF_"+num).val(val);
             $('#FuModal').modal('hide');
         }
@@ -1773,7 +1754,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 <label style="font-size: 4vmin">評估時間:</label>
                 <input  type="text" id="timer" value="" name="sDate" placeholder="YYYMMDD" maxlength="7" autocomplete="off">
                 <input type="text" id="timetxt" value="" name="sTime" placeholder="HHMM" maxlength="4" autocomplete="off">
-                <input type="text" name="sIDTM" id="IDTM" value="" style="display: none" placeholder="IDTM">
+                <input type="text" name="sIDTM" id="IDTM" value=""  placeholder="IDTM" style="display:none;">
             </div>
             <div id="ISTM"></div>
         </div>
