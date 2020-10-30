@@ -179,14 +179,6 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             });
 
 
-            $('input[type=text]').keypress(function(e) {
-                //enter sumbit return false
-              let  code = e.keyCode ? e.keyCode : e.which;
-                if(code === 13) {
-                    e.preventDefault();
-                }
-            });
-
             $("#IdPt").bind("input propertychange",function () {
                 if(this.value.length==8)
                 {
@@ -222,6 +214,8 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         CheckUI(IdPt,Arr[index]);
                     }
 
+                }else {
+                    alert("格式錯誤")
                 }
             });
 
