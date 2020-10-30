@@ -1,0 +1,129 @@
+.btn {
+    margin-top: 3px;
+}
+
+h1 {
+    text-align: left;
+    font-size: 6vmin;
+}
+
+#BSData {
+    margin-top: 10px;
+    display: none;
+}
+
+#isuling {
+    margin-top: 10px;
+    display: none;
+}
+
+#Imgisuling {
+    margin-top: 10px;
+    width: 350px;
+    height: 560px;
+    display: none;
+}
+#NO_isuling{
+    margin-top: 10px;
+    display: none;
+}
+#A {
+    transform: rotate(25deg);
+}
+
+#H {
+    transform: rotate(-25deg);
+}
+
+#FuModal .modal-dialog,
+.modal-content {
+   /* 80% of window height */
+    height: 80%;
+}
+
+#isuModal .modal-dialog,
+.modal-content {
+    /* 80% of window height */
+    height: 80%;
+}
+.modal-body {
+    /* 100% = dialog height, 120px = header + footer */
+    max-height: calc(100% - 120px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+#loading{
+    position: absolute;
+    z-index: 9999;
+    top: 50%;
+    left: 50%;
+    background-color: #FFFFFF;
+    color: #000000;
+    font-size: 5vmin;
+    width: 45vmin;
+    height: 12vmin;
+    padding-left:20px;
+    padding-top:10px;
+    border-radius: 5px;
+    margin: -15vmin 0 0 -30vmin;
+
+}
+#loading .loadimg{
+    width: 10vmin;
+    height:10vmin;
+}
+#wrapper{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.5;
+    z-index: 9998;
+}
+
+li {
+    list-style-type:none;
+}
+.container{
+    max-width: 1140px;
+}
+.container button{
+    color: white;
+    font-size: 4.5vmin;
+}
+.container .float-left{
+    font-size: 3.7vmin;
+}
+.container .Otimer{
+    margin-top:10px;
+    font-size: 4vmin;
+    background-color: #baeeff;
+    border-radius:3px;
+}
+.container .Otimer  .pageTime #timer{
+    width:35vmin;
+    text-align: center;
+    margin-top: 5px;
+
+}
+.container .Otimer  .pageTime #timetxt {
+    width: 15vmin;
+    margin-left: 5px;
+    margin-top: 5px;
+    border: 1px white;
+}
+.container .Features{
+    font-size: 3.5vmin;
+}
+.Parametertable{
+   display: none;
+}
+#LastPart{
+    margin-top: 3px;
+    border-width:0 ;
+    background-color: brown;
+    color: white;
+}
+#dose3{
+    -ms-ime-mode: disabled;
+}
