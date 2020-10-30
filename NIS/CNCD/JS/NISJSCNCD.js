@@ -11,7 +11,7 @@ function DefaultData(idPt,INPt,sUr) {
             $("#wrapper").hide();
             let objArr=JSON.parse(AESDeCode(data));
             let TraObj=JSON.parse(objArr.shift());
-            console.log(objArr);
+
             if( $("#DATAList").children().length>0){
                 $("#DATAList").children().remove();
             }
