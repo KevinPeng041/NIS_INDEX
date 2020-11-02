@@ -1,5 +1,4 @@
 <?php
-/*include '../config.php';*/
 date_default_timezone_set('Asia/Taipei');
 function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
     //取病人輸血紀錄初始清單
@@ -654,6 +653,7 @@ function PosCBLDCancel($conn,$sTraID,$sPg){
                 WHERE BCK_BAGENO=:BCK_BAGENO AND BCK_DATMSEQ=:BCK_DATMSEQ
                 AND BCK_TRADATE=:BCK_TRADATE AND BCK_TRATIME=:BCK_TRATIME
                 AND BCK_CANDATE=' 'AND BCK_CANTIME=' '";
+
                 $stid2=oci_parse($conn,$UPSQL);
                 oci_bind_by_name($stid2,":BCK_CANDATE",$CANDATE);
                 oci_bind_by_name($stid2,":BCK_CANTIME",$CANTIME);
