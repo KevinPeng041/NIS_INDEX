@@ -47,7 +47,6 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
-    <script src="../../NISCOMMAPI.js"></script>
     <script>
         let sfm='<?php echo $sfm?>';
         if(sfm==""){
