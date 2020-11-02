@@ -1266,12 +1266,12 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
                         $("#ISTM").append(
                             `
-                        <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000001"}' value='${obj.ISTM00000001}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000001}</label>
-                        <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000002"}' value='${obj.ISTM00000002}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000002}</label>
-                        <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000003"}' value='${obj.ISTM00000003}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000003}</label>
-                        <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000004"}' value='${obj.ISTM00000004}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000004}</label>
-                        <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000005"}' value='${obj.ISTM00000005}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000005}</label>
-                        `
+                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000001"}' value='${obj.ISTM00000001}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000001}</label>
+                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000002"}' value='${obj.ISTM00000002}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000002}</label>
+                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000003"}' value='${obj.ISTM00000003}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000003}</label>
+                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000004"}' value='${obj.ISTM00000004}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000004}</label>
+                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000005"}' value='${obj.ISTM00000005}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000005}</label>
+                             `
                         );
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         errorModal(
