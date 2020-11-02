@@ -169,11 +169,9 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         if(FocusIndex>4){
                             if (focusID==="NumId")
                             {
-
                                 CheckUIisset($("#IdPt").val(),$("#NumId").val());
                             }
-
-                            $("#"+InputIdArr[FocusIndex-1]).focus();
+                                $("#"+InputIdArr[FocusIndex-1]).focus();
 
                         }else {
                             if (focusID==="IdPt" && $("#DataTxt").val()===""){
@@ -181,11 +179,8 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             }else if(focusID==="IdPt" && $("#DataTxt").val()!==""){
                                 errorModal("是否要異動病人資料",true);
                             }
-
-                            $("#"+InputIdArr[FocusIndex]).focus();
+                                $("#"+InputIdArr[FocusIndex]).focus();
                         }
-
-
                     }
                     return false;
                 }
@@ -262,29 +257,28 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
             });
             function CheckUIisset(IdPt,NumidStr){
-                try {
-                    let CheckBoxId=$("#"+IdPt+"\\@"+NumidStr);
+                    let CheckBoxId=$("#"+ paddingLeft(IdPt,8)+"\\@"+NumidStr);
                     if(CheckBoxId.length>0){
                         let top=(CheckBoxId.offset()).top-400;
                         CheckBoxId.prop('checked',true);
                         $("#scrollList").scrollTop(top);
                     }else {
                         ErrIndex++;
-                        obj.IDPT=IdPt;
+
+                        obj.IDPT=paddingLeft(IdPt,8);
                         obj.BAR_CODE=NumidStr;
                         obj.NUM=ErrIndex;
                         let copy=Object.assign({},obj);//複製錯誤血袋
+
                         err.push(copy);
                         let errfilter=err.filter(function (element, index, arr) {
                             return arr.indexOf(element)===index;
                         });
+
                         errUI(errfilter);
                     }
                     $("#NumId").val("");
-                }catch (e) {
-                    console.log(e);
-                    return false;
-                }
+
             }
             function bedcallback(AESobj) {
                 let str=AESDeCode(AESobj);
@@ -330,7 +324,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                   console.log("http://localhost"+"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+IDPT+"&sUr="+sUr));
 */
                 $.ajax({
-                    url:"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+IDPT+"&sUr="+sUr),
+                    url:"/webservice/NISCNCDCALLBED.php?str="+AESEnCode("DA_idpt="+paddingLeft(IDPT,8)+"&sUr="+sUr),
                     type:"POST",
                     dataType: 'text',
                     success:function (data) {
@@ -376,6 +370,12 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $("input[type=text]:not(#NURSOPID)").val("");
                 $("#DATAList").children().remove();
             }
+            function paddingLeft(str,lenght){
+                if(str.length >= lenght)
+                    return str;
+                else
+                    return paddingLeft("0" +str,lenght);
+            }
         });
     </script>
 
@@ -417,7 +417,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
         <div class="DataTable">
             <div>
-                <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8" autocomplete="off">
+                <input id="IdPt" class="Num_input" type="text" placeholder="輸入病歷號" maxlength="8" autocomplete="off" enterkeyhint="go">
                 <input id="NumId" class="Num_input"  type="text" placeholder="輸入採血編號" autocomplete="off">
                 <button id="Error_btn" type="button" class="btn btn-secondary btn-md Num_input"  style="margin-bottom: 15px;" disabled>錯誤查詢</button>
             </div>
