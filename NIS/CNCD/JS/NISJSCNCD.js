@@ -203,14 +203,14 @@ function errUI(Arr){
     $.each(Arr,function (index,val) {
         let NUM=val.NUM;
         let IDPT=val.IDPT;
-        let BSK_BAGENO=val.BSK_BAGENO;
-
+        let BAR_CODE=val.BAR_CODE;
+        console.log(val);
         $("#ErrBlood").append(
             `
                <tr class='list-item'>
                     <td>${NUM}</td>
                     <td>${IDPT}</td>
-                    <td>${BSK_BAGENO}</td>
+                    <td>${BAR_CODE}</td>
                 </tr>
             `
         );
