@@ -34,7 +34,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
     <script  type="text/javascript" src="../../instascan.min.js"></script>
-    <script src="../../NISCOMMAPI.js"></script>
     <script>
 
         let ckw=setInterval(function () {
@@ -381,7 +380,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             return false;
                             break;
                         case "true":
-                            x=window.open("/webservice/NISPWSLKCBD.php?str="+AESEnCode("sFm=CBLD&sIdUser=00FUZZY"),"責任床位(輸)",'width=850px,height=650px,scrollbars=yes,resizable=no');
+                            x=window.open("/webservice/NISPWSLKCBD.php?str="+AESEnCode("sFm=CBLD&sIdUser=<?php echo $Account?>"),"責任床位(輸)",'width=850px,height=650px,scrollbars=yes,resizable=no');
                             break;
                     }
                     x.bedcallback=bedcallback;
@@ -1137,6 +1136,13 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
           let   s=(TimeNow.getSeconds()<10?'0':'')+TimeNow.getSeconds();
             $("#DateVal").val(yyyy-1911+MM+dd);
             $("#TimeVal").val(h+m);
+      }
+      function paddingLeft(str,lenght){
+          /*向左補0*/
+          if(str.length >= lenght)
+              return str;
+          else
+              return paddingLeft("0" +str,lenght);
       }
 
   });
