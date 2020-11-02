@@ -299,7 +299,7 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $("#loading").show();
                 $("#wrapper").show();
                 $("#DATAList").children().remove();
-                console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=00FUZZY'));
+                console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=<?php echo $OPID?>'));
                 $.ajax({
                     url:"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=<?php echo $OPID?>'),
                     type:"POST",
