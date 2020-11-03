@@ -35,6 +35,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <link rel="stylesheet" href="../../css/NIS/ILSG.css">
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="../../crypto-js.js"></script>
+    <script src="../../AESCrypto.js"></script>
     <script>
         let sfm='<?php echo $sfm?>';
         if(sfm==""){
@@ -133,11 +134,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=part]:checked").val(),
                     'FORBID':'',
-                    'ID':$("#tt1").val(),
+                    'ID':$("#sID0").val(),
                     'STM':$("#Isu_A").val(),
                     'DBDOSE':'-1',
-                    'SDOSE':$("#dose1").val(),
-                    'USEF':$("#fUSEF_1").val(),
+                    'SDOSE':$("#dose0").val(),
+                    'USEF':$("#fUSEF_0").val(),
                     'LSTPT':$('#LastPart').val()
                 }];
                 ISSN_jsonStr2=[{
@@ -147,11 +148,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=part]:checked").val(),
                     'FORBID':'',
-                    'ID':$("#tt1").val(),
+                    'ID':$("#sID0").val(),
                     'STM':$("#Isu_A").val(),
                     'DBDOSE':'-1',
-                    'SDOSE':$("#dose1").val(),
-                    'USEF':$("#fUSEF_1").val(),
+                    'SDOSE':$("#dose0").val(),
+                    'USEF':$("#fUSEF_0").val(),
                     'LSTPT':$('#LastPart').val()
                 },{
                     'idFrm':$('#STDATB_idFrm').val(),
@@ -160,11 +161,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=part]:checked").val(),
                     'FORBID':'',
-                    'ID':$("#tt3").val(),
+                    'ID':$("#sID1").val(),
                     'STM':$("#Isu_B").val(),
                     'DBDOSE':'-1',
-                    'SDOSE':$("#dose2").val(),
-                    'USEF':$("#fUSEF_2").val(),
+                    'SDOSE':$("#dose1").val(),
+                    'USEF':$("#fUSEF_1").val(),
                     'LSTPT':$('#LastPart').val()
                 }];
                 ISSN_jsonStr3=[{
@@ -174,8 +175,21 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=part]:checked").val(),
                     'FORBID':'',
-                    'ID':$("#tt1").val(),
+                    'ID':$("#sID0").val(),
                     'STM':$("#Isu_A").val(),
+                    'DBDOSE':'-1',
+                    'SDOSE':$("#dose0").val(),
+                    'USEF':$("#fUSEF_0").val(),
+                    'LSTPT':$('#LastPart').val()
+                },{
+                    'idFrm':$('#STDATB_idFrm').val(),
+                    'SFRMDTSEQ':'',
+                    'ITNO':$("input[name='ITNO']:checked").val(),
+                    'IDTM':$("#IDTM").val(),
+                    'IDGP':$("input[name=part]:checked").val(),
+                    'FORBID':'',
+                    'ID':$("#sID1").val(),
+                    'STM':$("#Isu_B").val(),
                     'DBDOSE':'-1',
                     'SDOSE':$("#dose1").val(),
                     'USEF':$("#fUSEF_1").val(),
@@ -187,24 +201,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=part]:checked").val(),
                     'FORBID':'',
-                    'ID':$("#tt3").val(),
-                    'STM':$("#Isu_B").val(),
+                    'ID':$("#sUSEF2").val(),
+                    'STM':$("#Isu_C").val(),
                     'DBDOSE':'-1',
                     'SDOSE':$("#dose2").val(),
                     'USEF':$("#fUSEF_2").val(),
-                    'LSTPT':$('#LastPart').val()
-                },{
-                    'idFrm':$('#STDATB_idFrm').val(),
-                    'SFRMDTSEQ':'',
-                    'ITNO':$("input[name='ITNO']:checked").val(),
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=part]:checked").val(),
-                    'FORBID':'',
-                    'ID':$("#tt5").val(),
-                    'STM':$("#Isu_C").val(),
-                    'DBDOSE':'-1',
-                    'SDOSE':$("#dose3").val(),
-                    'USEF':$("#fUSEF_3").val(),
                     'LSTPT':$('#LastPart').val()
                 }];
 
@@ -393,13 +394,13 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         Reset(1);
                         break;
                     case "FuClear1":
-                        clearvalue(1);
+                        clearvalue(0);
                         break;
                     case "FuClear2":
-                        clearvalue(2);
+                        clearvalue(1);
                         break;
                     case "FuClear3":
-                        clearvalue(3);
+                        clearvalue(2);
                         break;
                     case "FuConfirm":
                         PersonFuval();
@@ -428,11 +429,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             'IDTM':$("#IDTM").val(),
                             'IDGP':$("input[name=part]:checked").val(),
                             'FORBID':'',
-                            'ID':$("#tt1").val(),
+                            'ID':$("#sID0").val(),
                             'STM':$("#Isu_A").val(),
                             'DBDOSE':'-1',
-                            'SDOSE':$("#dose1").val(),
-                            'USEF':$("#fUSEF_1").val(),
+                            'SDOSE':$("#dose0").val(),
+                            'USEF':$("#fUSEF_0").val(),
                             'LSTPT':$('#LastPart').val()
                         }];
                         ISSN_jsonStr2=[{
@@ -442,11 +443,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             'IDTM':$("#IDTM").val(),
                             'IDGP':$("input[name=part]:checked").val(),
                             'FORBID':'',
-                            'ID':$("#tt1").val(),
+                            'ID':$("#sID0").val(),
                             'STM':$("#Isu_A").val(),
                             'DBDOSE':'-1',
-                            'SDOSE':$("#dose1").val(),
-                            'USEF':$("#fUSEF_1").val(),
+                            'SDOSE':$("#dose0").val(),
+                            'USEF':$("#fUSEF_0").val(),
                             'LSTPT':$('#LastPart').val()
                         },{
                             'idFrm':$('#STDATB_idFrm').val(),
@@ -455,11 +456,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             'IDTM':$("#IDTM").val(),
                             'IDGP':$("input[name=part]:checked").val(),
                             'FORBID':'',
-                            'ID':$("#tt3").val(),
+                            'ID':$("#sID1").val(),
                             'STM':$("#Isu_B").val(),
                             'DBDOSE':'-1',
-                            'SDOSE':$("#dose2").val(),
-                            'USEF':$("#fUSEF_2").val(),
+                            'SDOSE':$("#dose1").val(),
+                            'USEF':$("#fUSEF_1").val(),
                             'LSTPT':$('#LastPart').val()
                         }];
                         ISSN_jsonStr3=[{
@@ -469,8 +470,21 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             'IDTM':$("#IDTM").val(),
                             'IDGP':$("input[name=part]:checked").val(),
                             'FORBID':'',
-                            'ID':$("#tt1").val(),
+                            'ID':$("#sID0").val(),
                             'STM':$("#Isu_A").val(),
+                            'DBDOSE':'-1',
+                            'SDOSE':$("#dose0").val(),
+                            'USEF':$("#fUSEF_0").val(),
+                            'LSTPT':$('#LastPart').val()
+                        },{
+                            'idFrm':$('#STDATB_idFrm').val(),
+                            'SFRMDTSEQ':'',
+                            'ITNO':$("input[name='ITNO']:checked").val(),
+                            'IDTM':$("#IDTM").val(),
+                            'IDGP':$("input[name=part]:checked").val(),
+                            'FORBID':'',
+                            'ID':$("#sID1").val(),
+                            'STM':$("#Isu_B").val(),
                             'DBDOSE':'-1',
                             'SDOSE':$("#dose1").val(),
                             'USEF':$("#fUSEF_1").val(),
@@ -482,26 +496,15 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             'IDTM':$("#IDTM").val(),
                             'IDGP':$("input[name=part]:checked").val(),
                             'FORBID':'',
-                            'ID':$("#tt3").val(),
-                            'STM':$("#Isu_B").val(),
+                            'ID':$("#sID2").val(),
+                            'STM':$("#Isu_C").val(),
                             'DBDOSE':'-1',
                             'SDOSE':$("#dose2").val(),
                             'USEF':$("#fUSEF_2").val(),
                             'LSTPT':$('#LastPart').val()
-                        },{
-                            'idFrm':$('#STDATB_idFrm').val(),
-                            'SFRMDTSEQ':'',
-                            'ITNO':$("input[name='ITNO']:checked").val(),
-                            'IDTM':$("#IDTM").val(),
-                            'IDGP':$("input[name=part]:checked").val(),
-                            'FORBID':'',
-                            'ID':$("#tt5").val(),
-                            'STM':$("#Isu_C").val(),
-                            'DBDOSE':'-1',
-                            'SDOSE':$("#dose3").val(),
-                            'USEF':$("#fUSEF_3").val(),
-                            'LSTPT':$('#LastPart').val()
                         }];
+
+
                         ISSG_jsonStr = [{
                             'IDTM': $("#IDTM").val(),
                             'IDGP': $("input[name=IDGP]:checked").val(),
@@ -574,64 +577,64 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                     errorModal("請先選擇第二筆");
                                     return false;
                                 }
-                                if($("#Isu_A").val()!='' && $("#dose1").val()=='') {
+                                if($("#Isu_A").val()!='' && $("#dose0").val()=='') {
 
                                     errorModal("第一筆施打劑量不得為空");
                                     $("#ERRORVAL").val(4);
                                     focustext(4);
                                     return false;
                                 }
-                                if($("#Isu_A").val()!='' && $("#fUSEF_1").val()==''){
+                                if($("#Isu_A").val()!='' && $("#fUSEF_0").val()==''){
 
                                     errorModal("第一筆頻率不得為空");
                                     $("#ERRORVAL").val(5);
                                     focustext(5);
                                     return false;
                                 }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#dose2").val()=='') {
+                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#dose1").val()=='') {
 
                                     errorModal("第二筆施打劑量不得為空");
                                     $("#ERRORVAL").val(6);
                                     focustext(6);
                                     return false;
                                 }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#fUSEF_2").val()=='') {
+                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#fUSEF_1").val()=='') {
 
                                     errorModal("第二筆頻率不得為空");
                                     $("#ERRORVAL").val(7);
                                     focustext(7);
                                     return false;
                                 }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#Isu_C").val()!='' && $("#dose3").val()=='') {
+                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#Isu_C").val()!='' && $("#dose2").val()=='') {
                                     errorModal("第三筆施打劑量不得為空");
                                     $("#ERRORVAL").val(8);
                                     focustext(8);
                                     return false;
                                 }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#Isu_C").val()!='' && $("#fUSEF_3").val()=='') {
+                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#Isu_C").val()!='' && $("#fUSEF_2").val()=='') {
                                     errorModal("第三筆頻率不得為空");
                                     $("#ERRORVAL").val(9);
                                     focustext(9);
                                     return false;
                                 }
-                                if ($("#dose1").val() != '') {
-                                    if (ValidateNumber($("#dose1").val()) == 'error') {
+                                if ($("#dose0").val() != '') {
+                                    if (ValidateNumber($("#dose0").val()) == 'error') {
                                         errorModal("第一筆劑量請輸入數字");
                                         $("#ERRORVAL").val(4);
                                         focustext(4);
                                         return false;
                                     }
                                 }
-                                if ($("#dose2").val() != '') {
-                                    if (ValidateNumber($("#dose2").val()) == 'error') {
+                                if ($("#dose1").val() != '') {
+                                    if (ValidateNumber($("#dose1").val()) == 'error') {
                                         errorModal("第二筆劑量請輸入數字");
                                         $("#ERRORVAL").val(6);
                                         focustext(6);
                                         return false;
                                     }
                                 }
-                                if ($("#dose3").val() != '') {
-                                    if (ValidateNumber($("#dose3").val()) == 'error') {
+                                if ($("#dose2").val() != '') {
+                                    if (ValidateNumber($("#dose2").val()) == 'error') {
                                         errorModal("第三筆劑量請輸入數字");
                                         $("#ERRORVAL").val(8);
                                         focustext(8);
@@ -669,7 +672,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 spg='C';
                                 break;
                         }
-
+                        console.log(json);
                         console.log("http://localhost"+submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
                         $("#loading").show();
                         $("#wrapper").show();
@@ -751,6 +754,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             }
             function DEaultINI(){
                 let ajaxdata_ip='/webservice/NISPWSTRAINI.php';
+                console.log("http://localhost"+ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'));
                 $.ajax({
                     url:ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'),
                     type:"POST",
@@ -1093,6 +1097,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             /*讀取輸入作業頁面資料ws(藥名)*/
             function LoadInsertPage(num) {
                 let LoadInsertPage_ip="/webservice/NISPWSGETPRE.php";
+                console.log("http://localhost"+LoadInsertPage_ip+"?str="+AESEnCode("sFm=ILSGA&sTraID="+transKey+"&sPg="+num));
                 $.ajax({
                     url:LoadInsertPage_ip+"?str="+AESEnCode("sFm=ILSGA&sTraID="+transKey+"&sPg="+num),
                     type:'POST',
@@ -1105,10 +1110,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             }
                             if(num=='PREB'){
                                 let ISULING_OBJ=JSON.parse((JSON.parse(data))[0].ISULING);
-
+                                console.log(ISULING_OBJ);
                                 $.each(ISULING_OBJ,function (index,value) {
                                     let JID_KEY = ISULING_OBJ[index].JID_KEY;
-                                    let ID = ISULING_OBJ[index].DIA;
+                                    let DIA = ISULING_OBJ[index].DIA;
                                     let STM =(ISULING_OBJ[index].STM).replace('§0§','');
                                     let  DCSORT = ISULING_OBJ[index].DCSORT;
                                     let QTY = ISULING_OBJ[index].QTY;
@@ -1123,9 +1128,9 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                        class="btn btn-primary"  data-dismiss="modal"  aria-hidden="true" style='width: 60px;margin-left: -25px;margin-right: 5px;font-size: 2.7vmin;' >
                                            ${STM}
                                     <li style='padding-left: 42px;font-size:2.5vmin'>${QTY_tt+QTY+USEF_tt+USEF}</li>
-                                        <input type='text' value='${ID}' style='display: none' id='${"sID"+index}'>
-                                        <input type='text' value='${QTY}' style='display: none' id='${"QTY"+index}'>
-                                        <input type='text' value='${USEF}' style='display: none' id='${"sUSEF"+index}'>
+                                        <input type='text' value='${DIA}'  id='${"DIA"+index}'>
+                                        <input type='text' value='${QTY}' id='${"QTY"+index}'>
+                                        <input type='text' value='${USEF}'  id='${"sUSEF"+index}'>
                                     </li>
                                     `
                                     );
@@ -1145,7 +1150,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 });
 
             }
-
             function UPDATEDATA(spg,Json) {
                 let  trsKey=$('#transKEY').val();
                 let UPDATEDATA_ip="/webservice/NISPWSSETDATA.php";
@@ -1222,22 +1226,22 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         $('#STVALval').focus();
                         break;
                     case '4':
-                        $('#dose1').focus();
+                        $('#dose0').focus();
                         break;
                     case '5':
-                        $('#fUSEF_1').focus();
+                        $('#fUSEF_0').focus();
                         break;
                     case '6':
-                        $('#dose2').focus();
+                        $('#dose1').focus();
                         break;
                     case '7':
-                        $('#fUSEF_2').focus();
+                        $('#fUSEF_1').focus();
                         break;
                     case '8':
-                        $('#dose3').focus();
+                        $('#dose2').focus();
                         break;
                     case '9':
-                        $('#fUSEF_3').focus();
+                        $('#fUSEF_2').focus();
                         break;
                     case '10':
                         $('#DateStart').focus();
@@ -1283,38 +1287,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     }
                 });
             }
-            function AESDeCode(text){
-                let key = CryptoJS.enc.Utf8.parse('1234567890654321'); //為了避免補位，直接用16位的金鑰
-                let iv = CryptoJS.enc.Utf8.parse('1234567890123456'); //16位初始向量
-                let decrypted = CryptoJS.AES.decrypt(text,key,{
-                    iv: iv,
-                    mode: CryptoJS.mode.CBC,
-                    padding:CryptoJS.pad.Pkcs7
-                });
-
-                let decryptedStr=decrypted.toString(CryptoJS.enc.Utf8);
-                let value=decryptedStr.toString();
-                return value;
-            }
-            function AESEnCode(text){
-                let key = CryptoJS.enc.Utf8.parse('1234567890654321'); //為了避免補位，直接用16位的金鑰
-                let iv = CryptoJS.enc.Utf8.parse('1234567890123456'); //16位初始向量
-                let encrypted = CryptoJS.AES.encrypt(text, key, {
-                    iv: iv,
-                    mode:CryptoJS.mode.CBC,
-                    padding:CryptoJS.pad.Pkcs7
-                });
-
-
-                //若上面加密返回的hexStr,需打開下面兩行，再次處理
-                //var encryptedHexStr = CryptoJS.enc.Hex.parse(word);
-                // var srcs = CryptoJS.enc.Base64.stringify(encryptedHexStr);
-
-                let hexstr=encrypted.ciphertext.toString().toUpperCase();
-                let oldHexStr=CryptoJS.enc.Hex.parse(hexstr);
-                let base64Str=CryptoJS.enc.Base64.stringify(oldHexStr);
-                return  base64Str;
-            }
             function Reset(num) {
                 switch (num) {
                     case 1:
@@ -1343,7 +1315,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $('#SubmitBtn').prop('disabled',false);
                 $("#Part").prop("disabled", true);
 
-
+                $("#PageVal").val("A");
                 $('#Textarea').val("");
                 $("#SERCH_Click").val("1");
                 $('#timer').prop('readonly',false);
@@ -1351,8 +1323,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $("#Part").prop('disabled',true);
                 $("#Serch").prop('disabled',false);
 
-                $("input[type=radio]").prop('checked',false);
-                $("input[type=checkbox]").prop('checked',false);
+                $("input[type=checkbox]:not(#ITNO_btn)").prop('checked',false);
                 $("input[type=checkbox]").prop('disabled',false);
                 $("input[type=radio]").prop('disabled',false);
 
@@ -1364,18 +1335,21 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             }
             function clearvalue(VAL){
                 switch (VAL) {
-                    case 1:
+                    case 0:
                         $('#Isu_A').val("");
                         break;
-                    case 2:
+                    case 1:
                         $('#Isu_B').val("");
                         break;
-                    case 3:
+                    case 2:
                         $('#Isu_C').val("");
                         break;
                 }
                 $('#fUSEF_'+VAL).val("");
                 $('#dose'+VAL).val("");
+                $("#sID"+VAL).val("");
+                $("#sUSEF"+VAL).val("");
+
             }
             function Serchcallback(AESdata){
                 let page=$("#PageVal").val();
@@ -1467,15 +1441,12 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             $.each(data,function (index) {
                                 if(index==0){
                                     txt_index='A';
-                                    num_index=index+1;
                                 }
                                 if(index==1){
                                     txt_index='B';
-                                    num_index=index+1;
                                 }
                                 if (index==2){
                                     txt_index='C';
-                                    num_index=index+1;
                                 }
                                 DT=data[index].DT_EXCUTE;
                                 TM=data[index].TM_EXCUTE;
@@ -1504,8 +1475,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 $("#LastPart").val(LSTPT);
                                 $("#transKEY").val(data[index].sTraID);
                                 $("#Isu_"+txt_index).val(NM_ORDER);
-                                $("#dose"+num_index).val(ST_DOSE);
-                                $("#fUSEF_"+num_index).val(ST_USENO);
+                                $("#dose"+index).val(ST_DOSE);
+                                $("#fUSEF_"+index).val(ST_USENO);
+                                $("#sID"+index).val(data[index].ID_ORDER);
+                                $("#sUSEF"+index).val(data[index].ST_USENO);
                                 $("#ISLNLi").children().remove();
                                 $("#ISLNLi").append(
                                     `
@@ -1522,6 +1495,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                     </li>
                                 `
                                 );
+
                                 $("#Part"+ID_REGION).prop('checked',true);
                                 TimeSet(JID_TIME);
                                 let y=DT.substr(0,3);
@@ -1531,6 +1505,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 let M=TM.substr(2,2);
                                 $("#timer").val(y+m+d);
                                 $("#timetxt").val(H+M);
+
                             });
                             $('input[name=part]').prop('disabled',true);
                             break;
@@ -1573,11 +1548,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
                     const Disabled_T=['Part','Del','DELMENU','Part'];
                     const CheackName_F=['sRdoDateTime','part','sPressure','IDGP'];
-                    const Disabled_F=['ISSG','ISLN','Inhibit','SubmitBtn','ITNO_btn'];
+                    const Disabled_F=['ISSG','ISLN','Inhibit','SubmitBtn'];
                     const HandBtn=['ISSG','ISLN','Inhibit','Part','BSData','isuling','Imgisuling','NO_isuling'];
 
                     const Value_Clear=['FORMSEQANCE','DT_EXE','TM_EXE','sSave','STDATA_FORMWT','STDATA_JID_NSRANK','STDATB_idFrm','transKEY','SER_TM','SER_DT',
-                        'timer','timetxt','LastPart','dose1','dose2','dose3','fUSEF_1','fUSEF_2','fUSEF_3','tt1','tt2','tt3','tt4','tt5','tt6',
+                        'timer','timetxt','LastPart','dose0','dose1','dose2','fUSEF_0','fUSEF_1','fUSEF_2','sID0','sUSEF0','sID1','sUSEF1','sUSEF2','sID2',
                         'Isu_A','Isu_B','Isu_C','STVALval','Textarea'];
 
                     $.each(CheackName_F,function (index,value) {
@@ -1587,7 +1562,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
                     $.each(Disabled_F,function (index,value) {
                         $("#"+value).prop("disabled",false);
-
                     });
 
                     $.each(Disabled_T,function (index,value) {
@@ -1652,44 +1626,44 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
 
         function MEDbtnID(NUM) {
-
             let txt = ($("#MEDli" + NUM).text()).trim();
-            let IDtxt=($("#sID"+NUM).val()).trim();
+            let IDtxt=($("#DIA"+NUM).val()).trim();
             let USERtxt=($("#sUSEF"+NUM).val()).trim();
             let ckt=($("#ckt").val()).trim();
             let QTY=($("#QTY"+NUM).val()).trim();
 
             switch (ckt) {
                 case '1':
-                    $("#tt1").val(IDtxt);
-                    $("#tt2").val(USERtxt);
-                    $("#Isu_A").val(txt);
-                    $("#fUSEF_1").val(USERtxt);
-                    $("#dose1").val(QTY);
 
-                    setTimeout("$(\"#dose1\").focus();",500);
+                    $("#sID0").val(IDtxt);
+                    $("#sUSEF0").val(USERtxt);
+                    $("#Isu_A").val(txt);
+                    $("#fUSEF_0").val(USERtxt);
+                    $("#dose0").val(QTY);
+
+                    setTimeout("$(\"#dose0\").focus();",500);
 
                     break;
                 case '2':
 
-                    $("#tt3").val(IDtxt);
-                    $("#tt4").val(USERtxt);
+                    $("#sID1").val(IDtxt);
+                    $("#sUSEF1").val(USERtxt);
                     $("#Isu_B").val(txt);
+                    $("#fUSEF_1").val(USERtxt);
+                    $("#dose1").val(QTY);
+
+
+                    setTimeout("$(\"#dose1\").focus();",500);
+                    break;
+                case '3':
+                    $("#sUSEF2").val(IDtxt);
+                    $("#sID2").val(USERtxt);
+                    $("#Isu_C").val(txt);
                     $("#fUSEF_2").val(USERtxt);
                     $("#dose2").val(QTY);
 
 
                     setTimeout("$(\"#dose2\").focus();",500);
-                    break;
-                case '3':
-                    $("#tt5").val(IDtxt);
-                    $("#tt6").val(USERtxt);
-                    $("#Isu_C").val(txt);
-                    $("#fUSEF_3").val(USERtxt);
-                    $("#dose3").val(QTY);
-
-
-                    setTimeout("$(\"#dose3\").focus();",500);
                     break;
                 default:
             }
@@ -1825,16 +1799,18 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     </button>
                     <label>胰島素:</label><input type="text" value="" name="ISLN_A" id="Isu_A" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off">
                     <div style="margin-top: 5px">
-                        <label>劑量:<input type="text" id="dose1"  name="sTdose1"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
-                                    type="text" style="width: 80px;" id="fUSEF_1" class="FuQuenCy" autocomplete="off" >
+                        <label>劑量:<input type="text" id="dose0"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
+                                    type="text" style="width: 80px;" id="fUSEF_0" class="FuQuenCy" autocomplete="off" >
                             <button  id="FuClear1" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button></label>
                     </div>
+                    <div style="display: none">
+                        <input type="text" value="" id="sID0" ><!-- 藥id-->
+                        <input type="text" value="" id="sUSEF0">
+                        <input type="text" value="" id="ckt" >
+                        <input type="text" value="" id="fut">
+                        <input type="text" value="" id="funum">
+                    </div>
 
-                    <input type="text" name="sID1" value="" id="tt1" style="display: none">
-                    <input type="text" name="sUSEF1" value="" id="tt2" style="display: none">
-                    <input type="text" value="" id="ckt" style="display: none">
-                    <input type="text" value="" id="fut" style="display: none">
-                    <input value="" id="funum" type="text" style="display: none">
                 </div>
 
                 <div id="ISU2">
@@ -1843,14 +1819,14 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     </button>
                     <label>胰島素:</label><input type="text" value="" name="ISLN_B" id="Isu_B" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off">
                     <div style="margin-top: 5px">
-                        <label>劑量:<input type="text" id="dose2" name="sTdose2" style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
-                                    type="text" style="width: 80px;" id="fUSEF_2" class="FuQuenCy" autocomplete="off">
+                        <label>劑量:<input type="text" id="dose1"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
+                                    type="text" style="width: 80px;" id="fUSEF_1" class="FuQuenCy" autocomplete="off">
                                      <button type="button"  id="FuClear2" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
                             </label>
 
                     </div>
-                    <input type="text" name="sID2" value="" id="tt3" style="display: none">
-                    <input type="text" name="sUSEF2" value="" id="tt4" style="display: none">
+                    <input type="text" value="" id="sID1" style="display: none">
+                    <input type="text" value="" id="sUSEF1" style="display: none">
                 </div>
                 <div id="ISU3" >
                     <button type="button" name="ISLNch" value="3" class="btn btn-primary btn-md" style="font-size: 3.5vmin" data-toggle="modal"
@@ -1858,13 +1834,13 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     </button>
                     <label>胰島素:</label><input type="text" value="" name="ISLN_C" id="Isu_C" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off">
                     <div style="margin-top: 5px">
-                        <label>劑量:<input type="text" id="dose3" name="sTdose3" style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
-                                    type="text" style="width: 80px;" id="fUSEF_3" class="FuQuenCy" autocomplete="off">
-                            <button type="button" type="button"   id="FuClear3" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
+                        <label>劑量:<input type="text" id="dose2"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
+                                    type="text" style="width: 80px;" id="fUSEF_2" class="FuQuenCy" autocomplete="off">
+                            <button  type="button"   id="FuClear3" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
                         </label>
                     </div>
-                    <input type="text" name="sID3" value="" id="tt5" style="display: none">
-                    <input type="text" name="sUSEF3" value="" id="tt6" style="display: none">
+                    <input type="text"  value="" id="sID2" style="display: none">
+                    <input type="text"  value="" id="sUSEF2" style="display: none">
                 </div>
             </div>
         </div>
