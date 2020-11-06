@@ -34,11 +34,7 @@ function  GetCNADPatient($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK){
     if(!$r){
         oci_rollback($conn);
         $e=oci_error($stid2);
-        print htmlentities($e['message']);
-        print "\n<pre>\n";
-        print htmlentities($e['sqltext']);
-        printf("\n%".($e['offset']+1)."s", "^");
-        print  "\n</pre>\n";
+         return $e['message'];
     }else{
         oci_commit($conn);
         return $json;
@@ -84,11 +80,7 @@ function GetCNADIniJson ($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FOR
     if(!$r){
         oci_rollback($conn);
         $e=oci_error($stid5);
-        print htmlentities($e['message']);
-        print "\n<pre>\n";
-        print htmlentities($e['sqltext']);
-        printf("\n%".($e['offset']+1)."s", "^");
-        print  "\n</pre>\n";
+        return $e['message'];
     }else{
         oci_commit($conn);
         return $json;
@@ -129,10 +121,7 @@ function GetCNADPageJson($conn,$BSK_TRANSRECNO,$sTraID){
     if(!$r){
         oci_rollback($conn);
         $e=oci_error($stid5);
-        print htmlentities($e['message']);
-        print "\n<pre>\n";
-        print htmlentities($e['sqltext']);
-        print  "\n</pre>\n";
+        return $e['message'];
     }else{
         oci_commit($conn);
         return $json;
@@ -367,7 +356,7 @@ function PosCNADCancel($conn,$sTraID,$sUr){
 
         if(!$r_execute){
             ocirollback($conn);
-            $e=oci_error($conn);
+            $e=oci_error($sid1);
             $response=json_encode(array("response" => "false","message" =>"作廢錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
         }else{
             $INSERT_SQL="INSERT INTO TBOBTG
@@ -379,7 +368,7 @@ function PosCNADCancel($conn,$sTraID,$sUr){
             $r_execute=oci_execute($sid2);
             if(!$r_execute){
                 ocirollback($conn);
-                $e=oci_error($conn);
+                $e=oci_error($sid2);
 
                 $response=json_encode(array("response" => "false","message" =>"存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
             }else{
