@@ -40,12 +40,11 @@ function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMS
         $INDENTNO=oci_result($stidA,'A_INDNO');
         $TRANSRECNO=oci_result($stidA,'A_TRANO');
     }
+    $Serch=array('"DT_EXECUTE":""','"TM_EXECUTE":""','"Num":""',"}]");
+    $str=',"A_INDNO":'.$INDENTNO.',"A_TRANO":"'.$TRANSRECNO.'"}]';
 
-    $a= str_replace('"DT_EXECUTE":""','"DT_EXE":'.$DT_EXECUTE,$ST_DATAA);
-    $B=str_replace('"TM_EXECUTE":""','"TM_EXE":'.$TM_EXECUTE,$a);
-    $new_ST_DA=str_replace('"Num":""','"NUM":'.$NUM,$B);
-    $newprm=',"A_INDNO":'.$INDENTNO.',"A_TRANO":"'.$TRANSRECNO.'"}]';
-    $new_ST_DATAA= str_replace("}]",$newprm,$new_ST_DA);
+    $replace=array($DT_EXECUTE,$TM_EXECUTE,$NUM,$str);
+    $new_ST_DATAA=str_replace($Serch,$replace,$ST_DATAA);
 
     $Insert_sql="INSERT INTO HIS803.NISWSTP(
                     ID_TABFORM,ID_TRANSACTION,ID_PATIENT,ID_INPATIENT,
@@ -59,11 +58,7 @@ function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMS
     if(!$r){
         oci_rollback($conn);
         $e=oci_error($stid5);
-        print htmlentities($e['message']);
-        print "\n<pre>\n";
-        print htmlentities($e['sqltext']);
-        printf("\n%".($e['offset']+1)."s", "^");
-        print  "\n</pre>\n";
+       return $e['message'];
     }else{
         oci_commit($conn);
         $arr2[]=array('INDENTNO'=>$INDENTNO,'TRANSRECNO'=>$TRANSRECNO,'sTraID'=>$sTraID,'sSave'=>$sSave);
@@ -226,20 +221,20 @@ function PosCBLDSave($conn,$sTraID,$sPg,$sDt,$sTm){
                             $Bstid=oci_parse($conn,$Bsql);
                             if (!$Bstid){
                                 $e=oci_error($conn);
-                                $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
+                                return $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
                             }
                             $Bex=oci_execute($Bstid,OCI_NO_AUTO_COMMIT);
                             if(!$Bex)
                             {
                                 oci_rollback($conn);
                                 $e=oci_error($Bstid);
-                                $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
+                                return $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
                             }
                             else{
                                 $r=oci_commit($conn);
                                 if(!$r){
                                     $e=oci_error($conn);
-                                    $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
+                                    return $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
 
                                 }
                                 $response=json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
@@ -280,24 +275,24 @@ function PosCBLDSave($conn,$sTraID,$sPg,$sDt,$sTm){
 
 
                             $Csql=$UPDATESQL.$str;
-                           $Cstid=oci_parse($conn,$Csql);
+                            $Cstid=oci_parse($conn,$Csql);
                             if (!$Cstid){
                                 $e=oci_error($conn);
-                                $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
+                                return $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
                             }
                             $Cex=oci_execute($Cstid,OCI_NO_AUTO_COMMIT);
                             if(!$Cex)
                             {
                                 oci_rollback($conn);
                                 $e=oci_error($Cstid);
-                                $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
+                                return  $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
 
                             }
                             else{
                                 $r=oci_commit($conn);
                                 if(!$r){
                                     $e=oci_error($conn);
-                                    $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
+                                    return  $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
                                 }
                                 $response=json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
                             }
@@ -444,15 +439,15 @@ function GetCBLDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
         oci_rollback($conn);
         $e=oci_error($TP_stid);
         $json=json_encode(array("message"=>$e['message']),JSON_UNESCAPED_UNICODE);
-        echo AESEnCode($json);
-        return false;
+
+        return $json;
     }else{
         $comm=oci_commit($conn);
        if(!$comm){
            $e=oci_error($conn);
            $json=json_encode(array("message"=>$e['message']),JSON_UNESCAPED_UNICODE);
-           echo AESEnCode($json);
-           return false;
+
+           return $json;
        }
     }
     return $CallBackJson;
@@ -544,11 +539,13 @@ function PosCBLDCancel($conn,$sTraID,$sPg){
                     'N',
                     ' ',' ',' ',' ',' ')";
                 $stid1=oci_parse($conn,$INSERSQL);
-                $r=oci_execute($stid1);
+                $r=oci_execute($stid1,OCI_NO_AUTO_COMMIT);
                 if(!$r){
-                    $e=oci_error($conn);
+                    $e=oci_error($stid1);
                     $response=json_encode(array("response" => "false","message" =>"錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
                     return $response;
+                }else{
+                    oci_commit($conn);
                 }
 
                 $UPSQL="UPDATE TBOBCK  SET
@@ -639,7 +636,7 @@ function PosCBLDCancel($conn,$sTraID,$sPg){
 
                 $r=oci_execute($stid1);
                 if(!$r){
-                    $e=oci_error($conn);
+                    $e=oci_error($stid1);
                     $response=json_encode(array("response" => "false","message" =>"錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
                     return $response;
                 }
@@ -668,7 +665,7 @@ function PosCBLDCancel($conn,$sTraID,$sPg){
                 $r=oci_execute($stid2,OCI_NO_AUTO_COMMIT);
                 if(!$r){
                     ocirollback($conn);
-                    $e=oci_error($conn);
+                    $e=oci_error($stid2);
                     $response=json_encode(array("response" => "false","message" =>"錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
 
                 }else{
