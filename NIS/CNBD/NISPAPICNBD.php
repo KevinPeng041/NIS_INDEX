@@ -32,11 +32,7 @@ function GetCNBDIniJson($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FORM
     if(!$r){
         oci_rollback($conn);
         $e=oci_error($stid5);
-        print htmlentities($e['message']);
-        print "\n<pre>\n";
-        print htmlentities($e['sqltext']);
-        printf("\n%".($e['offset']+1)."s", "^");
-        print  "\n</pre>\n";
+        return $e['message'];
     }else{
         oci_commit($conn);
         return $json;
@@ -122,7 +118,7 @@ function PosCNBDSave($conn,$sTraID,$sDt,$sTm,$sUr){
                    if(!$r){
                        $e=oci_error($conn);
                        $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']));
-
+                       return   $response;
                    }
                    $response=json_encode(array("response" => "success","message" =>"this is the success message"));
 
@@ -233,15 +229,13 @@ function GetCNBDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
         oci_rollback($conn);
         $e=oci_error($TP_stid);
         $json=json_encode(array("message"=>$e['message']));
-        echo $json;
-        return false;
+        return $json;
     }else{
         $comm=oci_commit($conn);
         if(!$comm){
             $e=oci_error($conn);
             $json=json_encode(array("message"=>$e['message']));
-            echo $json;
-            return false;
+            return $json;
         }
     }
     return $CallBackJson;
@@ -254,11 +248,13 @@ function PosCNBDCancel($conn,$sTraID,$sUr){
     $STR1 = substr($DateTime, -10, 10);
     $str = $STR - 1911;
     $dm_cand = $str . $STR1;
+
     $CANDATE=substr($dm_cand,0,7);
     $CANTIME=substr($dm_cand,7,4)."00";
     $BTG_CANDATETIME=$CANDATE.$CANTIME;
-    $sSQL="SELECT ST_DATAB FROM HIS803.NISWSTP WHERE ID_TABFORM='CNBD'AND ID_TRANSACTION='$sTraID'";
 
+
+    $sSQL="SELECT ST_DATAB FROM HIS803.NISWSTP WHERE ID_TABFORM='CNBD'AND ID_TRANSACTION='$sTraID'";
     $sid=oci_parse($conn,$sSQL);
     oci_execute($sid);
     $ST_DATAB='';
@@ -307,7 +303,7 @@ function PosCNBDCancel($conn,$sTraID,$sUr){
             $r_execute=oci_execute($sid2);
             if(!$r_execute){
                 ocirollback($conn);
-                $e=oci_error($conn);
+                $e=oci_error($sid2);
           $response=json_encode(array("response" => "false","message" =>"存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
             }else{
                 $response=json_encode(array("response" => "success"),JSON_UNESCAPED_UNICODE);
