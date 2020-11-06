@@ -88,12 +88,7 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID
         $result =  oci_execute($stm,OCI_NO_AUTO_COMMIT);
         if(!$result){
             $e=oci_error($stm);
-            print htmlentities($e['message']);
-            print "\n<pre>\n";
-            print htmlentities($e['sqltext']);
-            printf("\n%".($e['offset']+1)."s", "^");
-            print  "\n</pre>\n";
-            return false;
+            return $e['message'];
         }else{
             $lob->save($ST_DATAA);
             oci_commit($conn);
@@ -101,6 +96,8 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID
 
     } else {
         oci_rollback($conn);
+        $e=oci_error($conn);
+        return $e['message'];
     }
 
     return $ST_DATAA;
@@ -167,7 +164,7 @@ function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
                                 ,' ',' ',' ')";
 
                if (PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$OrDerKey,$LBT_DIACODE,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FORMSEQANCE_WT,$DateTime_NOW,$sUr)!==true){
-                   $response=json_encode(array("response" => "false","message" =>"檢體NSMARS存檔錯誤訊息:"),JSON_UNESCAPED_UNICODE);
+                   $response=json_encode(array("response" => "false","message" =>"檢體NSMARS存檔錯誤訊息"),JSON_UNESCAPED_UNICODE);
                    return $response;
                 }
 
@@ -319,16 +316,14 @@ function GetCNCDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
         $result =  oci_execute($stm,OCI_NO_AUTO_COMMIT);
         if(!$result){
             $e=oci_error($stm);
-            print htmlentities($e['message']);
-            print "\n<pre>\n";
-            print htmlentities($e['sqltext']);
-            printf("\n%".($e['offset']+1)."s", "^");
-            print  "\n</pre>\n";
+           return $e['message'];
         }
         $lob->save($ST_DATAA);
         oci_commit($conn);
     } else {
         oci_rollback($conn);
+        $e=oci_error($conn);
+        return $e;
     }
     return $ST_DATAA;
 }
@@ -369,12 +364,12 @@ function PosCNCDCancel($conn,$sTraID,$sUr){
         $r_execute=oci_execute($sid1);
         if(!$r_execute){
             ocirollback($conn);
-            $e=oci_error($conn);
+            $e=oci_error($sid1);
             $response=json_encode(array("response" => "false","message" =>"作廢錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
         }else{
            if(PosCNCDCancelNSMARS($conn,$IDPT,$sUr,$CANDATE,$EXECDATE,$EXECTIME,$PRCOPID)!==true){
                ocirollback($conn);
-               $response=json_encode(array("response" => "false","message" =>"作廢錯誤訊息:"),JSON_UNESCAPED_UNICODE);
+               $response=json_encode(array("response" => "false","message" =>"作廢NSMARS錯誤訊息"),JSON_UNESCAPED_UNICODE);
                break;
            }
             $response=json_encode(array("response" => "success"),JSON_UNESCAPED_UNICODE);
