@@ -40,10 +40,13 @@ function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMS
         $INDENTNO=oci_result($stidA,'A_INDNO');
         $TRANSRECNO=oci_result($stidA,'A_TRANO');
     }
-    $Serch=array('"DT_EXECUTE":""','"TM_EXECUTE":""','"Num":""',"}]");
-    $str=',"A_INDNO":'.$INDENTNO.',"A_TRANO":"'.$TRANSRECNO.'"}]';
+    $DT_str='"DT_EXE":"'.$DT_EXECUTE.'"';
+    $TM_str='"TM_EXE":"'.$TM_EXECUTE.'"';
+    $NUM_str='"NUM":"'.$NUM.'"';
+    $str=',"A_INDNO":"'.$INDENTNO.'"'.',"A_TRANO":"'.$TRANSRECNO.'"}]';
 
-    $replace=array($DT_EXECUTE,$TM_EXECUTE,$NUM,$str);
+    $Serch=array('"DT_EXECUTE":""','"TM_EXECUTE":""','"Num":""',"}]");
+    $replace=array($DT_str,$TM_str,$NUM_str,$str);
     $new_ST_DATAA=str_replace($Serch,$replace,$ST_DATAA);
 
     $Insert_sql="INSERT INTO HIS803.NISWSTP(
@@ -77,6 +80,7 @@ function GetCBLDPageJson($conn,$sTraID,$sPg){
 
     }
     //[{"DT_EXE":1090414,"TM_EXE":1611,"B_NUM":4,"A_INDNO":10904142001,"A_TRANO":"T10904140001"}]
+
     $a=explode(",",$ST_DATAA);
     $DT_EXE=explode(":",$a[0])[1];
     $TM_EXE=explode(":",$a[1])[1];
