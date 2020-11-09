@@ -39,8 +39,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <script>
         let sfm='<?php echo $sfm?>';
         if(sfm==""){
-            let ckw=setInterval(function () {
-                try {
+            let ckw=setInterval(()=>{ try {
                     if(!window.opener) {
                         alert("此帳號以被登出,請重新登入開啟");
                         window.close();
@@ -54,7 +53,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 }
             },500);
         }
-
         $(document).ready(function () {
             (function () {
                 $("#loading").hide();
