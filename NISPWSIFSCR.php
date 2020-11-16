@@ -12,7 +12,17 @@ function AESDeCode($text){
     $key = '1234567890654321';
     $iv = "1234567890123456";
     $decrypted = openssl_decrypt($text, 'aes-128-cbc', $key, OPENSSL_ZERO_PADDING , $iv);
-    return  rtrim($decrypted,"\ \t\n\r\0\x0B"); //偏移量補字移除
+    $Arr=str_split($decrypted);
+    $decryptStr='';
+    foreach ($Arr as $item){
+        $assii =ord($item);
+        if ($assii <= 32){
+            return $decryptStr = str_replace(chr($assii),"",$decrypted); //删除此ASCII字符
+        }
+    }
+    if($decryptStr==''){
+        return $decrypted;
+    }
 }
 function is_json($string) {
  json_decode($string);
@@ -50,7 +60,7 @@ function GetEMR106PrevSeq($conn,$AFormType,$AHisSeq){
         if(strpos($AHisSeq,"ISLN@")>-1){
             $AHisSeq=oci_result($stid,"ID_HISLINK");
         }
-        $sSeq=oci_result($stid,"ID_DTTMSEQ");
+        $sSeq=oci_result($stid,"ID_TTDMSEQ");
     }
     return $sSeq;
 }
@@ -174,6 +184,8 @@ function InsertEMR($conn,$idHospital,$ATab,$AFormType,$ADataType,$AHislink,$AMed
         ." '".$sInpDate."', '" .$sDivNo."', '".$sCD_DATA_FLAG."', ' ', SYSDATE, "
         ." '".$AFormID. "', '".$ASignHisAcc. "', '".$sSignIdno. "' "
         ." ) ";
+
+
     $stid4=oci_parse($conn,$sql4);
     oci_execute($stid4);
     return $sKey;
@@ -244,13 +256,12 @@ function CallEmrXmlExe($account,$sUr,$sTnsName,$sPassword,$sFromWk,$sDataFlag,$s
     $tArguments=" ".$account." ".$sUr." ".$sTnsName." ".$sToEMR." ".$sPassword." ".
                 $sFromWk." ".$sDataFlag." ".$sFrmDtSeq." ".$sFrmSeq." ".$sIdPatient." ".$sInPatient." ".
                  $exeDate." ".substr($exeTime,0,4)." ".str_pad($sKeyEmr106New,1,"@",STR_PAD_LEFT );
-    exec('C:\xampp\htdocs\NISCTEMR\NISCTEMR.exe'.$tArguments);
 
+    //exec("C:/xampp/htdocs/NISCTEMR/NISCTEMR.exe".$tArguments);
 }
 
 /*系統當下時間*/
 function DateNow(){
-
     $DateTime_NOW = date("YmdHis");
     $STR = substr($DateTime_NOW, 0, 4);
     $STR1 = substr($DateTime_NOW, -10, 10);
@@ -354,5 +365,4 @@ class TXmlForm{
     /// </summary>
     public   $C_ID_TABFORM_BSOR = "BSOR";
 }
-
 
