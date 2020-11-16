@@ -47,11 +47,7 @@ function GetILSGIniJson($conn,$idPt,$INPt,$sFm,$ID_BED,$sTraID,$sSave,$date,$sUr
         $result = oci_execute($INTP_Stid,OCI_NO_AUTO_COMMIT);
         if(!$result){
             $e=oci_error($INTP_Stid);
-            print htmlentities($e['message']);
-            print "\n<pre>\n";
-            print htmlentities($e['sqltext']);
-            printf("\n%".($e['offset']+1)."s", "^");
-            print  "\n</pre>\n";
+            return $e['message'];
         }
         $clob->save($ST_PREB);
         oci_commit($conn);
@@ -480,14 +476,12 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd,$HOST_IP){
             $response=json_encode(array("response" => "false","message" =>"禁打錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
             echo AESEnCode($response);
             return false;
-        }/*   else{
-
-         $response=json_encode(array("response" => "success","message" => "thisis the success message"),JSON_UNESCAPED_UNICODE);
-        }*/
+        }
 
     }
     //部位序號
     $URL="http://".$HOST_IP."/webservice/NISPWSCILREG.php?str=".AESEnCode("sFm=ILSGA&sTraID=".$sTraID."&sRgn=".$LN_IDGP);
+
     $num=file_get_contents($URL);
     $LN_IDGP=$LN_IDGP.(int)AESDeCode($num);
 
