@@ -3,6 +3,7 @@ header("Content-Type:text/html; charset=utf-8");
 date_default_timezone_set('Asia/Taipei');
 set_time_limit(0);
 include '../../NISPWSIFSCR.php';
+
 $str=$_GET['str'];
 $replaceSpace=str_replace(' ','+',$str);//空白先替換+
 $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
@@ -10,19 +11,18 @@ $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
 $sIdUser_STR=$EXPLODE_data[0];
 $passwd_STR=$EXPLODE_data[1];
 $user_STR=$EXPLODE_data[2];
-
+$From_STR=$EXPLODE_data[3];
 
 $sIdUser_value=explode('=',$sIdUser_STR);
 $passwd_value=explode('=',$passwd_STR);
 $user_value=explode('=',$user_STR);
+$From_value=explode('=',$From_STR);
 
-
-$sIdUser=trim($sIdUser_value[1]);/*帳號*/
+$Account=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
 $passwd=trim($passwd_value[1]);/*密碼*/
 $sUr=trim($user_value[1]);/*使用者*/
-
-
-$Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
+$From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
+$HOST_IP=$_SERVER['HTTP_HOST'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -36,12 +36,22 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
+    <script src="../../NISCOMMAPI.js"></script>
     <script>
-        let sfm='<?php echo $sfm?>';
-        if(sfm==""){
-            let ckw=setInterval(()=>{ try {
+        $(document).ready(function () {
+            //url帳號密碼驗證
+            let From='<?php echo $From?>';
+            if (From==="U"){
+                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
+                if(FromObj.reponse==="false"){
+                    alert("帳號密碼錯誤,請重新確認");
+                    return;
+                }
+            }
+            else {
+                let ckw=setInterval(()=>{ try {
                     if(!window.opener) {
-                        alert("此帳號以被登出,請重新登入開啟");
+                        alert("此帳號以被登出,請關閉視窗重新登入開啟");
                         window.close();
                     }
                 }catch (e) {
@@ -51,9 +61,9 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     clearInterval(ckw);
                     return false;
                 }
-            },500);
-        }
-        $(document).ready(function () {
+                },500);
+            }
+
             (function () {
                 $("#loading").hide();
                 $("#wrapper").hide();
@@ -65,8 +75,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 NISPWSFMINI_Timer();
             })();
 
-
-
             let transKey='';
             let sSave='';
             let FORMSEQANCE_WT='';
@@ -74,15 +82,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             let sDt='';
             let sTm='';
             let  ISSG_jsonStr='';
-            let  ISSN_jsonStr1='';
-            let  ISSN_jsonStr2='';
-            let  ISSN_jsonStr3='';
             let LSTPT='';
-
             let FORBIDArrary='';
             let x;
             let y;
-
+            $(window).on('beforeunload', reloadmsg);
 
             $(document).on("keydown","input",function (e) {
                 if(e.keyCode===13){
@@ -97,19 +101,17 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
                 let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
                 let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
-
                 let Timetxt=($(this).val()).split("");
                 let timer=Timetxt.filter(function (value, index, array) { return  value!==":"});
                 let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
-
-
 
                 $("#IDTM").val($(this).attr('id'));
                 $("#timer").val(yyyy-1911+MM+dd);
                 $("#timetxt").val(timerVal);
 
             });
-            $(window).on('beforeunload', reloadmsg);
+
+
 
             $('#STVALval').bind("input propertychange",function(){
                 if($(this).val()){
@@ -122,10 +124,22 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $("#STVALval").val("");
             });
 
+            $('button[name=ISLNch]').click(function () {
+                /*call ws for胰島素藥品*/
+                let val=$(this).val();
+                LoadInsertPage('PREB',);
+                $('#ckt').val(val);
+            });
+
             /*各頁面控制*/
             $("button[name=click]").click(function(){
+                let ISLN_jsonStrtt=new Map();
+                let data = [];
+                let val=$(this).val();
+                let btnid=$(this).attr('id');
+                $("#PageVal").val(val);
 
-                ISSN_jsonStr1=[{
+                ISLN_jsonStrtt.set('ISLN0',{
                     'idFrm':$('#STDATB_idFrm').val(),
                     'SFRMDTSEQ':'',
                     'ITNO':$("input[name='ITNO']:checked").val(),
@@ -138,21 +152,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     'SDOSE':$("#dose0").val(),
                     'USEF':$("#fUSEF_0").val(),
                     'LSTPT':$('#LastPart').val()
-                }];
-                ISSN_jsonStr2=[{
-                    'idFrm':$('#STDATB_idFrm').val(),
-                    'SFRMDTSEQ':'',
-                    'ITNO':$("input[name='ITNO']:checked").val(),
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=part]:checked").val(),
-                    'FORBID':'',
-                    'ID':$("#sID0").val(),
-                    'STM':$("#Isu_A").val(),
-                    'DBDOSE':'-1',
-                    'SDOSE':$("#dose0").val(),
-                    'USEF':$("#fUSEF_0").val(),
-                    'LSTPT':$('#LastPart').val()
-                },{
+                });
+                ISLN_jsonStrtt.set('ISLN1',{
                     'idFrm':$('#STDATB_idFrm').val(),
                     'SFRMDTSEQ':'',
                     'ITNO':$("input[name='ITNO']:checked").val(),
@@ -165,49 +166,28 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     'SDOSE':$("#dose1").val(),
                     'USEF':$("#fUSEF_1").val(),
                     'LSTPT':$('#LastPart').val()
-                }];
-                ISSN_jsonStr3=[{
+                });
+                ISLN_jsonStrtt.set('ISLN2',{
                     'idFrm':$('#STDATB_idFrm').val(),
                     'SFRMDTSEQ':'',
                     'ITNO':$("input[name='ITNO']:checked").val(),
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=part]:checked").val(),
                     'FORBID':'',
-                    'ID':$("#sID0").val(),
-                    'STM':$("#Isu_A").val(),
-                    'DBDOSE':'-1',
-                    'SDOSE':$("#dose0").val(),
-                    'USEF':$("#fUSEF_0").val(),
-                    'LSTPT':$('#LastPart').val()
-                },{
-                    'idFrm':$('#STDATB_idFrm').val(),
-                    'SFRMDTSEQ':'',
-                    'ITNO':$("input[name='ITNO']:checked").val(),
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=part]:checked").val(),
-                    'FORBID':'',
-                    'ID':$("#sID1").val(),
-                    'STM':$("#Isu_B").val(),
-                    'DBDOSE':'-1',
-                    'SDOSE':$("#dose1").val(),
-                    'USEF':$("#fUSEF_1").val(),
-                    'LSTPT':$('#LastPart').val()
-                },{
-                    'idFrm':$('#STDATB_idFrm').val(),
-                    'SFRMDTSEQ':'',
-                    'ITNO':$("input[name='ITNO']:checked").val(),
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=part]:checked").val(),
-                    'FORBID':'',
-                    'ID':$("#sUSEF2").val(),
+                    'ID':$("#sID2").val(),
                     'STM':$("#Isu_C").val(),
                     'DBDOSE':'-1',
                     'SDOSE':$("#dose2").val(),
                     'USEF':$("#fUSEF_2").val(),
                     'LSTPT':$('#LastPart').val()
-                }];
-
-                ISSG_jsonStr=[{
+                });
+                ISLN_jsonStrtt.forEach((v, i)=> {
+                    data.push({
+                        "item": i,
+                        "obj": v
+                    });
+                });
+                    ISSG_jsonStr=[{
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=IDGP]:checked").val(),
                     'STVAL':$("#STVALval").val(),
@@ -216,9 +196,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 }];
 
 
-                let val=$(this).val();
-                let btnid=$(this).attr('id');
-                $("#PageVal").val(val);
 
                 switch (val) {
                     case 'A':
@@ -230,20 +207,9 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         }
                         /*if val=1 執行快存WSST*/
                         if($("#clickTime").val()=='1'){
-                            if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
-                                UPDATEDATA('B',JSON.stringify(ISSN_jsonStr1));
-                                UPDATEDATA('C',JSON.stringify(Forbidjson()));
-
-                            }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
-                                UPDATEDATA('B',JSON.stringify(ISSN_jsonStr2));
-                                UPDATEDATA('C',JSON.stringify(Forbidjson()));
-
-                            }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
-                                UPDATEDATA('B',JSON.stringify(ISSN_jsonStr3));
-                                UPDATEDATA('C',JSON.stringify(Forbidjson()));
-
-                            }
-
+                            UPDATEDATA('B',JSON.stringify(ISLN_json(data)));
+                            UPDATEDATA('C',JSON.stringify(Forbidjson()));
+                            console.log(ISLN_json(data));
                         }
 
                         $("#BSData").show();
@@ -300,14 +266,9 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         }
                         /*if val=1 執行快存WSST*/
                         if($("#clickTime").val()=='1'){
-                            if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
-                                UPDATEDATA('B',JSON.stringify(ISSN_jsonStr1));
-                            }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
-                                UPDATEDATA('B',JSON.stringify(ISSN_jsonStr2));
-                            }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
-                                UPDATEDATA('B',JSON.stringify(ISSN_jsonStr3));
-                            }
                             UPDATEDATA('A',JSON.stringify(ISSG_jsonStr));
+                            UPDATEDATA('B',JSON.stringify(ISLN_json(data)));
+
                         }
                         $("#NO_isuling").show();
                         $("#isuling").hide();
@@ -343,13 +304,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $("#"+btnid).css({ 'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
                 $("#"+btnid).css({ 'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
 
-            });
-
-            $('button[name=ISLNch]').click(function () {
-                /*call ws for胰島素藥品*/
-                let val=$(this).val();
-                LoadInsertPage('PREB',);
-                $('#ckt').val(val);
             });
 
             $(document).on("click","button",function (e) {
@@ -392,7 +346,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         y.Serchcallback=Serchcallback;
                         break;
                     case "Del":
-                        delte(1);
+                        DELILSG();
                         break;
                     case "ReSet":
                         Reset(1);
@@ -426,48 +380,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         sDt=($('#timer').val()).toString();
                         sTm=$('#timetxt').val()+"00";
 
-                        ISSN_jsonStr1=[{
-                            'idFrm':$('#STDATB_idFrm').val(),
-                            'SFRMDTSEQ':'',
-                            'ITNO':$("input[name='ITNO']:checked").val(),
-                            'IDTM':$("#IDTM").val(),
-                            'IDGP':$("input[name=part]:checked").val(),
-                            'FORBID':'',
-                            'ID':$("#sID0").val(),
-                            'STM':$("#Isu_A").val(),
-                            'DBDOSE':'-1',
-                            'SDOSE':$("#dose0").val(),
-                            'USEF':$("#fUSEF_0").val(),
-                            'LSTPT':$('#LastPart').val()
-                        }];
-                        ISSN_jsonStr2=[{
-                            'idFrm':$('#STDATB_idFrm').val(),
-                            'SFRMDTSEQ':'',
-                            'ITNO':$("input[name='ITNO']:checked").val(),
-                            'IDTM':$("#IDTM").val(),
-                            'IDGP':$("input[name=part]:checked").val(),
-                            'FORBID':'',
-                            'ID':$("#sID0").val(),
-                            'STM':$("#Isu_A").val(),
-                            'DBDOSE':'-1',
-                            'SDOSE':$("#dose0").val(),
-                            'USEF':$("#fUSEF_0").val(),
-                            'LSTPT':$('#LastPart').val()
-                        },{
-                            'idFrm':$('#STDATB_idFrm').val(),
-                            'SFRMDTSEQ':'',
-                            'ITNO':$("input[name='ITNO']:checked").val(),
-                            'IDTM':$("#IDTM").val(),
-                            'IDGP':$("input[name=part]:checked").val(),
-                            'FORBID':'',
-                            'ID':$("#sID1").val(),
-                            'STM':$("#Isu_B").val(),
-                            'DBDOSE':'-1',
-                            'SDOSE':$("#dose1").val(),
-                            'USEF':$("#fUSEF_1").val(),
-                            'LSTPT':$('#LastPart').val()
-                        }];
-                        ISSN_jsonStr3=[{
+                        let  ISSN_jsonStr3=[{
                             'idFrm':$('#STDATB_idFrm').val(),
                             'SFRMDTSEQ':'',
                             'ITNO':$("input[name='ITNO']:checked").val(),
@@ -516,6 +429,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             'SPRESS': $("input[name='sPressure']:checked").val(),
                             'MMVAL': $('#Textarea').val().match(/&/)!=null?$('#Textarea').val().replace(/&/g,'＆'):$('#Textarea').val()
                         }];
+
+
                         if($('#DataTxt').val()=='' ||$('#DataTxt').val()==null　){
 
                             errorModal("請先選擇責任床位");
@@ -645,18 +560,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                         return false;
                                     }
                                 }
-
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
-                                    json=ISSN_jsonStr1;
-
-                                }
-                                if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
-                                    json=ISSN_jsonStr2;
-
-                                }
-                                if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
-                                    json=ISSN_jsonStr3;
-                                }
+                                json=JSON.stringify(ISLN_json(ISSN_jsonStr3));
                                 spg='B';
                                 break;
                             case "C":
@@ -677,7 +581,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 break;
                         }
                         console.log(json);
-                        console.log("http://localhost"+submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
+                        //console.log("http://localhost"+submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
                         $("#loading").show();
                         $("#wrapper").show();
                         $.ajax({
@@ -686,18 +590,16 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             beforeSend: UPDATEDATA(spg, JSON.stringify(json)),
                             dataType:'text',
                             success:function (json) {
-                                    let data= JSON.parse(AESDeCode(json));
-                                    console.log(data);
-                                    $("#loading").hide();
-                                    $("#wrapper").hide();
-                                    if(data.response=='success'){
-                                        alert("儲存成功");
-                                        window.location.reload(true);
-                                    }else {
-                                        errorModal("儲存失敗重新檢查格式:"+data.message);
-                                    }
+                                let data= JSON.parse(AESDeCode(json));
 
-
+                                $("#loading").hide();
+                                $("#wrapper").hide();
+                                if(data.response=='success'){
+                                    alert("儲存成功");
+                                    window.location.reload(true);
+                                }else {
+                                    errorModal("儲存失敗重新檢查格式:"+data.message);
+                                }
                             },error:function (XMLHttpResponse,textStatus,errorThrown) {
                                 $("#loading").hide();
                                 $("#wrapper").hide();
@@ -723,39 +625,59 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 $('#fut').val(index[6]);
             });
 
+            function ISLN_json(arr){
+                let length=0;
+                let re=[];
+                if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
+                    length=0;
+                }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
+                    length=1;
 
+                }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
+                    length=2;
+                }
+
+                for (let i=0;i<=length;i++){
+                    if (arr[i].obj===undefined){
+                        re.push(arr[i]);
+                    }else {
+                        re.push(arr[i].obj);
+                    }
+                }
+                return re;
+            }
 
             function checkSerchwindow() {
                 if(!y){
-                    console.log("not open");
+
                     return "true";
                 }else {
                     if(y.closed){
-                        console.log("window close");
+
                         return "true";
                     }else {
-                        console.log("window not close");
+
                         return "false";
                     }
                 }
             }
             function checkBEDwindow() {
                 if(!x){
-                    console.log("not open");
+
                     return "true";
                 }else {
                     if(x.closed){
-                        console.log("window close");
+
                         return "true";
                     }else {
-                        console.log("window not close");
+
                         return "false";
                     }
                 }
             }
             function DEaultINI(){
                 let ajaxdata_ip='/webservice/NISPWSTRAINI.php';
-                console.log("http://localhost"+ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'));
+                //console.log("http://localhost"+ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'));
                 $.ajax({
                     url:ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'),
                     type:"POST",
@@ -766,7 +688,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         sSave=json.sSave;
                         FORMSEQANCE_WT=json.FORMSEQANCE_WT;
                         JID_NSRANK=json.JID_NSRANK;
-                        console.log(json);
+                       // console.log(json);
                         let ST_DATAA=(JSON.parse(json.ST_DATAA))[0];
                         let ST_DATAB=(JSON.parse(json.ST_DATAB))[0];
                         let ST_DATAC=(JSON.parse(json.ST_DATAC))[0];
@@ -794,11 +716,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         }
                         if(ST_DATAB.IDGP){
                             $('#Part'+ST_DATAB.IDGP).prop('checked',true);
-                        }
-                        $("#fu2").val("");
-                        $("#fu1").val("");
-                        /*施打頻率UI*/
+                        }+
 
+                        /*施打頻率UI*/
+                        $("#fu1").children().remove();
+                        $("#fu2").children().remove();
                         $.each(fu_data,function (index) {
                             let str1='';
                             let str2='';
@@ -807,18 +729,15 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                 str1=fu_data[index].FUQUEN;
                                 $("#fu1").append(
                                     `
-                                <tr><td>
-                                <input type='button' onclick='fuval("${str1}")'  class="btn btn-primary btn-lg" value='${str1}' style="width:15vw ;max-width: 18vw;min-width: 90px">
-                                </td></tr>
-                                `
+                                   <input type='button' onclick='fuval("${str1}")'  class="btn btn-primary btn-lg" value='${str1}' style="width:inherit ;">
+                                  `
                                 );
                             }else {
                                 str2=fu_data[index].FUQUEN;
                                 $("#fu2").append(
                                     `
-                                <tr><td>
-                                <input type='button' onclick='fuval("${str2}")'  class="btn btn-primary btn-lg" value='${str2}' style="width:15vw ;max-width: 18vw;min-width: 90px">
-                                </td></tr>
+                                   <input type='button' onclick='fuval("${str2}")'  class="btn btn-primary btn-lg" value='${str2}' style="width:inherit ;">
+
                                 `
                                 );
                             }
@@ -847,8 +766,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     });
                 }
             }
-
             function Forbid_Dateback(idPt,DT,TM,NO_MMAL,sTraID) {
+
+
+
+
                 if(idPt!=$("#DA_idpt").val()){
                     errorModal("病人資訊已異動,請先重新操作一次");
                     return false;
@@ -1098,7 +1020,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             /*讀取輸入作業頁面資料ws(藥名)*/
             function LoadInsertPage(num) {
                 let LoadInsertPage_ip="/webservice/NISPWSGETPRE.php";
-                console.log("http://localhost"+LoadInsertPage_ip+"?str="+AESEnCode("sFm=ILSGA&sTraID="+transKey+"&sPg="+num));
+                //console.log("http://localhost"+LoadInsertPage_ip+"?str="+AESEnCode("sFm=ILSGA&sTraID="+transKey+"&sPg="+num));
                 $.ajax({
                     url:LoadInsertPage_ip+"?str="+AESEnCode("sFm=ILSGA&sTraID="+transKey+"&sPg="+num),
                     type:'POST',
@@ -1107,7 +1029,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                         if(json){
                             let data=AESDeCode(json);
                             if(num=='DATAA'){
-                                console.log(data);
+                               // console.log(data);
                             }
                             if(num=='PREB'){
                                 let ISULING_OBJ=JSON.parse((JSON.parse(data))[0].ISULING);
@@ -1153,15 +1075,15 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             function UPDATEDATA(spg,Json) {
                 let  trsKey=$('#transKEY').val();
                 let UPDATEDATA_ip="/webservice/NISPWSSETDATA.php";
-                console.log(Json);
-                console.log(UPDATEDATA_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+spg+'&sData='+Json));
+                //console.log(Json);
+                //console.log(UPDATEDATA_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+spg+'&sData='+Json));
                 $.ajax({
                     url:UPDATEDATA_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+spg+'&sData='+Json),
                     type:'POST',
                     dataType:"text",
                     success:function (data) {
                         let json=JSON.parse(AESDeCode(data));
-                        console.log(json.message);
+                        //console.log(json.message);
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         errorModal(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -1172,34 +1094,22 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     }
                 });
             }
-            function delte(num) {
+            function DELILSG() {
                 let del_ip='/webservice/NISPWSDELILSG.php';
-                console.log("http://localhost"+del_ip+"?str="+AESEnCode("sFm="+'ILSGA'+"&sTraID="+$('#transKEY').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#sUser").val()));
+               // console.log("http://localhost"+del_ip+"?str="+AESEnCode("sFm="+'ILSGA'+"&sTraID="+$('#transKEY').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#sUser").val()));
                 $.ajax({
                     url:del_ip+"?str="+AESEnCode("sFm="+'ILSGA'+"&sTraID="+$('#transKEY').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#sUser").val()),
                     type:'POST',
                     dataType:'text',
                     success:function (json) {
                         let data=JSON.parse(AESDeCode(json));
-                        switch (num) {
-                            case 1:
-                                if(data.result=='false'){
-                                    errorModal('作廢失敗');
-                                    console.log(data.message);
-                                    return false;
-                                }else {
-                                    $('#DELModal').modal('hide');
-                                    Reset(2);
-                                }
-
-                                break;
-                            case 2:
-                                if(data.result=='false'){
-                                    console.log(data.message);
-                                }else {
-                                    console.log('修改成功');
-                                }
-                                break;
+                        if(data.result=='false'){
+                            errorModal('作廢失敗');
+                            console.log(data.message);
+                            return false;
+                        }else {
+                            $('#DELModal').modal('hide');
+                            Reset(2);
                         }
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         errorModal(
@@ -1384,24 +1294,25 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
                     switch (page) {
                         case 'A':
-                            console.log(data);
+                            //console.log(data);
                             $('#BSData').show();
                             $('#ISLN').prop('disabled',true);
                             $('#Inhibit').prop('disabled',true);
 
                             $.each(data,function (index,val) {
-                              let idPt=val.idPt;
-                              let DT_EXCUTE=val.DT_EXCUTE;
-                              let TM_EXCUTE=val.TM_EXCUTE;
-                              let JID_TIME=val.JID_TIME;
-                              let MM_TPRS=val.MM_TPRS;
-                              let SPRESS=val.SPRESS;
-                              let ST_MEASURE=val.ST_MEASURE;
-                              let CID_MEAL=val.CID_MEAL;
-                              let transKEY=val.sTraID;
-                              let FORMSEQANCE=val.FORMSEQANCE;
-                              let SER_DT=val.SER_DT;
-                              let SER_TM=val.SER_TM;
+                                let idPt=val.idPt;
+                                let DT_EXCUTE=val.DT_EXCUTE;
+                                let TM_EXCUTE=val.TM_EXCUTE;
+                                let JID_TIME=val.JID_TIME;
+                                let MM_TPRS=val.MM_TPRS;
+                                let SPRESS=val.SPRESS;
+                                let ST_MEASURE=val.ST_MEASURE;
+                                let CID_MEAL=val.CID_MEAL;
+                                let transKEY=val.sTraID;
+                                let FORMSEQANCE=val.FORMSEQANCE;
+                                let SER_DT=val.SER_DT;
+                                let SER_TM=val.SER_TM;
+                                let regExp = new RegExp(/^[a-zA-Z]+$/);
 
                                 if(idPt!=$("#DA_idpt").val())
                                 {
@@ -1409,40 +1320,38 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                                     return false;
                                 }
 
-                              TimeSet(JID_TIME,DT_EXCUTE,TM_EXCUTE);
+                                TimeSet(JID_TIME,DT_EXCUTE,TM_EXCUTE);
 
-                              $('#FORMSEQANCE').val(FORMSEQANCE);
-                              $('#SER_DT').val(SER_DT);
-                              $('#SER_TM').val(SER_TM);
-                              $("#Textarea").val(MM_TPRS.match(/＆/)!=null?MM_TPRS.replace(/＆/g,'&'):MM_TPRS);
-                              $("#transKEY").val(transKEY);
-                              $("#STVALval").val(ST_MEASURE);
+                                $('#FORMSEQANCE').val(FORMSEQANCE);
+                                $('#SER_DT').val(SER_DT);
+                                $('#SER_TM').val(SER_TM);
+                                $("#Textarea").val(MM_TPRS.match(/＆/)!=null?MM_TPRS.replace(/＆/g,'&'):MM_TPRS);
+                                $("#transKEY").val(transKEY);
+                                $("#STVALval").val(ST_MEASURE);
 
-                              let regExp = new RegExp(/^[a-zA-Z]+$/);
+                                if(SPRESS.match(regExp)){
+                                    $("#sPress").val(SPRESS);
+                                    $("#P_"+SPRESS).prop('checked',true);
+                                }
 
-                              if(SPRESS.match(regExp)){
-                                  $("#sPress").val(SPRESS);
-                                  $("#P_"+SPRESS).prop('checked',true);
-                              }
+                                if (CID_MEAL=='A'){
+                                    $("#Eating1").prop('checked',true);
 
-                              if (CID_MEAL=='A'){
-                                  $("#Eating1").prop('checked',true);
-
-                              }
-                              else if(CID_MEAL=='B')
-                              {
-                                  $("#Eating2").prop('checked',true);
-                              }
-                              else{
-                                  $('input[name=IDGP]').prop('checked',false);
-                              }
-                          });
+                                }
+                                else if(CID_MEAL=='B')
+                                {
+                                    $("#Eating2").prop('checked',true);
+                                }
+                                else{
+                                    $('input[name=IDGP]').prop('checked',false);
+                                }
+                            });
 
 
                             break;
                         case 'B':
                             let txt_index='';
-                          /*  console.log(data);*/
+                            /*  console.log(data);*/
                             $.each(data,function (index) {
                                 if(index==0){
                                     txt_index='A';
@@ -1507,7 +1416,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             $('input[name=part]').prop('disabled',true);
                             break;
                         case 'C':
-                           /* console.log(data);*/
+                   /*       console.log(data);*/
                             let C_idPt=data.idPt;
                             let C_DT=data.DT_EXCUTE;
                             let C_TM=data.TM_EXCUTE;
@@ -1517,6 +1426,10 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                             let C_FORMSEQANCE=data.FORMSEQANCE;
                             let C_JID_TIME=data.JID_TIME;
 
+                            if(C_idPt!=$("#DA_idpt").val()){
+                                errorModal("病人資訊已異動,請先重新操作一次");
+                                return false;
+                            }
 
                             $("#SERCH_Click").val("2");
                             $("#Part").prop('disabled',true);
@@ -1635,7 +1548,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     $("#dose0").val(QTY);
 
                     setTimeout("$(\"#dose0\").focus();",500);
-
                     break;
                 case '2':
 
@@ -1649,8 +1561,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     setTimeout("$(\"#dose1\").focus();",500);
                     break;
                 case '3':
-                    $("#sUSEF2").val(IDtxt);
-                    $("#sID2").val(USERtxt);
+                    $("#sID2").val(IDtxt);
+                    $("#sUSEF2").val(USERtxt);
                     $("#Isu_C").val(txt);
                     $("#fUSEF_2").val(USERtxt);
                     $("#dose2").val(QTY);
@@ -1659,6 +1571,7 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     setTimeout("$(\"#dose2\").focus();",500);
                     break;
                 default:
+                    break;
             }
         }
         function fuval(val){
@@ -1814,8 +1727,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     <div style="margin-top: 5px">
                         <label>劑量:<input type="text" id="dose1"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
                                     type="text" style="width: 80px;" id="fUSEF_1" class="FuQuenCy" autocomplete="off">
-                                     <button type="button"  id="FuClear2" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
-                            </label>
+                            <button type="button"  id="FuClear2" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
+                        </label>
 
                     </div>
                     <input type="text" value="" id="sID1" style="display: none">
@@ -2130,8 +2043,8 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                     <p>請確認是否要作廢此清單!!!</p>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" id="Del" class="btn btn-primary" style="height: 10vh;font-size: 20px">作廢</button>
-                    <button type="button" class="btn btn-secondary " data-dismiss="modal" style="height: 10vh;font-size: 20px">取消</button>
+                    <button type="button" id="Del" class="btn btn-primary" style="height: 6vh;font-size: 20px">作廢</button>
+                    <button type="button" class="btn btn-secondary " data-dismiss="modal" style="height: 6vh;font-size: 20px">取消</button>
                 </div>
             </div>
         </div>
@@ -2150,12 +2063,11 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
                 <div class="modal-body" style="overflow-x: hidden;">
                     <label style="font-size: 20px;margin-top: 2px;">自訂:<input value="" type="text" style="width: 100px" id="Fuval"></label>
                     <button type="button" id="FuConfirm" class="btn btn-primary"  style="margin-left: 5px;border-radius: 4px;margin-top: -9px;">確定</button>
-                    <table>
-                        <tr>
-                            <td id="fu1"></td>
-                            <td id="fu2"></td>
-                        </tr>
-                    </table>
+                    <div class="row">
+                        <div class="col-6" id="fu1"></div>
+                        <div class="col-6" id="fu2"></div>
+                    </div>
+
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
@@ -2179,11 +2091,6 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
             </div>
         </div>
     </div>
-
-
-
-
-
     <h1 id="titleName"></h1>
     <div>
         <table id="ser_tb" ></table>
@@ -2197,10 +2104,5 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
         </div>
     </div>
 </div>
-
-
-
-
-
 </body>
 </html>
