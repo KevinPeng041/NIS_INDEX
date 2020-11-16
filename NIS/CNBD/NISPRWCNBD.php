@@ -3,34 +3,22 @@ include '../../NISPWSIFSCR.php';
 $str=$_GET['str'];
 $replaceSpace=str_replace(' ','+',$str);//空白先替換+
 $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
-preg_match('/(sfm)/',AESDeCode($replaceSpace),$matches);
-
-$sfm_STR='';
-$sfm_value='';
-$sfm='';
 
 
-if(count($matches)>0){
-    $sfm_STR=$EXPLODE_data[0];
-    $sfm_value=explode('=',$sfm_STR);
-    $sfm=trim($sfm_value[1]);
-}
-
-$n=count($matches)>0?1:0;
-$sIdUser_STR=$EXPLODE_data[$n];
-$passwd_STR=$EXPLODE_data[$n+1];
-$user_STR=$EXPLODE_data[$n+2];
-
+$sIdUser_STR=$EXPLODE_data[0];
+$passwd_STR=$EXPLODE_data[1];
+$user_STR=$EXPLODE_data[2];
+$From_STR=$EXPLODE_data[3];
 
 $sIdUser_value=explode('=',$sIdUser_STR);
 $passwd_value=explode('=',$passwd_STR);
 $user_value=explode('=',$user_STR);
+$From_value=explode('=',$From_STR);
 
-
-$sIdUser=trim($sIdUser_value[1]);/*帳號*/
+$OPID=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
 $passwd=trim($passwd_value[1]);/*密碼*/
 $sUr=trim($user_value[1]);/*使用者*/
-$OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
+$From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
 ?>
 
@@ -47,25 +35,32 @@ $OPID=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
+    <script src="../../NISCOMMAPI.js"></script>
     <script>
-        let sfm='<?php echo $sfm?>';
-        if(sfm==""){
-            let ckw=setInterval(()=>{ try {
-                if(!window.opener) {
-                    alert("此帳號以被登出,請重新登入開啟");
-                    window.close();
-                }
-            }catch (e) {
-                $("#wrapper").show();
-                alert(e);
-                window.close();
-                clearInterval(ckw);
-                return false;
-            }
-            },500);
-        }
-
         $(document).ready(function () {
+            //url帳號密碼驗證
+            let From='<?php echo $From?>';
+            if (From==="U"){
+                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $OPID?>','<?php echo $passwd?>')));
+                if(FromObj.reponse==="false"){
+                    alert("帳號密碼錯誤,請重新確認");
+                    return;
+                }
+            }else {
+                let ckw=setInterval(()=>{ try {
+                    if(!window.opener) {
+                        alert("此帳號以被登出,請重新登入開啟");
+                        window.close();
+                    }
+                }catch (e) {
+                    $("#wrapper").show();
+                    alert(e);
+                    window.close();
+                    clearInterval(ckw);
+                    return false;
+                }
+                },500);
+            }
 
             (function () {
                 TimerDefault();
