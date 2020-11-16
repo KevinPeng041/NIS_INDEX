@@ -286,7 +286,10 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                             DEaultINI();
                             $('#clickTime').val(1);
                         }
-                        NISPWSCILREG();
+                        let Part=$("input[name=part]:checked").val();
+                        let TraKey=$("#transKEY").val();
+
+                        NISPWSCILREG(TraKey,Part);
                         $("#SubmitBtn").prop("disabled",true);
                         $("#Imgisuling").show();
                         $("#isuling").hide();
@@ -698,8 +701,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         $("input[name='forbid[]']").prop('disabled',false);
                         FORBIDArrary=ST_DATAB.FORBID;
                         if(FORBIDArrary){
-
-
                             $.each(FORBIDArrary,function (index) {
                                 $('#Part'+FORBIDArrary[index].REGION).prop('disabled',true);
                                 $('#No_'+FORBIDArrary[index].REGION).prop('disabled',true);
@@ -716,7 +717,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         }
                         if(ST_DATAB.IDGP){
                             $('#Part'+ST_DATAB.IDGP).prop('checked',true);
-                        }+
+                        }
 
                         /*施打頻率UI*/
                         $("#fu1").children().remove();
@@ -811,182 +812,8 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 return data;
             }
             /*部位序號(圖)*/
-            function NISPWSCILREG() {
-                let part_json=[
-                    {"FORBID":[
-                            {"region":"A"},{"region":"B"},{"region":"C"},{"region":"D"},{"region":"E"},
-                            {"region":"F"},{"region":"G"},{"region":"H"}
-                        ]
-                    }
-                ];
-                let td_json={
-                    "Region": [
-                        {
-                            "A":
-                                [{
-                                    "TD":"A1"
-                                },{
-                                    "TD":"A2"
-                                },{
-                                    "TD":"A3"
-                                },{
-                                    "TD":"A4"
-                                },{
-                                    "TD":"A5"
-                                },{
-                                    "TD":"A6"
-                                },{
-                                    "TD":"A7"
-                                },{
-                                    "TD":"A8"
-                                }]
-                        },
-                        {
-                            "B":
-                                [{
-                                    "TD":"B1"
-                                },{
-                                    "TD":"B2"
-                                },{
-                                    "TD":"B3"
-                                },{
-                                    "TD":"B4"
-                                },{
-                                    "TD":"B5"
-                                },{
-                                    "TD":"B6"
-                                },{
-                                    "TD":"B7"
-                                },{
-                                    "TD":"B8"
-                                }]
-                        },
-                        {
-                            "C":
-                                [{
-                                    "TD":"C1"
-                                },{
-                                    "TD":"C2"
-                                },{
-                                    "TD":"C3"
-                                },{
-                                    "TD":"C4"
-                                },{
-                                    "TD":"C5"
-                                },{
-                                    "TD":"C6"
-                                },{
-                                    "TD":"C7"
-                                },{
-                                    "TD":"C8"
-                                }]
-                        },{
-                            "D":
-                                [{
-                                    "TD":"D1"
-                                },{
-                                    "TD":"D2"
-                                },{
-                                    "TD":"D3"
-                                },{
-                                    "TD":"D4"
-                                },{
-                                    "TD":"D5"
-                                },{
-                                    "TD":"D6"
-                                },{
-                                    "TD":"D7"
-                                },{
-                                    "TD":"D8"
-                                }]
-                        },{
-                            "E":
-                                [{
-                                    "TD":"E1"
-                                },{
-                                    "TD":"E2"
-                                },{
-                                    "TD":"E3"
-                                },{
-                                    "TD":"E4"
-                                },{
-                                    "TD":"E5"
-                                },{
-                                    "TD":"E6"
-                                },{
-                                    "TD":"E7"
-                                },{
-                                    "TD":"E8"
-                                }]
-                        },{
-                            "F":
-                                [{
-                                    "TD":"F1"
-                                },{
-                                    "TD":"F2"
-                                },{
-                                    "TD":"F3"
-                                },{
-                                    "TD":"F4"
-                                },{
-                                    "TD":"F5"
-                                },{
-                                    "TD":"F6"
-                                },{
-                                    "TD":"F7"
-                                },{
-                                    "TD":"F8"
-                                }]
-                        },{
-                            "G":
-                                [{
-                                    "TD":"G1"
-                                },{
-                                    "TD":"G2"
-                                },{
-                                    "TD":"G3"
-                                },{
-                                    "TD":"G4"
-                                },{
-                                    "TD":"G5"
-                                },{
-                                    "TD":"G6"
-                                },{
-                                    "TD":"G7"
-                                },{
-                                    "TD":"G8"
-                                }]
-                        },{
-                            "H":
-                                [{
-                                    "TD":"H1"
-                                },{
-                                    "TD":"H2"
-                                },{
-                                    "TD":"H3"
-                                },{
-                                    "TD":"H4"
-                                },{
-                                    "TD":"H5"
-                                },{
-                                    "TD":"H6"
-                                },{
-                                    "TD":"H7"
-                                },{
-                                    "TD":"H8"
-                                }]
-                        }
-                    ]
-                };
-
-                let td_obj=JSON.parse(JSON.stringify(td_json));
-                let objpart=JSON.parse(JSON.stringify(part_json));
-                $.each(objpart, function (index) {
-                    for(let i=0;i<8;i++){
-                        let region=objpart[index].FORBID[i].region;
-                        $("#"+region).css({'backgroundColor':'white','color':'black'});
-                    }
-                });
+            function NISPWSCILREG(TransKEY,Part) {
+                $("td").css({'backgroundColor':'white','color':'black'});
                 $('.ImgTable').css({"background-color":"","color":""});
 
                 $.each(FORBIDArrary,function (index) {
@@ -997,13 +824,15 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     $("#"+LSTPT).css({'backgroundColor':'blue','color':'white'});
                 }
 
+                console.log("http://localhost"+"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+TransKEY+"&sRgn="+Part));
                 $.ajax({
-                    url:"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+$("#transKEY").val()+"&sRgn="+$("input[name=part]:checked").val()),
+                    url:"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+TransKEY+"&sRgn="+Part),
                     type:'POST',
                     dataType:'text',
                     success:function (json) {
                         let data=JSON.parse(AESDeCode(json));
                         let IDGP_num=$("input[name=part]:checked").val();
+
                         $("#"+IDGP_num+data).css({'backgroundColor':'green','color':'white'});
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         errorModal(
