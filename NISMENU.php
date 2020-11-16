@@ -1,25 +1,9 @@
 <?php
 include "NISPWSIFSCR.php";
 $str=$_GET["str"];
-$replaceSpace=str_replace(' ','+',$str);//空白先替換+
-$EXPLODE_data=explode('&',AESDeCode($replaceSpace));
-
-$sIdUser_STR=$EXPLODE_data[0];
-$passwd_STR=$EXPLODE_data[1];
-$user_STR=$EXPLODE_data[2];
-
-$sIdUser_value=explode('=',$sIdUser_STR);
-$passwd_value=explode('=',$passwd_STR);
-$user_value=explode('=',$user_STR);
-
-$sIdUser=trim($sIdUser_value[1]);/*帳號*/
-$passwd=trim($passwd_value[1]);/*密碼*/
-$sUr=trim($user_value[1]);/*使用者*/
-
-
-$Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
-/*$parameter="sfm=CNAD".'&sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;*/
-$parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
+$parameter=str_replace(' ','+',$str);//空白先替換+
+$str=explode("&",AESDeCode($parameter));
+$sUr=explode("=",$str[2])[1];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -49,7 +33,9 @@ $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
         .btn{
            font-size: 19px;
         }
-
+        #LogOutModleUI{
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -60,7 +46,7 @@ $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
             <h1><?php echo  $sUr?></h1>
         </div>
         <div class="col-auto col-auto col-sm-auto col-md-auto col-lg-auto ">
-            <button id="LogOutModleUI" class="btn btn-sm btn-warning" style="margin-top: 4px"><b>登出</b></button>
+            <input  type="button" id="LogOutModleUI" class="btn btn-sm btn-warning" value="登出" style="margin-top: 4px">
         </div>
     </div>
     <div id="MenuBtn" class="row">
@@ -77,75 +63,86 @@ $parameter='sIdUser='.$Account.'&passwd='.$passwd."&user=".$sUr;
                 <p style="font-size: 25px;word-wrap: break-word">請確認是否要登出</p>
             </div>
             <div class="modal-footer">
-                <button type="button" id="LogOut" class="btn btn-secondary" data-dismiss="modal" onclick='CancellLogOut()'>取消</button>
-                <button type="button" id="LogOut" class="btn btn-secondary" data-dismiss="modal" onclick='WindowCloes()'>確定</button>
+                <button type="button" id="LogOutCel" class="btn btn-secondary" data-dismiss="modal" >取消</button>
+                <button type="button" id="LogOut" class="btn btn-secondary" data-dismiss="modal">確定</button>
             </div>
         </div>
     </div>
 </div>
-
-
 </body>
 <script>
-    const BtnName=[
-        {
-            sFm:'ILSG',name:'血糖胰島素作業'
-        },{
-            sFm:'CBLD',name:'領輸血作業'
-        },{
-            sFm:'CNBD',name:'領用血袋簽收單作業'
-        },{
-            sFm:'CNAD',name:'發血覆核作業'
-        },
-        {
-            sFm:'CNCD',name:'檢驗採檢辨識作業'
+    $(document).ready(function () {
+        const BtnName=[
+            {
+                sFm:'ILSG',name:'血糖胰島素作業'
+            },{
+                sFm:'CBLD',name:'領輸血作業'
+            },{
+                sFm:'CNBD',name:'領用血袋簽收單作業'
+            },{
+                sFm:'CNAD',name:'發血覆核作業'
+            },
+            {
+                sFm:'CNCD',name:'檢驗採檢辨識作業'
+            }
+        ];
+
+
+        $.each(BtnName,function (index) {
+            let sFm=BtnName[index].sFm;
+            $('#MenuBtn').append(
+                `
+                <div class='btn col-6'>
+                     <button  type="button" class='btn btn-primary btn-lg btn-block' id='${sFm}'>${BtnName[index].name}</button>
+                </div>
+                `
+            );
+        });
+
+        $(document).on('click','button',function () {
+            let BtnID=$(this).attr('id');
+            switch (BtnID) {
+                case "LogOutCel":
+                    CancellLogOut();
+                    break;
+                case "LogOut":
+                    WindowCloes();
+                    break;
+                default:
+                    openwindow(BtnID);
+                    break;
+            }
+        });
+
+
+        let  myWindow='';
+        function openwindow(sFm) {
+            let strWindowFeatures=
+         `
+            width=850px,
+            height=750px,
+            scrollbars=yes,
+            resizable=no
+            location=no,
+
+        `;
+            myWindow= window.open("NIS/"+sFm+"/NISPRW"+sFm+".php?str="+'<?PHP echo $parameter?>',$("#"+sFm).text(),strWindowFeatures);
+            console.log("http://localhost"+"/NIS/"+sFm+"/NISPRW"+sFm+".php?str="+'<?PHP echo $parameter?>');
         }
 
-    ];
-    $.each(BtnName,function (index) {
-        let sFm=BtnName[index].sFm;
-        $('#MenuBtn').append(
-            `
-            <div class='col col-12 col-sm-6 col-md-4 col-lg-2'>
-                 <button class='btn btn-primary btn-lg btn-block'  onclick='openwindow("${sFm}")'>${BtnName[index].name}</button>
-            </div>
-            `
-        );
+        $("#LogOutModleUI").click(function () {
+            $('#LogOutmodal').modal('show');
+        });
+        function CancellLogOut() {
+            $('#LogOutmodal').modal('hide');
+        }
+        function WindowCloes(){
+            window.close();
+        }
+
     });
 
-let  myWindow='';
-function openwindow(sFm) {
-   myWindow= window.open("NIS/"+sFm+"/NISPRW"+sFm+".php?str="+AESEnCode('<?PHP echo $parameter?>'),$("#"+sFm).text(),'width=850px,height=750px,scrollbars=yes,resizable=no');
-   console.log("http://10.10.230.73:8080/"+"NIS/"+sFm+"/NISPRW"+sFm+".php?str="+AESEnCode('<?PHP echo $parameter?>'));
-    console.log("http://10.10.230.73:8080/"+"NIS/"+sFm+"/NISPRW"+sFm+".php?str="+'<?PHP echo $parameter?>');
-}
 
-function CloseWin() {
-    if(myWindow){
-        myWindow.close();
-    }
-}
-function  ckw() {
-    if(!myWindow){
-        alert("window not opened");
-    }else {
-        if(myWindow.closed){
-            alert("window closed")
-        }else {
-            alert("window not closed")
-        }
-    }
-}
-$("#LogOutModleUI").click(function () {
-    $('#LogOutmodal').modal('show');
-});
-function CancellLogOut() {
-    $('#LogOutmodal').modal('hide');
-}
-function WindowCloes(){
-
-    window.close();
-}
 </script>
 </html>
 
