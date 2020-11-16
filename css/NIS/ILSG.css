@@ -1,3 +1,6 @@
+body{
+    overscroll-behavior-y: contain;
+}
 .btn {
     margin-top: 3px;
 }
@@ -29,10 +32,55 @@ h1 {
 }
 #A {
     transform: rotate(25deg);
+    z-index: 2;
+    position: static;
+    margin-top: -445px;
+    margin-left: 35px;
+
+}
+#B{
+    z-index: 2;
+    position: relative;
+    margin-left: 110px;
+    margin-top: -27px
+}
+#C{
+    z-index: 2;
+    position: relative;
+    margin-left: 74px;
+    margin-top: -22px;
+}
+#D{
+    z-index: 2;
+    position: relative;
+    margin-left: 88px;
+    margin-top: -22px;
+}
+#E{
+    z-index: 2;
+    position: relative;
+    margin-left: 215px;
+    margin-top: -22px;
+}
+#F{
+    z-index: 2;
+    position: relative;
+    margin-left: 230px;
+    margin-top: -22px;
+}
+#G{
+    z-index: 2;
+    position: relative;
+    margin-left: 190px;
+    margin-top: -28px;
 }
 
 #H {
     transform: rotate(-25deg);
+    z-index: 2;
+    position: static;
+    margin-top: -450px;
+    margin-left: 265px;
 }
 
 #FuModal .modal-dialog,
