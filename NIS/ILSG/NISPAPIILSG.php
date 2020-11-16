@@ -179,9 +179,13 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd,$HOST_IP){
     $NowDT= $str . $STR1;
 
     $Ssql="SELECT ID_INPATIENT,ID_PATIENT,DT_EXCUTE,TM_EXCUTE,FORMSEQANCE,UR_PROCESS FROM HIS803.NISWSTP
-                WHERE ID_TABFORM = '$sFm'  AND ID_TRANSACTION = '$sTraID'";
+                WHERE ID_TABFORM = :id_TAB  AND ID_TRANSACTION = :id_TRANS";
 
     $Sstid=oci_parse($conn,$Ssql);
+
+    oci_bind_by_name($Sstid,":id_TAB",$sFm);
+    oci_bind_by_name($Sstid,":id_TRANS",$sTraID);
+
     oci_execute($Sstid);
     $idinpt='';
     $idpt='';
@@ -253,8 +257,10 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd,$HOST_IP){
     /*回壓frmseq*/
     $PAD_NO_TABFORM  = str_pad($NO_TABFORM,10,0,STR_PAD_LEFT);
     $FORMseq=$NO_TABFORM+1;
-    $sql_update="UPDATE  HIS803.NSTBMF SET  NO_TABFORM='$FORMseq' WHERE ID_TABFORM= 'ISSG'";
+    $sql_update="UPDATE  HIS803.NSTBMF SET  NO_TABFORM=:NO_TAB WHERE ID_TABFORM= 'ISSG'";
     $up_stid=oci_parse($conn,$sql_update);
+
+    oci_bind_by_name($up_stid,":NO_TAB",$FORMseq);
     oci_execute($up_stid);
     $V_FrmSeq='ISSG'.$PAD_NO_TABFORM;
 
@@ -276,8 +282,11 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd,$HOST_IP){
     $SPRESS = '';
     $MMVAL = '';
 
-    $UPTMSQL="UPDATE HIS803.NISWSTP SET TM_EXCUTE='$sTm',DT_EXCUTE='$sDt'  WHERE ID_TRANSACTION='$sTraID'";
+    $UPTMSQL="UPDATE HIS803.NISWSTP SET TM_EXCUTE=:TM,DT_EXCUTE=:DT  WHERE ID_TRANSACTION=:id_TRAN";
     $upstid=oci_parse($conn,$UPTMSQL);
+    oci_bind_by_name($upstid,":TM",$sTm);
+    oci_bind_by_name($upstid,":DT",$sDt);
+    oci_bind_by_name($upstid,":id_TRAN",$sTraID);
     $R=oci_execute($upstid,OCI_NO_AUTO_COMMIT);
     if(!$R){
         oci_rollback($conn);
@@ -500,7 +509,7 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd,$HOST_IP){
     $sql3=ISLNinsert($idpt,$idINPt,$sDt,$sTm,$jidTime3,$LN_IDGP,$ID3,$STM3,$DBDOSE3,$iDOSE3,$USEF3,$LN3_FORBID,$iNo3,$sBed,$sNsRank,$sFrmSeqWk,$NowDT,$account);
 
     if (!empty($STVAL ||$SPRESS) && empty($LN_STM)) {
-        $a='123';
+
         $AKeyEmr106New='';
         if ($SFRMSEQ == '') {
             $stid_ISSG=oci_parse($conn,$sql);
@@ -553,7 +562,7 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd,$HOST_IP){
             }
 
         }
-        echo $a;
+
     }
     else if (!empty($STVAL ||$SPRESS && $LN_STM)){
         if(!empty($LN_STM)){
@@ -697,8 +706,6 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd,$HOST_IP){
                 }
             }
             oci_free_statement($stid_ISLN1);
-            oci_free_statement($stid_ISLN2);
-            oci_free_statement($stid_ISLN3);
             return   $response=json_encode(array("response" => "success","message" => "this is the success message"),JSON_UNESCAPED_UNICODE);
 
         }
@@ -768,7 +775,7 @@ function PosILSGCancel($conn,$sFm,$sTraID,$sPg,$sUr,$sDataFlag){
     $NowDT = $str . $STR1;
 
     $Ssql="SELECT ID_INPATIENT,ID_PATIENT,DT_EXCUTE,TM_EXCUTE,FORMSEQANCE from HIS803.NISWSTP
-            WHERE ID_TABFORM = '$sFm'  AND ID_TRANSACTION = '$sTraID'";
+            WHERE ID_TABFORM = :ID_TABFORM  AND ID_TRANSACTION = :ID_TRANSACTION";
     $Sstid=oci_parse($conn,$Ssql);
     oci_bind_by_name($Sstid,":ID_TABFORM",$sFm);
     oci_bind_by_name($Sstid,":ID_TRANSACTION",$sTraID);
@@ -848,11 +855,11 @@ function PosILSGCancel($conn,$sFm,$sTraID,$sPg,$sUr,$sDataFlag){
                   AND IG.formseqance =:formseqance  AND IG.DM_CANCD=' '";*/
 
                         $sql="UPDATE HIS803.NSISSG IG SET
-                              IG.dm_cancd = '$NowDT',
-                              IG.ur_cancd = '$sUr'
-                            WHERE IG.id_patient ='$idpt'
-                              AND IG.id_inpatient ='$idinpt'
-                              AND IG.formseqance ='$formseq'  AND IG.DM_CANCD=' '";
+                              IG.dm_cancd = :dm_cancd,
+                              IG.ur_cancd = :ur_cancd
+                            WHERE IG.id_patient = :id_patient
+                              AND IG.id_inpatient =:id_inpatient
+                              AND IG.formseqance =:formseqance  AND IG.DM_CANCD=' '";
 
             $stid=oci_parse($conn,$sql);
             oci_bind_by_name($stid,":dm_cancd",$NowDT);
@@ -923,8 +930,6 @@ function PosILSGCancel($conn,$sFm,$sTraID,$sPg,$sUr,$sDataFlag){
                     AND IL.ur_process = :ur_process
                     AND IL.dm_cancd=' '
                   AND IL.id_order = ' '";
-
-
             /*$sql3="UPDATE HIS803.NSISLN IL SET
                    IL.dm_cancd ='$NowDT',
                     IL.ur_cancd = '$sUr'
@@ -941,11 +946,10 @@ function PosILSGCancel($conn,$sFm,$sTraID,$sPg,$sUr,$sDataFlag){
             oci_bind_by_name($stid3,":dm_cancd",$NowDT);
             oci_bind_by_name($stid3,":ur_cancd",$sUr);
             oci_bind_by_name($stid3,":id_patient",$idpt);
-            oci_bind_by_name($stid2,":id_inpatient",$idinpt);
+            oci_bind_by_name($stid3,":id_inpatient",$idinpt);
             oci_bind_by_name($stid3,":dt_excute",$DT_EXCUTE);
             oci_bind_by_name($stid3,":tm_excute",$TM_EXCUTE);
             oci_bind_by_name($stid3,":ur_process",$sUr);
-
 
             $r=oci_execute($stid3,OCI_NO_AUTO_COMMIT);
             if(!$r){
