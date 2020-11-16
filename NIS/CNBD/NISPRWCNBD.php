@@ -153,7 +153,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 break;
                             case "true":
                                 try {
-                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $sIdUser?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
+                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $OPID?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
 
                                 }catch (e) {
                                     console.log(e);
