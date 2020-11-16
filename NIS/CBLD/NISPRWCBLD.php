@@ -7,18 +7,18 @@ $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
 $sIdUser_STR=$EXPLODE_data[0];
 $passwd_STR=$EXPLODE_data[1];
 $user_STR=$EXPLODE_data[2];
-
+$From_STR=$EXPLODE_data[3];
 
 $sIdUser_value=explode('=',$sIdUser_STR);
 $passwd_value=explode('=',$passwd_STR);
 $user_value=explode('=',$user_STR);
+$From_value=explode('=',$From_STR);
 
-
-$sIdUser=trim($sIdUser_value[1]);/*帳號*/
+$Account=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
 $passwd=trim($passwd_value[1]);/*密碼*/
 $sUr=trim($user_value[1]);/*使用者*/
+$From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
-$Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
 
 ?>
 <!DOCTYPE html>
@@ -34,25 +34,33 @@ $Account=strtoupper(str_pad($sIdUser,7,"0",STR_PAD_LEFT));
     <script src="../../crypto-js.js"></script>
     <script src="../../AESCrypto.js"></script>
     <script  type="text/javascript" src="../../instascan.min.js"></script>
+    <script src="../../NISCOMMAPI.js"></script>
     <script>
-        let sfm='<?php echo $sfm?>';
-        if(sfm==""){
-            let ckw=setInterval(()=>{ try {
-                if(!window.opener) {
-                    alert("此帳號以被登出,請重新登入開啟");
-                    window.close();
-                }
-            }catch (e) {
-                $("#wrapper").show();
-                alert(e);
-                window.close();
-                clearInterval(ckw);
-                return false;
-            }
-            },500);
-        }
-
         $(document).ready(function () {
+            //url帳號密碼驗證
+            let From='<?php echo $From?>';
+            if (From==="U"){
+                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
+                if(FromObj.reponse==="false"){
+                    alert("帳號密碼錯誤,請重新確認");
+                    return;
+                }
+            }else {
+                let ckw=setInterval(()=>{ try {
+                    if(!window.opener) {
+                        alert("此帳號以被登出,請重新登入開啟");
+                        window.close();
+                    }
+                }catch (e) {
+                    $("#wrapper").show();
+                    alert(e);
+                    window.close();
+                    clearInterval(ckw);
+                    return false;
+                }
+                },500);
+            }
+
             (function () {
                 TimerDefault();
                 DefaultElement();
