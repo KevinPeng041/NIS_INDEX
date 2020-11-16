@@ -102,7 +102,6 @@ function GetCNCDIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID
 
     return $ST_DATAA;
 }
-
 function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
 
     $DateTime = date("YmdHis");
