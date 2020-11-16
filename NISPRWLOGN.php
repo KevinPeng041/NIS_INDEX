@@ -40,21 +40,10 @@ $parameter='sfm='.$sfm.'&sIdUser='.$sIdUser.'&passwd='.$passwd."&user=".$sUr;
         window.location.href="NIS/"+sfm+"/NISPRW"+sfm+".php?str="+AESEnCode('<?PHP echo $parameter?>');
     }else {
         $(document).ready(function () {
-         /*   $("#passwd").keypress(function (e) {
-                $("#CapsLockMsg").toggle(
-                    //沒按下Shift鍵，卻輸入大寫字母
-                    (e.which >= 65 && e.which <= 90 && !e.shiftKey) ||
-                    //按下Shift鍵時，卻輸入小寫字母
-                    (e.which >= 97 && e.which <= 122 && e.shiftKey)
-                );
-            }).focusout(function () { $("#CapsLockMsg").hide(); });
-            */
-
             $("#sidName").attr('disabled',true);
             $("#passwd").attr('disabled',true);
             $("#loadword").hide();
             $(document).on('keypress','input[type=text]',function (e) {
-               console.log();
                let ID=$(this).attr('id');
                let code= e.keyCode ? e.keyCode : e.which;
                if(code===13){
@@ -63,7 +52,6 @@ $parameter='sfm='.$sfm.'&sIdUser='.$sIdUser.'&passwd='.$passwd."&user=".$sUr;
                        $(this).val("");
                        return  false;
                    }
-
                    switch (ID) {
                        case "acount":
                            if($("#acount").val()==""){
@@ -110,19 +98,15 @@ $parameter='sfm='.$sfm.'&sIdUser='.$sIdUser.'&passwd='.$passwd."&user=".$sUr;
                            }
                            break;
                    }
-
                }
             });
 
         });
 
-        function CheckHasSpecialStr(val)
-        {
+        function CheckHasSpecialStr(val){
             let strReg=/^.[A-Za-z0-9]+$/;
             return  val.match(strReg)==null?false:true;
         }
-
-
         function paddingLeft(str,lenght){
             if(str.length >= lenght)
                 return str;
@@ -130,12 +114,11 @@ $parameter='sfm='.$sfm.'&sIdUser='.$sIdUser.'&passwd='.$passwd."&user=".$sUr;
                 return paddingLeft("0" +str,lenght);
 
         }
-
         function formSubmit(){
             let passwd=$("#passwd").val();
-            let acount=$("#acount").val().toUpperCase();
+            let acount=paddingLeft($("#acount").val().toUpperCase(),7);
             $.ajax({
-                url:'/webservice/NISPWSCKPWD.php?str='+AESEnCode('sIdUser='+paddingLeft(acount,7)+'&sPassword='+passwd),
+                url:'/webservice/NISPWSCKPWD.php?str='+AESEnCode('sIdUser='+acount+'&sPassword='+passwd),
                 type:'POST',
                 dataType:'text',
                 success:function (data) {
@@ -150,8 +133,8 @@ $parameter='sfm='.$sfm.'&sIdUser='.$sIdUser.'&passwd='.$passwd."&user=".$sUr;
                         alert('密碼錯誤請重新檢查密碼');
                         return false;
                     }else if(re=='true') {
-                        window.open("./NISMENU.php?str="+AESEnCode('sIdUser='+acount+'&passwd='+$("#passwd").val()+"&user="+$("#sidName").val()),"系統作業選單",'width=500px,height=350px,scrollbars=yes,resizable=no');
-                        window.close();
+                        window.open("./NISMENU.php?str="+AESEnCode('sIdUser='+acount+'&passwd='+$("#passwd").val()+"&user="+$("#sidName").val()+"&From=L"),"系統作業選單",'width=515px,height=350px,scrollbars=yes,resizable=no');
+                        /*window.close();*/
                     }
                 },error:error
             });
