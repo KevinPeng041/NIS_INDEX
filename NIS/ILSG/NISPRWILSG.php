@@ -710,6 +710,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         }
                         /*禁打原因*/
                         Radioforbid(ST_DATAC.NO_MMVAL);
+
                         /*上次施打部位*/
                         LSTPT=ST_DATAB.LSTPT;
                         if(LSTPT){
@@ -762,16 +763,17 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 if($("#NOisuling_RE").children().length==0){
                     $.each(arr,function (index) {
                         $("#NOisuling_RE").append(
-                            "<label id='bb"+index+"' style='font-size: 4.5vmin'>"+"<input type='radio' name='NO_MMVAL' id='"+Object.keys(arr[index])+"' value='"+Object.keys(arr[index])+"' style='width: 6vmin;height: 6vmin' >"+Object.values(arr[index])+"</label>"
+                            `
+                            <label  style='font-size: 4.5vmin'>
+                                <input type='radio' name='NO_MMVAL' id='${Object.keys(arr[index])}' value='${Object.keys(arr[index])}' style='width: 6vmin;height: 6vmin' >
+                                ${Object.values(arr[index])}
+                            </label>
+                            `
                         );
                     });
                 }
             }
             function Forbid_Dateback(idPt,DT,TM,NO_MMAL,sTraID) {
-
-
-
-
                 if(idPt!=$("#DA_idpt").val()){
                     errorModal("病人資訊已異動,請先重新操作一次");
                     return false;
@@ -814,17 +816,17 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             /*部位序號(圖)*/
             function NISPWSCILREG(TransKEY,Part) {
                 $("td").css({'backgroundColor':'white','color':'black'});
-                $('.ImgTable').css({"background-color":"","color":""});
-
-                $.each(FORBIDArrary,function (index) {
-                    $("#"+FORBIDArrary[index].REGION).css({'backgroundColor':'red','color':'white'});
+                $.each(FORBIDArrary,function (index,val) {
+                   for (let i=1;i<=8;i++) {
+                       $("#"+val.REGION+i).css({'backgroundColor':'red','color':'white'});
+                   }
                 });
 
                 if(LSTPT){
                     $("#"+LSTPT).css({'backgroundColor':'blue','color':'white'});
                 }
 
-                console.log("http://localhost"+"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+TransKEY+"&sRgn="+Part));
+                //console.log("http://localhost"+"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+TransKEY+"&sRgn="+Part));
                 $.ajax({
                     url:"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+TransKEY+"&sRgn="+Part),
                     type:'POST',
@@ -1604,7 +1606,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
         <!--部位圖-->
         <div id="Imgisuling">
             <img src="ISLN800.bmp" style="z-index: -1;">
-            <table id="A" border="1" style="z-index: 2;position: static;margin-top: -445px;margin-left: 35px" class="ImgTable">                　
+            <table id="A" border="1">                　
                 <tr>                    　
                     <td id="A1">A1</td>                    　
                     <td id="A2">A2</td>                    　
@@ -1626,7 +1628,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td id="A8">A8</td>
                 </tr>
             </table>
-            <table id="B" border="1" style="z-index: 2;position: relative;margin-left: 110px;margin-top: -27px" class="ImgTable">
+            <table id="B" border="1" >
                 　
                 <tr>
                     　
@@ -1651,7 +1653,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td id="B8">B8</td>
                 </tr>
             </table>
-            <table id="C" border="1" style="z-index: 2;position: relative;margin-left: 74px;margin-top: -22px" class="ImgTable">
+            <table id="C" border="1" >
                 　
                 <tr>
                     　
@@ -1678,7 +1680,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td id="C8">C8</td>
                 </tr>
             </table>
-            <table id="D" border="1" style="z-index: 2;position: relative;margin-left: 88px;margin-top: -22px" class="ImgTable">
+            <table id="D" border="1">
                 　
                 <tr>
                     　
@@ -1706,7 +1708,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td id="D8">D8</td>
                 </tr>
             </table>
-            <table id="H" border="1" style="z-index: 2;position: static;margin-top: -450px;margin-left: 265px" class="ImgTable">
+            <table id="H" border="1"  >
                 　
                 <tr>
                     　
@@ -1734,7 +1736,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td id="H7">H7</td>
                 </tr>
             </table>
-            <table id="G" border="1" style="z-index: 2;position: relative;margin-left: 190px;margin-top: -28px" class="ImgTable">
+            <table id="G" border="1"  >
                 　
                 <tr>
                     　
@@ -1762,7 +1764,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td  id="G7">G7</td>
                 </tr>
             </table>
-            <table id="F" border="1" style="z-index: 2;position: relative;margin-left: 230px;margin-top: -22px" class="ImgTable">
+            <table id="F" border="1" >
                 　
                 <tr>
                     　
@@ -1790,7 +1792,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td id="F7">F7</td>
                 </tr>
             </table>
-            <table id="E" border="1" style="z-index: 2;position: relative;margin-left: 215px;margin-top: -22px" class="ImgTable">
+            <table id="E" border="1"  >
                 　
                 <tr>
                     　
