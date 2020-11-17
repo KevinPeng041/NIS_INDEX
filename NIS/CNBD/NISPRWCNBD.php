@@ -43,7 +43,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             if (From==="U"){
                 let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $OPID?>','<?php echo $passwd?>')));
                 if(FromObj.reponse==="false"){
-                    alert("帳號密碼錯誤,請重新確認");
+                    alert("帳號密碼錯誤,請關閉視窗重新確認");
                     return;
                 }
             }else {
@@ -645,7 +645,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
     <input id="NURSOPID" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
 </div>
 <div class="container">
-    <h2>領用血簽收單作業</h2>
+    <h1>領用血簽收單作業</h1>
     <form id="form1">
          <span class="ListBtn" style="margin-left:0 px">
              <button type="button" class="btn btn-secondary btn-md" disabled style="display: none">回主畫面</button>
