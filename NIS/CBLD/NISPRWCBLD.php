@@ -42,7 +42,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             if (From==="U"){
                 let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
                 if(FromObj.reponse==="false"){
-                    alert("帳號密碼錯誤,請重新確認");
+                    alert("帳號密碼錯誤,請關閉視窗重新確認");
                     return;
                 }
             }else {
