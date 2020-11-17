@@ -42,7 +42,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             if (From==="U"){
                 let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $OPID?>','<?php echo $passwd?>')));
                 if(FromObj.reponse==="false"){
-                    alert("帳號密碼錯誤,請重新確認");
+                    alert("帳號密碼錯誤,請關閉視窗重新確認");
                     return;
                 }
             }else {
@@ -396,7 +396,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 </div>
 
 <div class="container">
-    <h2>檢驗採檢辨識作業</h2>
+    <h1>檢驗採檢辨識作業</h1>
     <form id="form1" >
         <div class="ListBtn">
             <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" disabled>儲存</button>
