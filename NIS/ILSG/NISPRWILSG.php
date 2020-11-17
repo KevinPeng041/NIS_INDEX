@@ -44,7 +44,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             if (From==="U"){
                 let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
                 if(FromObj.reponse==="false"){
-                    alert("帳號密碼錯誤,請重新確認");
+                    alert("帳號密碼錯誤,請關閉視窗重新確認");
                     return;
                 }
             }
@@ -1320,6 +1320,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         }
 
                     });
+
                     $("#DataTxt").val(dataObj[0].DataTxt);
                     $("#DA_idpt").val(dataObj[0].IDPT);
                     $("#DA_idinpt").val(dataObj[0].IDINPT);
@@ -1329,10 +1330,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
 
                     $("#timer").prop("readOnly",false);
                     $("#timetxt").prop("readOnly",false);
-
                 }
-
-
             }
             function TimeSet(JID_TIME,DT,TM) {
                 $("#timetxt").val(TM.substr(0,2)+TM.substr(2,2));
