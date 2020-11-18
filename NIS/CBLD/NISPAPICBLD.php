@@ -1,8 +1,9 @@
 <?php
 date_default_timezone_set('Asia/Taipei');
 function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
+
     //取病人輸血紀錄初始清單
-    $sql = "select ST_DATAA, ST_DATAB, ST_DATAC from HIS803.NISWSIT WHERE ID_TABFORM = 'CBLD'";
+    $sql = "SELECT ST_DATAA, ST_DATAB, ST_DATAC FROM HIS803.NISWSIT WHERE ID_TABFORM = 'CBLD'";
     $stid=oci_parse($conn,$sql);
     oci_execute($stid);
     $ST_DATAA = '';
@@ -15,47 +16,44 @@ function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMS
         $ST_DATAC=oci_result($stid,"ST_DATAC")->read(2000);
     }
 
+
     $Serch_STDATAA="SELECT  BSK_ALLOWDATE As DT_EXE,
         BSK_ALLOWTIME As TM_EXE,  COUNT(*) as Num, BSK_INDENTNO As A_Indno, BSK_TRANSRECNO As A_trano 
          FROM TBOSTK, TREMED
         WHERE BSK_CANCD = 'N' AND BSK_OUT = 'Y' AND BSK_ALLOWDATE <> ' '  AND BSK_INDENTNO <> ' '
-         AND BSK_MEDNO = MH_MEDNO AND BSK_ALLOWDATE BETWEEN '1090409' AND '1090414'
-         AND   bsk_medno  ='$Idpt'
+         AND BSK_MEDNO = MH_MEDNO AND BSK_ALLOWDATE BETWEEN '1090409' AND '1091118'
+        AND   bsk_medno  ='$Idpt'
           GROUP BY  BSK_ALLOWDATE, BSK_ALLOWTIME, BSK_INDENTNO, BSK_TRANSRECNO
           ORDER BY  BSK_ALLOWDATE || BSK_ALLOWTIME DESC ";
 
-
     $stidA=oci_parse($conn,$Serch_STDATAA);
     oci_execute($stidA);
-    $DT_EXECUTE='';
-    $TM_EXECUTE='';
-    $NUM='';
+
     $INDENTNO='';
     $TRANSRECNO='';
     $arr2=[];
+    $arr_DATAA=[];
     while (oci_fetch_array($stidA)){
         $DT_EXECUTE=oci_result($stidA,'DT_EXE');
         $TM_EXECUTE=oci_result($stidA,'TM_EXE');
         $NUM=oci_result($stidA,'NUM');
         $INDENTNO=oci_result($stidA,'A_INDNO');
         $TRANSRECNO=oci_result($stidA,'A_TRANO');
+        $arr_DATAA[]=array("DT_EXE"=>$DT_EXECUTE,"TM_EXE"=>$TM_EXECUTE,"NUM"=>$NUM,"A_INDNO"=>$INDENTNO,"A_TRANO"=>$TRANSRECNO);
     }
-    $DT_str='"DT_EXE":"'.$DT_EXECUTE.'"';
-    $TM_str='"TM_EXE":"'.$TM_EXECUTE.'"';
-    $NUM_str='"NUM":"'.$NUM.'"';
-    $str=',"A_INDNO":"'.$INDENTNO.'"'.',"A_TRANO":"'.$TRANSRECNO.'"}]';
 
-    $Serch=array('"DT_EXECUTE":""','"TM_EXECUTE":""','"Num":""',"}]");
-    $replace=array($DT_str,$TM_str,$NUM_str,$str);
-    $new_ST_DATAA=str_replace($Serch,$replace,$ST_DATAA);
+
+   $DATAA= json_encode($arr_DATAA,JSON_UNESCAPED_UNICODE);
 
     $Insert_sql="INSERT INTO HIS803.NISWSTP(
                     ID_TABFORM,ID_TRANSACTION,ID_PATIENT,ID_INPATIENT,
                     DT_EXCUTE,TM_EXCUTE,ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_PREA,ST_PREB,
                     ST_PREC,ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
              VALUES ('CBLD','$sTraID','$Idpt',' ',
-             ' ',' ','$new_ST_DATAA','$ST_DATAB','$ST_DATAC',' ',' ',' ',
-             ' ',' ','$date','$sUr','$JID_NSRANK',' ')";
+             ' ',' ','$DATAA','$ST_DATAB','$ST_DATAC',' ',' ',' ',
+             ' ',' ','$date','$sUr','$JID_NSRANK','$FORMSEQANCE_WT')";
+
+
     $stid5=oci_parse($conn,$Insert_sql);
     $r=oci_execute($stid5,OCI_NO_AUTO_COMMIT);
     if(!$r){
@@ -65,6 +63,7 @@ function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMS
     }else{
         oci_commit($conn);
         $arr2[]=array('INDENTNO'=>$INDENTNO,'TRANSRECNO'=>$TRANSRECNO,'sTraID'=>$sTraID,'sSave'=>$sSave);
+
         return json_encode($arr2,JSON_UNESCAPED_UNICODE);
     }
 }
@@ -79,22 +78,20 @@ function GetCBLDPageJson($conn,$sTraID,$sPg){
         $ST_DATAC=oci_result($stid,"ST_DATAC")->read(2000);
 
     }
-    //[{"DT_EXE":1090414,"TM_EXE":1611,"B_NUM":4,"A_INDNO":10904142001,"A_TRANO":"T10904140001"}]
 
-    $a=explode(",",$ST_DATAA);
-    $DT_EXE=explode(":",$a[0])[1];
-    $TM_EXE=explode(":",$a[1])[1];
-    $Num=explode(":",$a[2])[1];
-    $INNO=explode(":",$a[3])[1];
-    $A_TRANO=str_replace("}]","",explode(":",$a[4])[1]);
-    $A_TRANO=explode('"',$A_TRANO)[1];
-
+    $obj=json_decode($ST_DATAA)[0];
+    $DT_EXE=$obj->DT_EXE;
+    $TM_EXE=$obj->TM_EXE;
+    $INNO=$obj->A_INDNO;
+    $NUM=$obj->NUM;
+    $A_TRANO=$obj->A_TRANO;
 
     switch ($sPg){
         case "A":
             $arr[]=array('ST_DATAA'=>$ST_DATAA);
             break;
         case "B":
+
             $Serch_STDATAB="SELECT bsk_bageno As B_ID, bkd_easyname As B_Num, bsk_blood As B_Tp,
                             ' ' As B_UR, ' ' As B_CUR,
                             BCK_DATMSEQ AS B_dtseq, bck_bldkind As B_Bkd,  bck_indentno B_Indno
@@ -312,7 +309,6 @@ function PosCBLDSave($conn,$sTraID,$sPg,$sDt,$sTm){
 
 function GetCBLDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
     //產生已儲存之紀錄資料
-    $idPt='00735158';
     $sql="SELECT (SELECT his803.nis_datetimeseq FROM DUAL) ID_TRANSB,
             his803.GetWSTPNEXTVAL ID_TRANSA, 
              CR.CA_BEDNO ID_BED, WM.formseqance_wt FORMSEQANCE_WT,
@@ -353,7 +349,7 @@ function GetCBLDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
         $SQL="SELECT BCK_DATMSEQ,Usr.NM_USER AS BCK_OPIDNM ,BCK.BCK_BAGENO,BCK.BCK_RECNO,BCK.BCK_BLDKIND,BCK.BCK_INDENTNO,BCK.BCK_GETDATE,
                  BCK.BCK_GETTIME, BCK.BCK_GETOPID, BCK.BCK_GETCKOPID,BCK.BCK_GETFROM
                  FROM TBOBCK BCK INNER JOIN NSUSER Usr ON Usr.ID_USER=BCK.BCK_GETCKOPID WHERE 
-                  BCK.BCK_MEDNO='$idPt'
+                  BCK.BCK_MEDNO='$IDPT'
                   AND  BCK.BCK_GETDATE ='$sDt' AND  BCK.BCK_GETTIME='$sTm'
                   AND  BCK.BCK_CANDATE=' ' AND  BCK.BCK_CANTIME=' '
                   AND  BCK.BCK_GETOPID <>' 'AND  BCK.BCK_GETCKOPID <>' ' 
@@ -382,7 +378,7 @@ function GetCBLDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
                 BCK.BCK_INDENTNO,BCK.BCK_TRADATE,BCK.BCK_TRATIME,BCK.BCK_TRAOPID, 
                 BCK.BCK_GETCKOPID,BCK.BCK_TRACKOPID,BCK.BCK_TRAFROM FROM 
                 TBOBCK BCK INNER JOIN NSUSER Usr ON Usr.ID_USER=BCK.BCK_TRACKOPID
-                WHERE BCK_MEDNO='$idPt' AND BCK_TRADATE ='$sDt' AND BCK_TRATIME='$sTm'
+                WHERE BCK_MEDNO='$IDPT' AND BCK_TRADATE ='$sDt' AND BCK_TRATIME='$sTm'
                 AND BCK_CANDATE=' ' AND BCK_CANTIME=' ' AND BCK_TRAOPID <>' ' AND BCK_TRACKOPID <>' ' 
                 ORDER BY BCK_TRADATE DESC";
 
@@ -490,7 +486,10 @@ function PosCBLDCancel($conn,$sTraID,$sPg){
     $DATAB=json_decode($ST_DATAB);
     $DATAC=json_decode($ST_DATAC);
     $response='';
-    $ID_PATIENT='00735158';
+
+
+
+
     switch ($sPg){
         case 'B':
             for($i=0;$i<count($DATAB);$i++) {
@@ -622,7 +621,7 @@ function PosCBLDCancel($conn,$sTraID,$sPg){
                     $BCK_GETCKOPID=oci_result($DTSEQ_stid,'BCK_GETCKOPID');
                     $BCK_GETFROM=oci_result($DTSEQ_stid,'BCK_GETFROM');
                 }
-                $ID_PATIENT='00735158';
+
                 $INSERSQL="INSERT INTO TBOBCK
                     (BCK_DATMSEQ,BCK_BAGENO,BCK_RECNO,BCK_BLDKIND,BCK_INDENTNO,BCK_MEDNO,
                     BCK_GETDATE,BCK_GETTIME,BCK_GETOPID,BCK_GETCKOPID,BCK_GETFROM,
