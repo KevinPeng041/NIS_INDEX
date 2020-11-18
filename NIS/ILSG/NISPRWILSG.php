@@ -39,32 +39,33 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
     <script src="../../NISCOMMAPI.js"></script>
     <script>
         $(document).ready(function () {
-            //url帳號密碼驗證
-            let From='<?php echo $From?>';
-            if (From==="U"){
-                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
-                if(FromObj.reponse==="false"){
-                    alert("帳號密碼錯誤,請關閉視窗重新確認");
-                    return;
-                }
-            }
-            else {
-                let ckw=setInterval(()=>{ try {
-                    if(!window.opener) {
-                        alert("此帳號以被登出,請關閉視窗重新登入開啟");
-                        window.close();
-                    }
-                }catch (e) {
-                    $("#wrapper").show();
-                    alert(e);
-                    window.close();
-                    clearInterval(ckw);
-                    return false;
-                }
-                },500);
-            }
-
             (function () {
+                //url帳號密碼驗證
+                let From='<?php echo $From?>';
+                if (From==="U"){
+                    let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
+                    if(FromObj.reponse==="false"){
+                        alert("帳號密碼錯誤,請關閉視窗重新確認");
+                        return;
+                    }
+                }
+                else {
+                    let ckw=setInterval(()=>{ try {
+                        if(!window.opener) {
+                            alert("此帳號以被登出,請關閉視窗重新登入開啟");
+                            window.close();
+                        }
+                    }catch (e) {
+                        $("#wrapper").show();
+                        alert(e);
+                        window.close();
+                        clearInterval(ckw);
+                        return false;
+                    }
+                    },500);
+                }
+
+
                 $("#loading").hide();
                 $("#wrapper").hide();
                 $("#DELMENU").attr("disabled", true);
@@ -94,6 +95,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     return false;
                 }
             });
+
             $(document).on('change','input[name=sRdoDateTime]',function () {
                 let TimeNow=new Date();
                 let yyyy=TimeNow.toLocaleDateString().slice(0,4);
@@ -102,6 +104,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
                 let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
                 let Timetxt=($(this).val()).split("");
+
                 let timer=Timetxt.filter(function (value, index, array) { return  value!==":"});
                 let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
 
@@ -111,14 +114,13 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
 
             });
 
-
-
-            $('#STVALval').bind("input propertychange",function(){
+            $('#STVALval').on("keydown",function(){
                 if($(this).val()){
                     $("input[name='sPressure']").prop('checked',false);
                     $("#sPress").val("");
                 }
             });
+
             $("input[name='sPressure']").change(function () {
                 $("#sPress").val($(this).val());
                 $("#STVALval").val("");
@@ -187,6 +189,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         "obj": v
                     });
                 });
+
                     ISSG_jsonStr=[{
                     'IDTM':$("#IDTM").val(),
                     'IDGP':$("input[name=IDGP]:checked").val(),
@@ -208,7 +211,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         /*if val=1 執行快存WSST*/
                         if($("#clickTime").val()=='1'){
                             UPDATEDATA('B',JSON.stringify(ISLN_json(data)));
-                            UPDATEDATA('C',JSON.stringify(Forbidjson()));
+                            UPDATEDATA('C',JSON.stringify(Get_Forbidjson()));
                             console.log(ISLN_json(data));
                         }
 
@@ -239,7 +242,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         /*if val=1 執行快存WSST*/
                         if($("#clickTime").val()=='1'){
                             UPDATEDATA('A',JSON.stringify(ISSG_jsonStr));
-                            UPDATEDATA('C',JSON.stringify(Forbidjson()));
+                            UPDATEDATA('C',JSON.stringify(Get_Forbidjson()));
 
                         }
 
@@ -376,7 +379,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         let TIMER=$("#timetxt").val();
                         let CID_MEAL=$("input[name=IDGP]:checked").val();
                         let trsKey=$('#transKEY').val();
-                        let submitAjax_ip='/webservice/NISPWSSAVEILSG.php';
                         let Page=$('#PageVal').val();
                         let json='';
                         let spg='';
@@ -482,10 +484,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                 spg='A';
                                 break;
                             case "B":
-                                if($("input[name=part]:checked").val()=='' || $("input[name=part]:checked").val()==null || $("input[name=part]:checked").val()=='undefined'){
-                                    errorModal("尚未選擇施打部位");
-                                    return false;
-                                }
                                 if($("#Isu_A").val()=='') {
                                     errorModal("第一筆藥名不得為空");
                                     return false;
@@ -540,7 +538,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                     return false;
                                 }
                                 if ($("#dose0").val() != '') {
-                                    if (ValidateNumber($("#dose0").val()) == 'error') {
+                                    if (ValidateNumber($("#dose0").val()) === false) {
                                         errorModal("第一筆劑量請輸入數字");
                                         $("#ERRORVAL").val(4);
                                         focustext(4);
@@ -548,7 +546,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                     }
                                 }
                                 if ($("#dose1").val() != '') {
-                                    if (ValidateNumber($("#dose1").val()) == 'error') {
+                                    if (ValidateNumber($("#dose1").val()) === false) {
                                         errorModal("第二筆劑量請輸入數字");
                                         $("#ERRORVAL").val(6);
                                         focustext(6);
@@ -556,7 +554,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                     }
                                 }
                                 if ($("#dose2").val() != '') {
-                                    if (ValidateNumber($("#dose2").val()) == 'error') {
+                                    if (ValidateNumber($("#dose2").val()) === false) {
                                         errorModal("第三筆劑量請輸入數字");
                                         $("#ERRORVAL").val(8);
                                         focustext(8);
@@ -567,28 +565,31 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                 spg='B';
                                 break;
                             case "C":
-                                if( $("input[name='forbid[]']").is(":checked")===true && $("input[name=NO_MMVAL]").is(":checked")===false){
+                                if( $("input[name='forbid']").is(":checked")===true && $("input[name=NO_MMVAL]").is(":checked")===false){
                                     errorModal("請選擇禁打原因");
                                     return false;
                                 }
-                                if( $("input[name='forbid[]']").is(":checked")===false && $("input[name=NO_MMVAL]").is(":checked")===true){
+                                if( $("input[name='forbid']").is(":checked")===false && $("input[name=NO_MMVAL]").is(":checked")===true){
                                     errorModal("請選擇禁打部位");
                                     return false;
                                 }
-                                if( $("input[name='forbid[]']").is(":checked")===false && $("input[name=NO_MMVAL]").is(":checked")===false){
+                                if( $("input[name='forbid']").is(":checked")===false && $("input[name=NO_MMVAL]").is(":checked")===false){
                                     errorModal("請選擇禁打部位和原因");
                                     return false;
                                 }
-                                json=Forbidjson();
+                                json=Get_Forbidjson();
                                 spg='C';
                                 break;
                         }
+/*
                         console.log(json);
-                        //console.log("http://localhost"+submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
+                        console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
+
+*/
                         $("#loading").show();
                         $("#wrapper").show();
                         $.ajax({
-                            url:submitAjax_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'),
+                            url:'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'),
                             type:'POST',
                             beforeSend: UPDATEDATA(spg, JSON.stringify(json)),
                             dataType:'text',
@@ -620,6 +621,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         break;
                 }
             });
+
             $(".FuQuenCy").on("focus",function () {
                 let TxtID=$(this).attr("id");
                 let index=TxtID.split("");
@@ -697,9 +699,10 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         let ST_DATAC=(JSON.parse(json.ST_DATAC))[0];
                         let  fu_data=JSON.parse(json.ST_PREC);
                         $("#STDATB_idFrm").val(ST_DATAB.idFrm);
-                        $("input[name='forbid[]']").prop('checked',false);
-                        $("input[name='forbid[]']").prop('disabled',false);
+                        $("input[name='forbid']").prop('checked',false);
+                        $("input[name='forbid']").prop('disabled',false);
                         FORBIDArrary=ST_DATAB.FORBID;
+
                         if(FORBIDArrary){
                             $.each(FORBIDArrary,function (index) {
                                 $('#Part'+FORBIDArrary[index].REGION).prop('disabled',true);
@@ -727,7 +730,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                             let str1='';
                             let str2='';
 
-                            if (index%2 != 0){
+                            if (index%2 !== 0){
                                 str1=fu_data[index].FUQUEN;
                                 $("#fu1").append(
                                     `
@@ -759,22 +762,22 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     }
                 });
             }
+
             function Radioforbid(arr){
                 if($("#NOisuling_RE").children().length==0){
-                    $.each(arr,function (index) {
+                    $.each(arr,function (index,item) {
                         $("#NOisuling_RE").append(
                             `
-                            <label  style='font-size: 4.5vmin'>
-                                <input type='radio' name='NO_MMVAL' id='${Object.keys(arr[index])}' value='${Object.keys(arr[index])}' style='width: 6vmin;height: 6vmin' >
-                                ${Object.values(arr[index])}
-                            </label>
+                            <label  style='font-size: 4.5vmin'><input type='radio' name='NO_MMVAL' id='${item.F_ID}' value='${item.F_ID}' style='width: 6vmin;height: 6vmin' >${item.name}</label>
                             `
                         );
                     });
                 }
             }
+
+
             function Forbid_Dateback(idPt,DT,TM,NO_MMAL,sTraID) {
-                if(idPt!=$("#DA_idpt").val()){
+                if(idPt!==$("#DA_idpt").val()){
                     errorModal("病人資訊已異動,請先重新操作一次");
                     return false;
                 }
@@ -794,8 +797,8 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 $("input[type=checkbox]").prop('disabled',true);
 
             }
-            function Forbidjson(){
-                let checkboxval=$("input[name='forbid[]']:checked").map(function() { return $(this).val(); }).get();
+            function Get_Forbidjson(){
+                let checkboxval=$("input[name='forbid']:checked").map(function() { return $(this).val(); }).get();
                 for(let i=0;i<FORBIDArrary.length;i++){
                     /*移除禁打預設值*/
                     delete checkboxval[i];
@@ -804,11 +807,9 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     /*去除陣列移除後的空值*/
                     return e;
                 });
-                let newobj=new Object();
-                let REGION=checkboxval.length===0?[]:checkboxval;
-                let NO_MMVAL=$("input[name=NO_MMVAL]:checked").val()==="undefined"?"":$("input[name=NO_MMVAL]:checked").val();
-                newobj.REGION=REGION;
-                newobj.NO_MMVAL= NO_MMVAL;
+                let newobj={};
+                newobj.REGION=checkboxval.length===0?[]:checkboxval;
+                newobj.NO_MMVAL= $("input[name=NO_MMVAL]:checked").val()==="undefined"?"":$("input[name=NO_MMVAL]:checked").val();
                 let data=[];
                 data.push(newobj);
                 return data;
@@ -914,7 +915,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     dataType:"text",
                     success:function (data) {
                         let json=JSON.parse(AESDeCode(data));
-                        //console.log(json.message);
+                        console.log(json.message);
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         errorModal(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -996,7 +997,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             function ValidateNumber(number) {
                 let reg = new RegExp(/^\d+(\.\d{0,2})?$/);
                 if (!number.match(reg)) {
-                    return 'error';
+                    return false;
                 }
             }
             function NISPWSFMINI_Timer() {
@@ -1006,19 +1007,16 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     type:"POST",
                     dataType:"text",
                     success:function(data){
-                        let json=JSON.parse(AESDeCode(data));
-                        let ST_PREAAry=json[0];
-                        let obj=(JSON.parse(ST_PREAAry.ST_PREA))[0];
+                        let obj=JSON.parse(AESDeCode(data));
+                        let arr=JSON.parse(obj.ST_PREA);
 
-                        $("#ISTM").append(
-                            `
-                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000001"}' value='${obj.ISTM00000001}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000001}</label>
-                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000002"}' value='${obj.ISTM00000002}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000002}</label>
-                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000003"}' value='${obj.ISTM00000003}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000003}</label>
-                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000004"}' value='${obj.ISTM00000004}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000004}</label>
-                            <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${"ISTM00000005"}' value='${obj.ISTM00000005}' style='width: 6vmin;height: 6vmin' >${obj.ISTM00000005}</label>
-                             `
-                        );
+                        $.each(arr,function (index,item) {
+                            $("#ISTM").append(
+                                `
+                                <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${item.T_ID}' value='${item.name}' style='width: 6vmin;height: 6vmin' >${item.name}</label>
+                                `
+                            )
+                        });
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         errorModal(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -1265,7 +1263,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                             $("#SERCH_Click").val("2");
                             $("#Part").prop('disabled',true);
                             $('#FORMSEQANCE').val(C_FORMSEQANCE);
-                            $("input[name='forbid[]']").prop('checked',false);
+                            $("input[name='forbid']").prop('checked',false);
                             $.each(C_F_REGION,function (index,val) {
                                 $('#No_'+val).prop('checked',true);
                             });
@@ -1585,14 +1583,14 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 <label style="color: white">禁打部位</label>
             </div>
             <div style="background-color: #FFFBCC;border-radius:3px;padding-top: 5px">
-                <label><input type="checkbox" id="No_A" name="forbid[]" value="A" style="width: 4.5vmin;height: 4.5vmin" >A.左臂</label>
-                <label><input type="checkbox" id="No_B" name="forbid[]" value="B" style="width: 4.5vmin;height: 4.5vmin">B.左腹</label>
-                <label><input type="checkbox" id="No_C" name="forbid[]" value="C" style="width: 4.5vmin;height: 4.5vmin">C.左臀</label>
-                <label><input type="checkbox" id="No_D" name="forbid[]" value="D" style="width: 4.5vmin;height: 4.5vmin">D.左腿</label><br>
-                <label><input type="checkbox" id="No_E" name="forbid[]" value="E" style="width: 4.5vmin;height: 4.5vmin">E.右腿</label>
-                <label><input type="checkbox" id="No_F" name="forbid[]" value="F" style="width: 4.5vmin;height: 4.5vmin">F.右臀</label>
-                <label><input type="checkbox" id="No_G" name="forbid[]" value="G" style="width: 4.5vmin;height: 4.5vmin">G.右腹</label>
-                <label><input type="checkbox" id="No_H" name="forbid[]" value="H" style="width: 4.5vmin;height: 4.5vmin">H.右臂</label>
+                <label><input type="checkbox" id="No_A" name="forbid" value="A" style="width: 4.5vmin;height: 4.5vmin" >A.左臂</label>
+                <label><input type="checkbox" id="No_B" name="forbid" value="B" style="width: 4.5vmin;height: 4.5vmin">B.左腹</label>
+                <label><input type="checkbox" id="No_C" name="forbid" value="C" style="width: 4.5vmin;height: 4.5vmin">C.左臀</label>
+                <label><input type="checkbox" id="No_D" name="forbid" value="D" style="width: 4.5vmin;height: 4.5vmin">D.左腿</label><br>
+                <label><input type="checkbox" id="No_E" name="forbid" value="E" style="width: 4.5vmin;height: 4.5vmin">E.右腿</label>
+                <label><input type="checkbox" id="No_F" name="forbid" value="F" style="width: 4.5vmin;height: 4.5vmin">F.右臀</label>
+                <label><input type="checkbox" id="No_G" name="forbid" value="G" style="width: 4.5vmin;height: 4.5vmin">G.右腹</label>
+                <label><input type="checkbox" id="No_H" name="forbid" value="H" style="width: 4.5vmin;height: 4.5vmin">H.右臂</label>
             </div>
             <div style="background-color:#FF0000;">
                 <label style="color: white">禁打原因</label>
@@ -1811,7 +1809,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     <td id="E5">E5</td>
                 </tr>
                 <tr>
-                    　
                     <td id="E8">E8</td>                    　
                     <td id="E7">E7</td>
                 </tr>
