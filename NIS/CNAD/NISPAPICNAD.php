@@ -1,6 +1,6 @@
 <?php
 date_default_timezone_set('Asia/Taipei');
-function  GetCNADPatient($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK){
+function  GetCNADPatient($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
     //取輸血紀錄單 FOR NISPRWCBED
       $SQL="SELECT  BSK_ALLOWDATE, BSK_ALLOWTIME,MH_MEDNO,MH_NAME ,BSK_INDENTNO , BSK_TRANSRECNO
          FROM TBOSTK, TREMED
@@ -27,7 +27,7 @@ function  GetCNADPatient($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK){
                     ST_PREC,ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
              VALUES ('CNAD','$TransKey',' ',' ',
              ' ',' ','$json',' ',' ',' ',' ',' ',
-             ' ',' ','$date','$sUr','$JID_NSRANK',' ')";
+             ' ',' ','$date','$sUr','$JID_NSRANK','$FORMSEQANCE_WT')";
 
     $stid2=oci_parse($conn,$Insert_sql);
     $r=oci_execute($stid2,OCI_NO_AUTO_COMMIT);
@@ -73,7 +73,7 @@ function GetCNADIniJson ($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FOR
                     ST_PREC,ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
              VALUES ('CNAD','$TransKey',' ',' ',
              ' ',' ','$json',' ',' ',' ',' ',' ',
-             ' ',' ','$date','$sUr','$JID_NSRANK',' ')";
+             ' ',' ','$date','$sUr','$JID_NSRANK','$FORMSEQANCE_WT')";
 
     $stid5=oci_parse($conn,$Insert_sql);
     $r=oci_execute($stid5,OCI_NO_AUTO_COMMIT);
