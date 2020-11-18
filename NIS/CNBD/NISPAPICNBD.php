@@ -26,7 +26,7 @@ function GetCNBDIniJson($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FORM
                     ST_PREC,ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
              VALUES ('CNBD','$TransKey',' ',' ',
              ' ',' ','$json',' ',' ',' ',' ',' ',
-             ' ',' ','$date','$sUr','$JID_NSRANK',' ')";
+             ' ',' ','$date','$sUr','$JID_NSRANK','$FORMSEQANCE_WT')";
     $stid5=oci_parse($conn,$Insert_sql);
     $r=oci_execute($stid5,OCI_NO_AUTO_COMMIT);
     if(!$r){
