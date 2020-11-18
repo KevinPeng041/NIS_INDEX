@@ -145,10 +145,10 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 break;
                             case "true":
                                 let  sPg=$("#PageVal").val();
-                                console.log("http://localhost"+"/webservice/NISPWSLKQRY.php?str="+
+                                /*console.log("http://localhost"+"/webservice/NISPWSLKQRY.php?str="+
                                     AESEnCode("sFm=CBLD&PageVal="+sPg+"&DA_idpt="+
                                         $('#DA_idpt').val()+"&DA_idinpt="+$('#DA_idinpt').val()+
-                                        "&sUser="+$('#'+sPg+'_UR').val()+"&NM_PATIENT="+$('#DataTxt').val()));
+                                        "&sUser="+$('#'+sPg+'_UR').val()+"&NM_PATIENT="+$('#DataTxt').val()));*/
                                 y=window.open("/webservice/NISPWSLKQRY.php?str="+
                                     AESEnCode("sFm=CBLD&PageVal="+sPg+"&DA_idpt="+
                                         $('#DA_idpt').val()+"&DA_idinpt="+$('#DA_idinpt').val()+
@@ -238,6 +238,8 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
                         InsertWSST($("#sTraID").val(),'A',JSON.stringify(GETNEWSTDATA()));
                         InsertWSST($("#sTraID").val(),'C',JSON.stringify(CCKVal));
+
+
                         LoadPageData('CBLD',$('#sTraID').val(),'B');
 
 
@@ -271,7 +273,9 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         break;
                     case "Del":
                         let  del_ip='/webservice/NISPWSDELILSG.php';
+/*
                         console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CBLD'+"&sTraID="+$('#sTraID').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#B_UR").val()));
+*/
                         let  sPg=$("#PageVal").val();
 
                         $.ajax({
@@ -318,7 +322,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                 }
                 $("#loading").show();
                 $("#wrapper").show();
-                /*  console.log(json) ;*/
+                /*  console.log(json)
                 console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+ AESEnCode('sFm=' + 'CBLD' +
                     '&sTraID=' + $('#sTraID').val() +
                     '&sPg=' + $("#PageVal").val() +
@@ -326,7 +330,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     '&sTm=' + $("#TimeVal").val()+
                     '&PASSWD='+$("#"+page+"_CPWD").val()+
                     '&USER='+paddingLeft($("#"+page+"_CUR").val().toUpperCase(),7))
-                );
+                );;*/
                 $.ajax({
                     url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CBLD' +
                         '&sTraID=' + $('#sTraID').val() +
@@ -344,7 +348,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         $("#wrapper").hide();
                         let  str=AESDeCode(data);
                         let  dataObj=JSON.parse(str);
-                        console.log(dataObj);
+                       // console.log(dataObj);
                         let  result = dataObj.response;
                         let  message = dataObj.message;
                         if (result == "success") {
@@ -465,11 +469,12 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             }
             function Scancallback(data) {
                 let  json=JSON.parse(data);
-                console.log(json);
+               // console.log(json);
                 let  page=json.PAGE;
                 let  BIDArr=json.B_ID;
                 if(BIDArr.length >0){
-                    switch (page) {
+                    switch (page)
+                    {
                         case "B":
                             $.each(BIDArr,function (index,bid) {
                                 if($("#GT"+bid.trim()).length > 0){
@@ -480,7 +485,6 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
                             break;
                         case "C":
-
                             $.each(BIDArr,function (index,bid) {
                                 if($("#IN"+bid.trim()).length > 0){
                                     $("#IN"+bid.trim()).prop("checked",true);
@@ -515,12 +519,16 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     dataType:"text",
                     success:function(data){
                         let  json=JSON.parse(AESDeCode(data))[0];
-                        console.log(json);
                         switch (Page) {
                             case "A":
-
                                 let  ST_DATAA=JSON.parse(json.ST_DATAA);
-                                console.log(ST_DATAA);
+
+                                if (ST_DATAA.length===0)
+                                {
+                                    alert("查無資料");
+                                    return false;
+                                }
+
                                 if($("#PBList").children().length == 0){
                                     $.each(ST_DATAA,function (index) {
                                         let  DT_EXE=ST_DATAA[index].DT_EXE;
@@ -529,10 +537,13 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                         let  A_INDNO=ST_DATAA[index].A_INDNO;
                                         let  A_TRANO=ST_DATAA[index].A_TRANO;
                                         let RadioBtnVal=DT_EXE+"@"+TM_EXE+"@"+Num+"@"+A_INDNO+"@"+A_TRANO;
-                                        $("#PBList").append(
-                                            `
+
+
+
+                                            $("#PBList").append(
+                                                `
                                         <tr>
-                                            <td style='width: 20vmin'><input type='radio' id='ck0' name='PBCK' value='${RadioBtnVal}'></td>
+                                            <td style='width: 20vmin'><input type='radio' id='${"ck"+index}' name='PBCK' value='${RadioBtnVal}'></td>
                                             <td>${DT_EXE}</td>
                                             <td>${TM_EXE}</td>
                                             <td>${Num}</td>
@@ -540,7 +551,10 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                             <td style='display: none'>${A_TRANO}</td>
                                         </tr>
                                       `
-                                        );
+                                            );
+
+
+
                                     });
                                 }
                                 break;
@@ -580,7 +594,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 break;
                             case "C":
                                 ST_DATAC=JSON.parse(json.ST_DATAC);
-                                console.log(ST_DATAC);
+                      /*          console.log(ST_DATAC);*/
                                 if($("#INList").children().length == 0){
                                     $.each(ST_DATAC,function (index) {
                                         let  C_ID=ST_DATAC[index].C_ID;
@@ -629,22 +643,28 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             function _GetINIjson() {
                 //歷次發血表單資料
                 $("#wrapper").show();
-                console.log("http://localhost"+'/webservice/NISPWSTRAINI.PHP?str='+AESEnCode('sFm=CBLD&idPt='+$("#DA_idpt").val()+'&INPt='+$("#DA_idinpt").val()+'&sUr=<?php echo $Account?>'));
+
                 $.ajax({
                     url:'/webservice/NISPWSTRAINI.PHP?str='+AESEnCode('sFm=CBLD&idPt='+$("#DA_idpt").val()+'&INPt='+$("#DA_idinpt").val()+'&sUr=<?php echo $Account?>'),
                     type:"POST",
                     dataType:"text",
                     success:function(data){
                         let  json=JSON.parse(AESDeCode(data))[0];
-                        console.log(json);
+                        //console.log(json);
                         $('#sTraID').val(json.sTraID);
                         $('#sSave').val(json.sSave);
                         $('#INDENTNO').val(json.INDENTNO);
                         $('#TRANSRECNO').val(json.TRANSRECNO);
                         LoadPageData('CBLD',$('#sTraID').val(),'A');
                         $("#wrapper").hide();
-                    },error:function () {
-                        console.log("error");
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                        return false;
                     }
                 });
             }
@@ -681,7 +701,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     dataType:"text",
                     success:function(data){
                         let  json=JSON.parse(AESDeCode(data));
-                        console.log(json.message);
+                        //console.log(json.message);
                     },
                     error:function (XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -766,14 +786,11 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             }
             function checkSerchwindow() {
                 if(!y){
-                    console.log("not open");
                     return "true";
                 }else {
                     if(y.closed){
-                        console.log("window close");
                         return "true";
                     }else {
-                        console.log("window not close");
                         return "false";
                     }
                 }
@@ -819,7 +836,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
                                 let  str=cbxVehicle[index];
                                 let  OBJ=new Object();
-                                console.log(str);
+                               // console.log(str);
                                 OBJ.B_ID= str.split("@",8)[0];
                                 OBJ.B_NUM= str.split("@",8)[1];
                                 OBJ.B_TP= str.split("@",8)[2];
@@ -859,14 +876,11 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             function checkBEDwindow() {
 
                 if(!x){
-                    console.log("not open");
                     return "true";
                 }else {
                     if(x.closed){
-                        console.log("window close");
                         return "true";
                     }else {
-                        console.log("window not close");
                         return "false";
                     }
                 }
