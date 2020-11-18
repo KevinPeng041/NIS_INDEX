@@ -6,7 +6,6 @@
     <script type="text/javascript" src="../../jquery-3.4.1.js"></script>
     <link rel="stylesheet" href="../../bootstrap-4.3.1-dist/css/bootstrap.min.css">
     <script  type="text/javascript" src="../../instascan.min.js"></script>
-    <script type="text/javascript" src="../../jquery.min.js"></script>
     <style>
         .box2{
             height: 200px;
