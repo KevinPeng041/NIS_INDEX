@@ -210,9 +210,8 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         }
                         /*if val=1 執行快存WSST*/
                         if($("#clickTime").val()=='1'){
-                            UPDATEDATA('B',JSON.stringify(ISLN_json(data)));
+                            UPDATEDATA('B',JSON.stringify(Get_ISLNjson(data)));
                             UPDATEDATA('C',JSON.stringify(Get_Forbidjson()));
-                            console.log(ISLN_json(data));
                         }
 
                         $("#BSData").show();
@@ -270,7 +269,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         /*if val=1 執行快存WSST*/
                         if($("#clickTime").val()=='1'){
                             UPDATEDATA('A',JSON.stringify(ISSG_jsonStr));
-                            UPDATEDATA('B',JSON.stringify(ISLN_json(data)));
+                            UPDATEDATA('B',JSON.stringify(Get_ISLNjson(data)));
 
                         }
                         $("#NO_isuling").show();
@@ -375,13 +374,12 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     case "SubmitBtn":
                         $(window).off('beforeunload', reloadmsg);
                         let timeRadioButton=$("input[name=sRdoDateTime]:checked").val();
+                        let CID_MEAL=$("input[name=IDGP]:checked").val();
                         let Dateinput=$("#timer").val();
                         let TIMER=$("#timetxt").val();
-                        let CID_MEAL=$("input[name=IDGP]:checked").val();
                         let trsKey=$('#transKEY').val();
                         let Page=$('#PageVal').val();
                         let json='';
-                        let spg='';
                         sDt=($('#timer').val()).toString();
                         sTm=$('#timetxt').val()+"00";
 
@@ -435,6 +433,11 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                             'MMVAL': $('#Textarea').val().match(/&/)!=null?$('#Textarea').val().replace(/&/g,'＆'):$('#Textarea').val()
                         }];
 
+                        if ($("#sSave").val()==='N'){
+                            errorModal("此病人權限無法存檔");
+                            return false;
+                        }
+
 
                         if($('#DataTxt').val()=='' ||$('#DataTxt').val()==null　){
 
@@ -481,7 +484,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                     return false;
                                 }
                                 json=ISSG_jsonStr;
-                                spg='A';
+
                                 break;
                             case "B":
                                 if($("#Isu_A").val()=='') {
@@ -561,8 +564,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                         return false;
                                     }
                                 }
-                                json=JSON.stringify(ISLN_json(ISSN_jsonStr3));
-                                spg='B';
+                                json=JSON.stringify(Get_ISLNjson(ISSN_jsonStr3));
                                 break;
                             case "C":
                                 if( $("input[name='forbid']").is(":checked")===true && $("input[name=NO_MMVAL]").is(":checked")===false){
@@ -578,7 +580,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                     return false;
                                 }
                                 json=Get_Forbidjson();
-                                spg='C';
                                 break;
                         }
 /*
@@ -591,11 +592,10 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         $.ajax({
                             url:'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'),
                             type:'POST',
-                            beforeSend: UPDATEDATA(spg, JSON.stringify(json)),
+                            beforeSend: UPDATEDATA(Page, JSON.stringify(json)),
                             dataType:'text',
                             success:function (json) {
                                 let data= JSON.parse(AESDeCode(json));
-
                                 $("#loading").hide();
                                 $("#wrapper").hide();
                                 if(data.response=='success'){
@@ -630,7 +630,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 $('#fut').val(index[6]);
             });
 
-            function ISLN_json(arr){
+            function Get_ISLNjson(arr){
                 let length=0;
                 let re=[];
                 if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
@@ -654,14 +654,11 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
 
             function checkSerchwindow() {
                 if(!y){
-
                     return "true";
                 }else {
                     if(y.closed){
-
                         return "true";
                     }else {
-
                         return "false";
                     }
                 }
