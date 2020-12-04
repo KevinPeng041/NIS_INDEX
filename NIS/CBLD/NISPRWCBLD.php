@@ -935,7 +935,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             </thead>
         </table>
         <div class="input-group">
-            <input id="DataTxt"  value="" type="text" readonly="readonly" style="background-color: #FFFBCC;;font-size: 4vmin;width:100vmin;">
+            <input id="DataTxt" value="" class="form-control" type="text" readonly="readonly">
         </div>
         <!--參數欄位-->
         <div class="Parametertable">
