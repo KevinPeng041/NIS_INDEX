@@ -39,7 +39,6 @@ function GetILSGIniJson($conn,$idPt,$INPt,$sFm,$ID_BED,$sTraID,$sSave,$date,$sUr
                      RETURNING  ST_PREB INTO :ST_PREB";
 
     $INTP_Stid = oci_parse($conn, $TPsql);
-
     $clob=oci_new_descriptor($conn,OCI_D_LOB);
     oci_bind_by_name($INTP_Stid,":ST_PREB",$clob,-1,OCI_B_CLOB);
 
@@ -57,7 +56,9 @@ function GetILSGIniJson($conn,$idPt,$INPt,$sFm,$ID_BED,$sTraID,$sSave,$date,$sUr
         oci_free_statement($INTP_Stid);
         return json_encode($jsonback,JSON_UNESCAPED_UNICODE);
     } else {
+        $e=oci_error($conn);
         oci_rollback($conn);
+        return $e['message'];
     }
 }
 function GetILSGPageJson($conn,$sTraID,$sPg){
