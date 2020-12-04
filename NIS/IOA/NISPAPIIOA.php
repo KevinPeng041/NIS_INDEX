@@ -321,6 +321,47 @@ function PosIOASave($conn,$sTraID,$sDt,$sTm,$sUr){
 }
 function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
 
+    $sql="SELECT (SELECT his803.nis_datetimeseq FROM DUAL) ID_TRANSB,
+            his803.GetWSTPNEXTVAL ID_TRANSA, 
+             CR.CA_BEDNO ID_BED, WM.formseqance_wt FORMSEQANCE_WT,
+            (SELECT Max(CI.id_item) FROM HIS803.NSUSER UR, HIS803.NSCLSI CI
+            WHERE  UR.jid_nsrank <> ' '
+            AND UR.jid_nsrank = CI.jid_key AND CI.cid_class='RANK') JID_NSRANK,
+            (SELECT PU.is_confirm FROM HIS803.NSPROU PU
+            WHERE  PU.id_user  =  WM.id_user AND PU.id_program = 'NISCISLN') ID_COMFIRM   
+            FROM HIS803.NSWKBD WD, HIS803.NSWKTM WM, HIS803.INACAR CR
+            WHERE  CR.CA_MEDNO = '$idPt' AND CR.CA_INPSEQ = '$INPt'
+            AND  WM.id_user(+) ='$sUr'
+            AND  WM.dt_offwork(+) = ' ' AND  WM.dm_cancd(+) =' ' 
+            AND  WM.formseqance_wt(+)= WD.formseqance_wt
+            AND WD.id_bed(+) = CR.CA_BEDNO 
+            AND CR.CA_CHECK = 'Y' AND CR.CA_DIVINSU = 'N'
+            AND CR.CA_CLOSE='N'";
+
+
+    $stid1=oci_parse($conn,$sql);
+    oci_execute($stid1);
+    $ID_TRANSB='';
+    $ID_TRANSA='';
+    $ID_BED='';
+    $FORMSEQANCE_WT='';
+    $JID_NSRANK='';
+    while ($row=oci_fetch_array($stid1)){
+        $ID_TRANSB=$row[0];
+        $ID_TRANSA=$row[1];//流水號
+        $ID_BED=$row[2];
+        $FORMSEQANCE_WT=$row[3];
+        $JID_NSRANK=$row[4];
+        $ID_COMFIRM=$row[5];
+    }
+
+    $TRANSA=str_pad($ID_TRANSA,8,0,STR_PAD_LEFT);
+    $sTraID=$ID_TRANSB.'ILSGA'.$TRANSA;
+
+     $DM_PR=$sDt.substr($sTm,0,2);
+
+
+
     $SQL=" SELECT
             DATESEQANCE, DT_EXCUTE,TM_EXCUTE,CID_IO,JID_IOTYPE,
             CASE SUBSTRING(JID_IOTYPE,-2,2)
@@ -334,13 +375,11 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
             WHEN 'OD' THEN 'H'
             END AS PAGE,
             DB_QUANTITY,ST_LOSS,JID_COLOR,JID_IOWAY,IS_SUMARY,CID_CLASS,JID_KEY,NM_ITEM,MM_IO
-            from NSIOQA
-             where ID_PATIENT=:idPt AND ID_INPATIENT=:INPt
+            FROM NSIOQA
+             WHERE ID_PATIENT=:idPt AND ID_INPATIENT=:INPt
                 AND  DT_EXCUTE =:sDt  AND  TM_EXCUTE =:sTm
                 AND UR_PROCESS=:sUr
                 AND DM_CANCD=' '";
-
-
 
 
     $stid=oci_parse($conn,$SQL);
@@ -408,10 +447,125 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
             array_push($DATAH,$OBJ);
         }
     }
+
+    $IN_TP="INSERT INTO HIS803.NISWSTP(
+                    ID_TABFORM,ID_TRANSACTION,ID_PATIENT,ID_INPATIENT,DT_EXCUTE,TM_EXCUTE,
+                    ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG,ST_DATAH,
+                    ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
+                     VALUES (
+                     'IOA','$sTraID','$idPt','$INPt','$sDt','$sTm',
+                     EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),
+                    '$ID_BED','$DM_PR','$sUr','$JID_NSRANK','$FORMSEQANCE_WT')
+                    RETURNING  ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG,ST_DATAH
+                     INTO :ST_DATAA,:ST_DATAB,:ST_DATAC,:ST_DATAD,:ST_DATAE,:ST_DATAF,:ST_DATAG,:ST_DATAH";
+
+
+
+    $TP_Stid = oci_parse($conn, $IN_TP);
+    if(!$TP_Stid){
+        $e=oci_error($conn);
+        return $e['message'];
+    }
+
+
+    $clobA=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobB=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobC=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobD=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobE=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobF=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobG=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobH=oci_new_descriptor($conn,OCI_D_LOB);
+
+    //I
+    oci_bind_by_name($TP_Stid,":ST_DATAA",$clobA,-1,OCI_B_CLOB);
+    oci_bind_by_name($TP_Stid,":ST_DATAB",$clobB,-1,OCI_B_CLOB);
+    oci_bind_by_name($TP_Stid,":ST_DATAC",$clobC,-1,OCI_B_CLOB);
+    oci_bind_by_name($TP_Stid,":ST_DATAD",$clobD,-1,OCI_B_CLOB);
+
+    //O
+    oci_bind_by_name($TP_Stid,":ST_DATAE",$clobE,-1,OCI_B_CLOB);
+    oci_bind_by_name($TP_Stid,":ST_DATAF",$clobF,-1,OCI_B_CLOB);
+    oci_bind_by_name($TP_Stid,":ST_DATAG",$clobG,-1,OCI_B_CLOB);
+    oci_bind_by_name($TP_Stid,":ST_DATAH",$clobH,-1,OCI_B_CLOB);
+
+
+    $result = oci_execute($TP_Stid,OCI_NO_AUTO_COMMIT);
+    if(!$result){
+        $e=oci_error($TP_Stid);
+        return $e['message'];
+    }
+    $clobA->save(join("",$DATAA));
+    $clobB->save(join("",$DATAB));
+    $clobC->save(join("",$DATAC));
+    $clobD->save(join("",$DATAD));
+    $clobE->save(join("",$DATAE));
+    $clobF->save(join("",$DATAF));
+    $clobG->save(join("",$DATAG));
+    $clobH->save(join("",$DATAH));
+
+    oci_free_statement($TP_Stid);
+    oci_commit($conn);
+
+
     $RE=[];
-    array_push($RE,$DATAA,$DATAB,$DATAC,$DATAD,$DATAE,$DATAF,$DATAG,$DATAH);
+    array_push($RE,$DATAA,$DATAB,$DATAC,$DATAD,$DATAE,$DATAF,$DATAG,$DATAH,$sTraID);
 
     return json_encode($RE,JSON_UNESCAPED_UNICODE);
+}
+function PosIOACancel($conn,$sFm,$sTraID,$sUr){
+    $DateTime = date("YmdHis");
+    $STR = substr($DateTime, 0, 4);
+    $STR1 = substr($DateTime, -10, 10);
+    $str = $STR - 1911;
+    $NowDT = $str . $STR1;
+
+
+    $S_SQL="SELECT ID_PATIENT,ID_INPATIENT,DT_EXCUTE,TM_EXCUTE 
+            FROM  HIS803.NISWSTP
+            WHERE ID_TABFORM = :ID_TABFORM  AND ID_TRANSACTION = :ID_TRANSACTION";
+
+    $stid=oci_parse($conn,$S_SQL);
+    oci_bind_by_name($stid,":ID_TABFORM",$sFm);
+    oci_bind_by_name($stid,":ID_TRANSACTION",$sTraID);
+    oci_execute($stid);
+    $IdPt='';
+    $INPt='';
+    $DT='';
+    $TM='';
+    while (oci_fetch_array($stid)){
+        $IdPt=oci_result($stid,"ID_PATIENT");
+        $INPt=oci_result($stid,"ID_INPATIENT");
+        $DT=oci_result($stid,"DT_EXCUTE");
+        $TM=oci_result($stid,"TM_EXCUTE");
+    }
+
+
+
+    $UP_SQL=" UPDATE NSIOQA SET DM_CANCD=:C_DT , UR_CANCD=:sUr 
+              WHERE ID_PATIENT=:IdPt AND ID_INPATIENT=:INPt 
+              AND  DT_EXCUTE=:DT AND TM_EXCUTE=:TM";
+    $Ustid=oci_parse($conn,$UP_SQL);
+    if (!$Ustid){
+        $e=oci_error($conn);
+        return $json_reponce=json_encode(array("message"=>$e['message'],"result"=>"false"));
+    }
+    oci_bind_by_name($Ustid,":C_DT",$NowDT);
+    oci_bind_by_name($Ustid,":sUr",$sUr);
+    oci_bind_by_name($Ustid,":IdPt",$IdPt);
+    oci_bind_by_name($Ustid,":INPt",$INPt);
+    oci_bind_by_name($Ustid,":DT",$DT);
+    oci_bind_by_name($Ustid,":TM",$TM);
+
+    $UP_re=oci_execute($Ustid,OCI_NO_AUTO_COMMIT);
+    if(!$UP_re){
+        $e=oci_error($Ustid);
+        $json_reponce=json_encode(array("message"=>$e['message'],"result"=>"false"));
+        oci_rollback($conn);
+        return $json_reponce;
+    }
+    $json_reponce=json_encode(array("message"=>"success","result"=>"true"));
+    return $json_reponce;
 }
 function ObjectMap($arr,$MM_arr,$Color_arr,$Type,$Cid_Io,$Is_Sum){
     $len=count($arr);
