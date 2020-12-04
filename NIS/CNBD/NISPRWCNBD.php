@@ -660,7 +660,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             <button type="button" class="btn btn-secondary btn-md" disabled style="margin-right: 3px ;display: none">預設</button>
         </span>
         <div class="input-group">
-            <input id="DataTxt"  value="" type="text" readonly="readonly" style="font-size: 4vmin;width:100vmin;">
+            <input id="DataTxt" value="" class="form-control" type="text" readonly="readonly">
         </div>
 
 
