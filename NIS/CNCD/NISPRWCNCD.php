@@ -406,7 +406,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             <button type="button" id="sbed"  class="btn btn-warning btn-md" style="margin-left: 1px;display: none">責任床位</button>
         </div>
         <div class="PatientName">
-            <input id="DataTxt"  value="" type="text" readonly="readonly">
+            <input id="DataTxt" value="" class="form-control" type="text" readonly="readonly">
         </div>
         <div class="Otimer">
             <div class="pageTime">
