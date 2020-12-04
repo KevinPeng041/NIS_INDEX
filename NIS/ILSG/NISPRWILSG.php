@@ -238,7 +238,9 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                             $('#clickTime').val(1);
 
                         }
+
                         /*if val=1 執行快存WSST*/
+
                         if($("#clickTime").val()=='1'){
                             UPDATEDATA('A',JSON.stringify(ISSG_jsonStr));
                             UPDATEDATA('C',JSON.stringify(Get_Forbidjson()));
@@ -254,8 +256,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         $("#ISSG").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
                         $("#Inhibit").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
                         $("#Part").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-
-
                         break;
                     case 'C':
                         if ($("#SERCH_Click").val()=='1'){
@@ -306,7 +306,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     default:
                         break;
                 }
-                $("#"+btnid).css({ 'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
                 $("#"+btnid).css({ 'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
 
             });
@@ -582,11 +581,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                 json=Get_Forbidjson();
                                 break;
                         }
-/*
-                        console.log(json);
-                        console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'));
 
-*/
                         $("#loading").show();
                         $("#wrapper").show();
                         $.ajax({
@@ -679,7 +674,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             }
             function DEaultINI(){
                 let ajaxdata_ip='/webservice/NISPWSTRAINI.php';
-                //console.log("http://localhost"+ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'));
+                console.log("http://localhost"+ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'));
                 $.ajax({
                     url:ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'),
                     type:"POST",
@@ -1415,7 +1410,8 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
     <form id="form1" >
     <span style="margin-left:0 px">
         <button type="button" class="btn btn-secondary btn-md" disabled style="display: none">回主畫面</button>
-        <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button><span style="margin-left: 1px"><b>使用者:<?php echo $sUr?></b></span>
+        <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button>
+        <span style="margin-left: 1px"><b>使用者:<?php echo $sUr?></b></span>
     </span>
 
         <span class="float-left">
@@ -1431,7 +1427,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             <thead>
             </thead>
         </table>
-        <input id="DataTxt"  value="" type="text" readonly="readonly" style="border:1px white;font-size: 4vmin;width:100vmin;background-color: #FFFBCC;border-radius:3px;">
+        <input id="DataTxt" value="" class="form-control" type="text" readonly="readonly">
         <div class="Parametertable">
             <input id="clickTime" value="0"  type="text"  placeholder="clickTime"> <!--頁面載入 0 or 1-->
             <input id="DA_idpt" value="" type="text" name="DA_idpt"   placeholder="DA_idpt"> <!--病歷號-->
