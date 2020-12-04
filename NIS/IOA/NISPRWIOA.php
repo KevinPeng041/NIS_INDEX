@@ -190,7 +190,7 @@ $Account="00FUZZY";
                 CreatDefultElement.MainElement();
                 $("#SubmitBtn").prop('disabled',true);
                 $("#SerchBtn").prop('disabled',true);
-                $("#DELMENU").prop('disabled',true);
+                $("#DELBtn").prop('disabled',true);
             })();
 
             $(document).on('click','button',function () {
@@ -288,6 +288,9 @@ $Account="00FUZZY";
                         break;
                     case "SubmitBtn":
                         DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
+                        break;
+                    case "DELBtn":
+                        DB_DEL(sTraID,'<?php echo $Account?>');
                         break;
                     default:
                         break;
@@ -537,6 +540,25 @@ $Account="00FUZZY";
                     }
                 });
             }
+            function DB_DEL(sTraID,sUr) {
+                 console.log("http://localhost/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr));
+                $.ajax({
+                    url:"/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr),
+                    type:'POST',
+                    dataType:'text',
+                    success:function (json) {
+                        let data=JSON.parse(AESDeCode(json));
+                        console.log(data);
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        errorModal(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                    }
+                });
+            }
             function bedcallback(data){
                 let dataObj=JSON.parse(AESDeCode(data))[0];
                 $("#DA_idpt").val(dataObj.IDPT);
@@ -547,6 +569,10 @@ $Account="00FUZZY";
             }
             function Serchcallback(AESobj){
                 let obj=JSON.parse(AESDeCode(AESobj));
+
+              let sTraID=obj.splice(-1, 1);
+              $("#sTraID").val(sTraID);
+                console.log(obj);
                 const Pagearr =['A','B','C','D','E','F','G','H'];
                 ThisPageJson.clear();
                 $.each(Pagearr,function (index,page) {
@@ -604,7 +630,7 @@ $Account="00FUZZY";
                 });
 
                 SerchCallBack=true;
-                $("#DELMENU").prop('disabled',false);
+                $("#DELBtn").prop('disabled',false);
             }
             function checkBEDwindow() {
                 if(!BEDwindow){
@@ -803,7 +829,7 @@ $Account="00FUZZY";
         <span class="title float-left">
             <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" >查詢</button>
-            <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal">作廢</button>
+            <button type="button" id="DELBtn" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal">作廢</button>
             <button type="button" id="ReSet" class="btn btn-primary btn-md"  >清除</button>
         </span>
     <!----------------------------------------------------------Patient Name-------------------------------------------------------------------------->
