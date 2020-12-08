@@ -159,7 +159,6 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
     $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave);
     return json_encode($JsonBack,JSON_UNESCAPED_UNICODE);
 }
-
 function GetIOAPageJson($conn,$sPg,$sTraID){
     $TP_SQL="SELECT ST_DATA".$sPg." FROM HIS803.NISWSTP WHERE ID_TRANSACTION=:sTraID";
      $TP_stid=oci_parse($conn,$TP_SQL);
@@ -247,7 +246,7 @@ function GetIOAPageJson($conn,$sPg,$sTraID){
 
    return  json_encode(ObjectMap($obj,$re,$Color,$Type,$Cid_Io,$Is_Sum),JSON_UNESCAPED_UNICODE);
 }
-function PosIOASave($conn,$sTraID,$sDt,$sTm,$sUr){
+function PosIOASave($conn,$sTraID,$sPg,$sDt,$sTm,$sUr){
 
     $DateTime = date("YmdHis");
     $STR = substr($DateTime, 0, 4);
@@ -258,12 +257,15 @@ function PosIOASave($conn,$sTraID,$sDt,$sTm,$sUr){
 
     $Ssql="SELECT ID_INPATIENT,ID_PATIENT, 
             ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG,ST_DATAH,
-            UR_PROCESS,ID_BED,JID_NSRANK,FORMSEQANCE_WT
+            ID_BED,JID_NSRANK,FORMSEQANCE_WT
            FROM HIS803.NISWSTP
            WHERE ID_TABFORM = 'IOA'  AND ID_TRANSACTION = :id_TRANS";
 
     $Sstid=oci_parse($conn,$Ssql);
-
+    if (!$Sstid){
+        $e=oci_error($conn);
+        return $e['message'];
+    }
 
     oci_bind_by_name($Sstid,":id_TRANS",$sTraID);
     oci_execute($Sstid);
@@ -272,9 +274,10 @@ function PosIOASave($conn,$sTraID,$sDt,$sTm,$sUr){
     $ID_BED='';
     $JID_NSRANK='';
     $FormSeq_WT='';
-    $UR_PROCESS='';
+
 
     $DATA=[];
+
     while ($row=oci_fetch_array($Sstid)){
         $IdinPt=oci_result($Sstid,"ID_INPATIENT");
         $IdPt=oci_result($Sstid,"ID_PATIENT");
@@ -288,16 +291,19 @@ function PosIOASave($conn,$sTraID,$sDt,$sTm,$sUr){
         $ST_DATAG=oci_result($Sstid,"ST_DATAG")->load();
         $ST_DATAH=oci_result($Sstid,"ST_DATAH")->load();
 
-        $UR_PROCESS=oci_result($Sstid,"UR_PROCESS");
         $ID_BED=oci_result($Sstid,"ID_BED");
         $JID_NSRANK=oci_result($Sstid,"JID_NSRANK");
         $FormSeq_WT=oci_result($Sstid,"FORMSEQANCE_WT");
-        array_push($DATA,$ST_DATAA,$ST_DATAB,$ST_DATAC,$ST_DATAD,$ST_DATAE,$ST_DATAF,$ST_DATAG,$ST_DATAH);
+
+        array_push($DATA, $ST_DATAA,$ST_DATAB,$ST_DATAC,$ST_DATAD,$ST_DATAE,$ST_DATAF,$ST_DATAG,$ST_DATAH);
     }
 
     $FormSeq_SQL="SELECT NO_TABFORM FROM  HIS803.NSTBMF  WHERE ID_TABFORM= 'IOQT'";
     $Fsq_stid=oci_parse($conn,$FormSeq_SQL);
-
+    if (!$Fsq_stid){
+        $e=oci_error($conn);
+        return $e['message'];
+    }
     oci_execute($Fsq_stid);
 
     $NO_TABFORM='';
@@ -310,12 +316,17 @@ function PosIOASave($conn,$sTraID,$sDt,$sTm,$sUr){
     $FormSeq=$NO_TABFORM+1;
     $UpTabForm_sql="UPDATE  HIS803.NSTBMF SET  NO_TABFORM=:NO_TAB WHERE ID_TABFORM= 'IOQT'";
     $Up_Stid=oci_parse($conn,$UpTabForm_sql);
+    if (!$Up_Stid){
+        $e=oci_error($conn);
+        return $e['message'];
+    }
+
 
     oci_bind_by_name($Up_Stid,":NO_TAB",$FormSeq);
     oci_execute($Up_Stid);
     $FrmSeq='IOQT'.$PAD_NO_TABFORM;
 
-    return InsertDB($conn,$DATA,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FormSeq_WT,$NowDT,$UR_PROCESS);
+    return InsertDB($conn,$DATA,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FormSeq_WT,$NowDT,$sUr);
 
 
 }
@@ -419,7 +430,7 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
         $PAGE=oci_result($stid,"PAGE");
 
         $OBJ=json_encode(array("DataSeq"=>$DTSEQ,"DT"=>$DT,"TM"=>$TM,"CID_IO"=>$CID_IO,"CID_CLASS"=>$CID_CLASS,
-                            "COLOR"=>$COLOR,"IOTYPE"=>$IOTYPE,"IOWAY"=>$IOWAY,"JID_KEY"=>$JID_KEY,"LOSS"=>$LOSS,
+                            "COLOR"=>$COLOR,"IO_TYPE"=>$IOTYPE,"IOWAY"=>$IOWAY,"JID_KEY"=>$JID_KEY,"LOSS"=>$LOSS,
                             "MM_IO"=>$MM_IO,"M_Nam"=>$NM_ITEM,"QUNTY"=>$Qty,"IS_SUM"=>$SUMARY),JSON_UNESCAPED_UNICODE);
 
         if ($PAGE==="A"){
@@ -540,16 +551,16 @@ function PosIOACancel($conn,$sFm,$sTraID,$sUr){
         $TM=oci_result($stid,"TM_EXCUTE");
     }
 
-
-
-    $UP_SQL=" UPDATE NSIOQA SET DM_CANCD=:C_DT , UR_CANCD=:sUr 
+    $UP_SQL=" UPDATE NSIOQA SET DM_CANCD=:C_DT , UR_CANCD=:sUr
               WHERE ID_PATIENT=:IdPt AND ID_INPATIENT=:INPt 
               AND  DT_EXCUTE=:DT AND TM_EXCUTE=:TM";
+
     $Ustid=oci_parse($conn,$UP_SQL);
     if (!$Ustid){
         $e=oci_error($conn);
         return $json_reponce=json_encode(array("message"=>$e['message'],"result"=>"false"));
     }
+
     oci_bind_by_name($Ustid,":C_DT",$NowDT);
     oci_bind_by_name($Ustid,":sUr",$sUr);
     oci_bind_by_name($Ustid,":IdPt",$IdPt);
@@ -564,13 +575,22 @@ function PosIOACancel($conn,$sFm,$sTraID,$sUr){
         oci_rollback($conn);
         return $json_reponce;
     }
+    oci_commit($conn);
+
     $json_reponce=json_encode(array("message"=>"success","result"=>"true"));
     return $json_reponce;
 }
 function ObjectMap($arr,$MM_arr,$Color_arr,$Type,$Cid_Io,$Is_Sum){
-    $len=count($arr);
+    $len= count($arr)===0?1:count($arr);
+
     for ($i=0;$i<$len;$i++){
-        $arr[$i]->DataSeq=$Is_Sum;
+        if (count($arr)===0){
+            $arr[$i]->M_Nam="";
+            $arr[$i]->CID_CLASS="HIS";
+            $arr[$i]->JID_KEY="";
+        }
+
+        $arr[$i]->DataSeq="";
         $arr[$i]->CID_IO=$Cid_Io;
         $arr[$i]->IO_TYPE=$Type;
         $arr[$i]->QUNTY="";
@@ -581,14 +601,21 @@ function ObjectMap($arr,$MM_arr,$Color_arr,$Type,$Cid_Io,$Is_Sum){
         $arr[$i]->JID_MM=$MM_arr;
         $arr[$i]->JID_COLOR=$Color_arr;
         $arr[$i]->IS_SUM=$Is_Sum;
+
+
     }
     return $arr;
 }
 function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FormSeq_WT,$NowDT,$UR_PROCESS){
+
+
     $sTm=str_pad($sTm,6,"0",STR_PAD_RIGHT);
     $response="";
+
     for ($i=0;$i<count($arr);$i++){
-        $Obj=json_decode(urldecode($arr[$i]));
+        $len=strrpos(urldecode($arr[$i]),'}]');
+        $Obj=json_decode(substr(urldecode($arr[$i]),0,$len+2));
+
         if(is_array($Obj)){
 
             $count = count($Obj);
@@ -599,21 +626,22 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
 
         }
         for ($j=0;$j<$count;$j++){
-
-
             $M_Nam=$Obj[$j]->{'M_Nam'};
             $JID_KEY=$Obj[$j]->{'JID_KEY'}==""?" ":$Obj[$j]->{'JID_KEY'};;
             $CID_CLASS=$Obj[$j]->{'CID_CLASS'};
             $Cid_io=$Obj[$j]->{'CID_IO'};
-            $IoType=$Obj[$j]->{'IO_TYPE'};
+            $IoType=$Obj[$j]->{'IO_TYPE'}==""?" ":$Obj[$j]->{'IO_TYPE'};
             $Quantity=$Obj[$j]->{'QUNTY'}==""?" ":$Obj[$j]->{'QUNTY'};
             $Loss=$Obj[$j]->{'LOSS'}==""?" ":$Obj[$j]->{'LOSS'};
             $Color=$Obj[$j]->{'COLOR'}==""?" ":$Obj[$j]->{'COLOR'};
             $IoWay=$Obj[$j]->{'IOWAY'}==""?" ":$Obj[$j]->{'IOWAY'};
             $MM_IO=$Obj[$j]->{'MM_IO'}==""?" ":$Obj[$j]->{'MM_IO'};
-            $Is_Sum=$Obj[$j]->{'IS_SUM'};
+            $Is_Sum=$Obj[$j]->{'IS_SUM'}==""?" ":$Obj[$j]->{'IS_SUM'};
+            $DataSeq=$Obj[$j]->{'DataSeq'};
 
-
+            if (trim($DataSeq)!==""){
+                _DBDEL($conn,$DataSeq,$IdPt,$IdinPt,$sDt,$sTm,$NowDT,$UR_PROCESS);
+            }
 
             if (trim($Quantity)!=="" || trim($Loss)!==""){
 
@@ -631,7 +659,7 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
                                             '$MM_IO','$ID_BED','$JID_NSRANK','$FormSeq_WT','$FrmSeq','$NowDT',
                                             '$UR_PROCESS',' ',' ','TEST')";
 
-               $stid=oci_parse($conn,$In_Sql);
+                $stid=oci_parse($conn,$In_Sql);
                 if (!$stid){
                     $e=oci_error($conn);
                     $response=json_encode(array("response" => "false","message" =>$e['message']),JSON_UNESCAPED_UNICODE);
@@ -658,4 +686,24 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
         }
     }
     return  $response;
+}
+function _DBDEL($conn,$DtSeq,$IdPt,$InPt,$DT,$TM,$DM_Cand,$UR_Cand){
+
+
+    $UP_SQL=" UPDATE NSIOQA SET DM_CANCD='$DM_Cand' , UR_CANCD='$UR_Cand'
+              WHERE DATESEQANCE='$DtSeq' AND 
+              ID_PATIENT='$IdPt' AND ID_INPATIENT='$InPt' 
+              AND  DT_EXCUTE='$DT' AND TM_EXCUTE='$TM'";
+    $UP_Stid=oci_parse($conn,$UP_SQL);
+    if(!$UP_Stid){
+        $e=oci_error($conn);
+        return $e['message'];
+    }
+    $UP_re=oci_execute($UP_Stid);
+    if(!$UP_re){
+        $e=oci_error($UP_Stid);
+        return $e['message'];
+    }
+
+    return true;
 }
