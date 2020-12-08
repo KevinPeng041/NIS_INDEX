@@ -15,8 +15,7 @@ $Account="00FUZZY";
     <script src="../../NISCOMMAPI.js"></script>
     <script>
         $(document).ready(function () {
-            let BEDwindow;
-            let Serchwindow;
+            let BEDwindow,Serchwindow;
             let CreatDefultElement={
                 MainElement:() =>{
                     let DefultElement=new Map();
@@ -161,7 +160,7 @@ $Account="00FUZZY";
                     }
                 }
             };
-            let CallOnece=false;
+            let CallOnce=false;
             let PageINI=false;
             let SerchCallBack=false;
             let AddBtn_Color=new Map();
@@ -172,7 +171,7 @@ $Account="00FUZZY";
                 CID_CLASS: "",
                 CID_IO: "",
                 COLOR: "",
-                IOTYPE: "",
+                IO_TYPE: "",
                 IOWAY: "",
                 JID_KEY: "",
                 LOSS: "",
@@ -182,12 +181,12 @@ $Account="00FUZZY";
                 IS_SUM:""
             }];
 
-
-
-
+            
             (function () {
                 CreatDefultElement.TimeRadio();
-                CreatDefultElement.MainElement();
+                $("#loading").hide();
+                $("#wrapper").hide();
+                $("#PageBtn").children().prop('disabled',true);
                 $("#SubmitBtn").prop('disabled',true);
                 $("#SerchBtn").prop('disabled',true);
                 $("#DELBtn").prop('disabled',true);
@@ -210,7 +209,6 @@ $Account="00FUZZY";
                     OpenOmodal(Page,index);
 
                 }
-
 
                 switch (btnId) {
                     case "sbed":
@@ -252,10 +250,10 @@ $Account="00FUZZY";
                             CID_CLASS: CLASS,
                             CID_IO: Cid_io,
                             COLOR: "",
-                            IOTYPE: IoType,
+                            IO_TYPE: IoType,
                             IOWAY: "",
-                            JID_MM:[],
-                            JID_COLOR:[],
+                            JID_MM:"",
+                            JID_COLOR:"",
                             JID_KEY: "",
                             LOSS: "",
                             MM_IO: "",
@@ -287,6 +285,7 @@ $Account="00FUZZY";
                         $("#OtherModal").modal('hide');
                         break;
                     case "SubmitBtn":
+                        console.log(sTraID,sDt,sTM);
                         DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
                         break;
                     case "DELBtn":
@@ -350,7 +349,7 @@ $Account="00FUZZY";
                         CidIo="O";
                     }
 
-                    obj[index].IOTYPE="IOTP000000"+TypeID;
+                    obj[index].IO_TYPE="IOTP000000"+TypeID;
                     obj[index].CID_IO=CidIo;
                     obj[index].QUNTY=$("#Num"+Page+index).val();
                     obj[index].LOSS=$("#Last"+Page+index).val();
@@ -358,7 +357,7 @@ $Account="00FUZZY";
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
 
                 }
-
+                console.log(obj);
 
             });
             $(document).on('keydown',"input[type=text]",function(){
@@ -380,7 +379,6 @@ $Account="00FUZZY";
 
                 if (PageINI===true ){
                     let Cloen_DefaultObj=[...DefaultObj];
-
                     if(SerchCallBack===false){
                         //搜尋後加入
                         Cloen_DefaultObj[0].JID_MM=[];
@@ -393,7 +391,7 @@ $Account="00FUZZY";
                     }
                 }
 
-                if (CallOnece===false){
+                if (CallOnce===false){
                     /*Get INI Json to FistTime*/
                     $("#SubmitBtn").prop('disabled',false);
                     $("#SerchBtn").prop('disabled',false);
@@ -407,59 +405,113 @@ $Account="00FUZZY";
                 $(".PItem").hide();
                 $("#item"+Page).show();
                 $(".ItemBtn").show();
-                CallOnece=true;
+                CallOnce=true;
             });
+
             function GetINIJson(idPt,INPt,sUr,Page){
-              /*  console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr));*/
-                $.ajax({
-                    url:"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr),
-                    type:"POST",
-                    async:false,
-                    dataType: 'text',
-                    success:function (data) {
-                      let obj=JSON.parse(AESDeCode(data));
-                      $("#sSave").val(obj.sSave);
-                      $("#sTraID").val(obj.sTraID);
+                $("#wrapper").show();
+                /*  console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr));*/
+                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+'00055664'+'&INPt='+'970000884'+"&sUr="+'00FUZZY'))
+                    .done(function(data) {
+                        $("#wrapper").hide();
+                        let obj=JSON.parse(AESDeCode(data));
+                        $("#sSave").val(obj.sSave);
+                        $("#sTraID").val(obj.sTraID);
                         let Cloen_DefaultObj=[...DefaultObj];
                         Cloen_DefaultObj[0].JID_MM=[];
                         Cloen_DefaultObj[0].JID_COLOR=[];
-                        GetPageJson(Page,obj.sTraID,Cloen_DefaultObj)
-                    },
-                    error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        GetPageJson(Page,obj.sTraID,Cloen_DefaultObj);
+                    })
+                    .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
                             "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
                             "3 返回失敗,textStatus:"+textStatus+
                             "4 返回失敗,errorThrown:"+errorThrown
                         );
-                    }
-                });
+                    });
             }
+
+
+
             function GetPageJson(Page,sTraID,DefaultObj) {
-                /*console.log("http://localhost/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page));*/
-                $.ajax({
+/*
+                console.log("http://localhost/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page));
+*/
+                $.ajax("/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page))
+                    .done(function (data) {
+                        try{
+                            let obj=JSON.parse(AESDeCode(data));
+                            console.log(obj);
+                            if (obj==null ||obj.length===0){
+                                obj=DefaultObj;
+                            }
+
+                            CreatOmodal(Page,obj[0].JID_MM,obj[0].JID_COLOR,$("#item"+Page).children().length,"");
+
+                            AddBtn_Color.set(Page,obj[0].JID_COLOR);
+                            AddBtn_IoType.set(Page,obj[0].JID_MM);
+
+                            if(ThisPageJson.get(Page)===undefined){
+                                $.each(obj,function (index,val) {
+
+                                    $("#M_Nam"+Page+index).val(val.M_Nam);
+                                    if(val.JID_KEY!==""){
+                                        $("#M_Nam"+Page+index).prop('disabled',true);
+                                    }
+                                    if(val.IO_TYPE)
+                                        delete val.JID_MM;
+                                    delete val.JID_COLOR;
+                                });
+                                ThisPageJson.set(Page,obj);
+                            }
+                        }
+                        catch (e) {
+                            console.log(e);
+                        }
+                    }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
+                });
+
+              /*  $.ajax({
                     url:"/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page),
                     async:false,
                     type:'POST',
                     dataType:"text",
                     success:function (data){
-                       let obj=JSON.parse(AESDeCode(data));
-                        if (obj==null ||obj.length===0){
-                            obj=DefaultObj;
+                        try{
+                            let obj=JSON.parse(AESDeCode(data));
+                            console.log(obj);
+                            if (obj==null ||obj.length===0){
+                                obj=DefaultObj;
+                            }
+
+                            CreatOmodal(Page,obj[0].JID_MM,obj[0].JID_COLOR,$("#item"+Page).children().length,"");
+
+                            AddBtn_Color.set(Page,obj[0].JID_COLOR);
+                            AddBtn_IoType.set(Page,obj[0].JID_MM);
+
+                            if(ThisPageJson.get(Page)===undefined){
+                                $.each(obj,function (index,val) {
+
+                                    $("#M_Nam"+Page+index).val(val.M_Nam);
+                                    if(val.JID_KEY!==""){
+                                        $("#M_Nam"+Page+index).prop('disabled',true);
+                                    }
+                                    if(val.IO_TYPE)
+                                    delete val.JID_MM;
+                                    delete val.JID_COLOR;
+                                });
+                                ThisPageJson.set(Page,obj);
+                            }
                         }
-
-                        CreatOmodal(Page,obj[0].JID_MM,obj[0].JID_COLOR,$("#item"+Page).children().length,"");
-
-                        AddBtn_Color.set(Page,obj[0].JID_COLOR);
-                        AddBtn_IoType.set(Page,obj[0].JID_MM);
-
-                        if(ThisPageJson.get(Page)===undefined){
-                            $.each(obj,function (index,val) {
-                                $("#M_Nam"+Page+index).val(val.M_Nam);
-                                delete val.JID_MM;
-                                delete val.JID_COLOR;
-                            });
-                            ThisPageJson.set(Page,obj);
+                        catch (e) {
+                            console.log(e);
                         }
 
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
@@ -470,12 +522,11 @@ $Account="00FUZZY";
                             "4 返回失敗,errorThrown:"+errorThrown
                         );
                     }
-                });
+                });*/
 
             }
             function DB_WSST(Page,sTraID,json){
                 let obj=JSON.parse(json);
-                console.log(json);
                 $.each(obj,function (index,val) {
                     if ((val.M_Nam).indexOf('&')>0){
                         val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
@@ -489,7 +540,20 @@ $Account="00FUZZY";
 /*
                 console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson));
 */
-                $.ajax({
+
+            $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson))
+                .done(function (data) {
+                    let json=JSON.parse(AESDeCode(data));
+                    console.log(json.message);
+                }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                console.log(
+                    "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                    "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                    "3 返回失敗,textStatus:"+textStatus+
+                    "4 返回失敗,errorThrown:"+errorThrown
+                );
+            });
+              /*  $.ajax({
                     'url':'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson),
                     type:"POST",
                     dataType:"text",
@@ -507,56 +571,53 @@ $Account="00FUZZY";
                         return false;
                     }
 
-                });
+                });*/
             }
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
                 let json=JSON.stringify(ThisPageJson.get(Page));
-/*
-                console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr));
-*/
-                $.ajax({
-                    url:'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr),
-                    type:'POST',
-                    beforeSend: DB_WSST(Page,sTraID,json),
-                    dataType:'text',
-                    success:function (json) {
-                        let data= JSON.parse(AESDeCode(json));
-                      /*  $("#loading").hide();
-                        $("#wrapper").hide();*/
-                        if(data.response=='success'){
+
+               /* console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr));*/
+                DB_WSST(Page,sTraID,json);
+                $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
+                    .done(function (data) {
+                        let result= JSON.parse(AESDeCode(data));
+                        /*$("#loading").hide();
+                          $("#wrapper").hide();*/
+                        if(result.response==='success'){
                             alert("儲存成功");
                             location.reload();
-                          /*  window.location.reload(true);*/
+                            window.location.reload(true);
                         }else {
-                            console.log("儲存失敗重新檢查格式:"+data.message);
+                            console.log("儲存失敗重新檢查格式:"+result.message);
                         }
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
+                    }).
+                        fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
                 });
             }
             function DB_DEL(sTraID,sUr) {
-                 console.log("http://localhost/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr));
-                $.ajax({
-                    url:"/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr),
-                    type:'POST',
-                    dataType:'text',
-                    success:function (json) {
-                        let data=JSON.parse(AESDeCode(json));
-                        console.log(data);
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
+              /*   console.log("http://localhost/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr));*/
+                $.ajax("/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr))
+                    .done(function (data) {
+                        let re=JSON.parse(AESDeCode(data));
+                        if(re.result==="false"){
+                            alert('作廢失敗');
+                            return false;
+                        }else {
+                            location.reload();
+                        }
+                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
                 });
             }
             function bedcallback(data){
@@ -566,11 +627,30 @@ $Account="00FUZZY";
                 $("#DA_sBed").val(dataObj.SBED);
                 $("#DataTxt").val(dataObj.DataTxt);
 
+                if (ThisPageJson.size>0){
+                    ThisPageJson.clear();
+                    AddBtn_Color.clear();
+                    AddBtn_IoType.clear();
+                }
+
+                $(".PItem").children().children();
+                CreatDefultElement.MainElement();
+
+                $("#PageBtn").children().prop('disabled',false);
+                $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
+
+                $(".PItem").hide();
+                $(".ItemBtn").hide();
+                CallOnce=false;
+                PageINI=false;
+                SerchCallBack=false;
+
             }
             function Serchcallback(AESobj){
                 let obj=JSON.parse(AESDeCode(AESobj));
 
-              let sTraID=obj.splice(-1, 1);
+                let sTraID=obj.splice(-1, 1);
+
               $("#sTraID").val(sTraID);
                 console.log(obj);
                 const Pagearr =['A','B','C','D','E','F','G','H'];
@@ -614,8 +694,11 @@ $Account="00FUZZY";
                        let Obj= JSON.parse(PageArr[i]);
                        let Qty=Obj.QUNTY==='-1'?"":Obj.QUNTY;
                        ItemAction.appendItem(page,Obj.M_Nam,Obj.MM_IO,Qty,Obj.LOSS);
+
+
                        $("#sDate").val(Obj.DT);
                        $("#sTime").val(Obj.TM.substring(0,4));
+                       $("#M_Nam"+page+i).prop('readonly',true);
                        $("#"+i+page+Obj.IOWAY).prop('checked',true);
                        $("#"+i+page+Obj.COLOR).prop('checked',true);
 
@@ -631,6 +714,7 @@ $Account="00FUZZY";
 
                 SerchCallBack=true;
                 $("#DELBtn").prop('disabled',false);
+                $("#ISTM").hide();
             }
             function checkBEDwindow() {
                 if(!BEDwindow){
@@ -725,8 +809,8 @@ $Account="00FUZZY";
                 $("#M_"+Page+index).show();
                 $("#OtherModal").modal('show');
             }
-        });
 
+        });
     </script>
 </head>
 <style>
@@ -743,6 +827,7 @@ $Account="00FUZZY";
         background-color: #baeeff;
         border-radius:3px;
     }
+
     #sbed{
         margin-left: 1px;
     }
@@ -753,19 +838,28 @@ $Account="00FUZZY";
         margin-top: 5px;
         color: black;
     }
-    .container .Otimer   #sDate{
-        width:35vmin;
+    #sDate{
+         width:35vmin;
         text-align: center;
         margin-top: 5px;
         border: 1px white;
     }
-    .container .Otimer   #sTime {
+    #sTime {
         width: 15vmin;
         margin-left: 5px;
         margin-top: 5px;
         border: 1px white;
     }
-   Otimer:first-child{
+   #thirdClass{
+        background-color: white;
+        margin-bottom: 9px;
+       font-weight: bold;
+    }
+   #thirdClass:hover{
+     border-color: #0f6674;
+    background-color: #0f6674;
+    }
+   .Otimer .DateTime:first-child{
        font-size: 4vmin;
    }
    .PageBtn{
@@ -788,8 +882,9 @@ $Account="00FUZZY";
         border-radius: 50%;
     }
 
-    .Parametertable{
+    .Parametertable input{
        /* display: none;*/
+        background-color: #00FF00;
     }
     .Dir_s{
         text-overflow: ellipsis;
@@ -804,8 +899,38 @@ $Account="00FUZZY";
         width: 3.5vmin;
         height: 3.5vmin;
     }
+    #loading{
+        position: absolute;
+        z-index: 9999;
+        top: 50%;
+        left: 50%;
+        background-color: #FFFFFF;
+        color: #000000;
+        font-size: 5vmin;
+        width: 45vmin;
+        height: 12vmin;
+        padding-left:20px;
+        padding-top:10px;
+        border-radius: 5px;
+        margin: -15vmin 0 0 -30vmin;
+
+    }
+    #loading .loadimg{
+        width: 10vmin;
+        height:10vmin;
+    }
+    #wrapper{
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        opacity: 0.5;
+        z-index: 9998;
+    }
 </style>
 <body>
+<div id="wrapper"></div>
+<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
 <div class="container">
          <h1>輸出入量作業</h1>
     <!----------------------------------------------------------Parametertable displaynone-------------------------------------------------------------------------->
@@ -838,9 +963,22 @@ $Account="00FUZZY";
         </div>
     <!----------------------------------------------------------Time-------------------------------------------------------------------------->
         <div class="Otimer" >
-            <label >評估時間:</label>
-            <input type="text" id="sDate" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
-            <input type="text" id="sTime" value=""  placeholder="HHMM" maxlength="4" autocomplete="off">
+
+<!--            <div  class="DateTime input-group">
+                <label >評估時間:</label>
+                <input id='sDate' type="text" class="form-control" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
+                <input id='sTime'  type="text" class="form-control" value=""  placeholder="HHMM" maxlength="4" autocomplete="off">
+                <button id="thirdClass"  class="btn btn-outline-primary " type="button">三班</button>
+            </div>-->
+
+      <div class="DateTime">
+                <label >評估時間:</label>
+                <input type="text" id="sDate" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
+                <input type="text" id="sTime" value=""  placeholder="HHMM" maxlength="4" autocomplete="off">
+                <button type="button" id="thirdClass" class="btn btn-outline-primary  btn-lg">三班</button>
+            </div>
+
+
             <div id="ISTM"></div>
         </div>
     <!----------------------------------------------------------Page Button-------------------------------------------------------------------------->
