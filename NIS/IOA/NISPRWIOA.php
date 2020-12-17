@@ -15,8 +15,8 @@ $Account="00FUZZY";
     <script src="../../NISCOMMAPI.js"></script>
     <script>
         $(document).ready(function () {
-            let BEDwindow,Serchwindow;
-            let CreatDefultElement={
+            var BEDwindow,Serchwindow,ThrdClassWindow;
+            let CreatDefaultElement={
                 MainElement:() =>{
                     let DefultElement=new Map();
                     DefultElement.set('A',{"len":8,"Sum_Str":"量","Last_Str":"餘"});
@@ -160,9 +160,9 @@ $Account="00FUZZY";
                     }
                 }
             };
-            let CallOnce=false;
-            let PageINI=false;
-            let SerchCallBack=false;
+            var CallOnce=false;
+            var PageINI=false;
+            var SerchCallBack=false;
             let AddBtn_Color=new Map();
             let AddBtn_IoType=new Map();
             let ThisPageJson=new Map();
@@ -181,9 +181,9 @@ $Account="00FUZZY";
                 IS_SUM:""
             }];
 
-            
             (function () {
-                CreatDefultElement.TimeRadio();
+
+                CreatDefaultElement.TimeRadio();
                 $("#loading").hide();
                 $("#wrapper").hide();
                 $("#PageBtn").children().prop('disabled',true);
@@ -285,51 +285,69 @@ $Account="00FUZZY";
                         $("#OtherModal").modal('hide');
                         break;
                     case "SubmitBtn":
-                        console.log(sTraID,sDt,sTM);
                         DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
                         break;
                     case "DELBtn":
                         DB_DEL(sTraID,'<?php echo $Account?>');
                         break;
+                    case "ThirdClassBtn":
+                        switch (checkThrdClassWindow()) {
+                            case "false":
+                                alert("查詢視窗已開啟");
+                                break;
+                            case "true":
+                                ThrdClassWindow=window.open("/webservice/NISPWIOATHIRD.php?str="+
+                                    AESEnCode("sFm=IOA&PageVal="+""+"&DA_idpt="+IdPt+"&DA_idinpt="+InPt
+                                        +"&sUser="+"<?php echo $Account?>")
+                                    ,"三班查詢",'width=250px,height=550px,scrollbars=yes,resizable=no');
+                                break;
+                        }
+
+                        ThrdClassWindow.ThrdClassCallback=ThrdClassCallback;
+                        break;
                     default:
                         break;
                 }
             });
-            $(document).on('change','input[name=sRdoDateTime]',function () {
-                let TimeNow=new Date();
-                let yyyy=TimeNow.toLocaleDateString().slice(0,4);
-                let MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
-                let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
-                let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
-                let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
-                let Timetxt=($(this).val()).split("");
 
-                let timer=Timetxt.filter(function (value) { return  value!==":"});
-                let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
-
-                $("#IDTM").val($(this).attr('id'));
-                $("#sDate").val(yyyy-1911+MM+dd);
-                $("#sTime").val(timerVal);
-
-            });
-            $(document).on('change',"input[type=checkbox]",function () {
+            $(document).on('change',"input[type=radio]",function () {
 
 
                 let index=$(this).val().substring(0,1);
                 let Page=$(this).val().substring(1,2);
                 let id=$(this).val().substring(2,14);
                 let ck_Class=$(this).attr('class');
+                let ck_Name=$(this).attr('name');
 
 
-                if (ck_Class==="IOCK_"+Page+index){
-                    $(".IOCK_"+Page+index).prop('checked',false);
-                    $("#"+index+Page+id).prop('checked',true);
+                if (ck_Name==="sRdoDateTime"){
+                    let TimeNow=new Date();
+                    let yyyy=TimeNow.toLocaleDateString().slice(0,4);
+                    let MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
+                    let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
+                    let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
+                    let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
+                    let Timetxt=($(this).val()).split("");
+
+                    let timer=Timetxt.filter(function (value) { return  value!==":"});
+                    let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
+
+                    $("#IDTM").val($(this).attr('id'));
+                    $("#sDate").val(yyyy-1911+MM+dd);
+                    $("#sTime").val(timerVal);
+                }else {
+                    if (ck_Class==="IOCK_"+Page+index){
+                        $(".IOCK_"+Page+index).prop('checked',false);
+                        $("#"+index+Page+id).prop('checked',true);
+                    }
+
+                    if (ck_Class==="COLORCK_"+Page+index){
+                        $(".COLORCK_"+Page+index).prop('checked',false);
+                        $("#"+index+Page+id).prop('checked',true);
+                    }
                 }
 
-                if (ck_Class==="COLORCK_"+Page+index){
-                    $(".COLORCK_"+Page+index).prop('checked',false);
-                    $("#"+index+Page+id).prop('checked',true);
-                }
+
 
             });
             $(document).on('change',"input[type=text]",function () {
@@ -345,7 +363,18 @@ $Account="00FUZZY";
                         TypeID="I"+Page;
                         CidIo="I";
                     }else {
-                        TypeID="O"+Page;
+                        if (Page==="E"){
+                            TypeID="OA"
+                        }
+                        if (Page==="F"){
+                            TypeID="OB"
+                        }
+                        if (Page==="G"){
+                            TypeID="OC"
+                        }
+                        if (Page==="H"){
+                            TypeID="OD"
+                        }
                         CidIo="O";
                     }
 
@@ -357,7 +386,6 @@ $Account="00FUZZY";
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
 
                 }
-                console.log(obj);
 
             });
             $(document).on('keydown',"input[type=text]",function(){
@@ -431,9 +459,6 @@ $Account="00FUZZY";
                         );
                     });
             }
-
-
-
             function GetPageJson(Page,sTraID,DefaultObj) {
 /*
                 console.log("http://localhost/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page));
@@ -442,7 +467,7 @@ $Account="00FUZZY";
                     .done(function (data) {
                         try{
                             let obj=JSON.parse(AESDeCode(data));
-                            console.log(obj);
+                            console.table(obj);
                             if (obj==null ||obj.length===0){
                                 obj=DefaultObj;
                             }
@@ -461,7 +486,7 @@ $Account="00FUZZY";
                                     }
                                     if(val.IO_TYPE)
                                         delete val.JID_MM;
-                                    delete val.JID_COLOR;
+                                        delete val.JID_COLOR;
                                 });
                                 ThisPageJson.set(Page,obj);
                             }
@@ -533,10 +558,10 @@ $Account="00FUZZY";
                             return  value.match(/&/)!==null?value.replace(/&/g,'＆'):value;
                         }).join(""));
                     }
-
                 });
-                let SavaJson=JSON.stringify(obj);
 
+                let SavaJson=JSON.stringify(obj);
+                console.log(SavaJson);
 /*
                 console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson));
 */
@@ -575,20 +600,24 @@ $Account="00FUZZY";
             }
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
                 let json=JSON.stringify(ThisPageJson.get(Page));
-
-               /* console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr));*/
+                console.log(json);
                 DB_WSST(Page,sTraID,json);
-                $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
+
+                 console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr));
+
+
+               $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
                     .done(function (data) {
                         let result= JSON.parse(AESDeCode(data));
-                        /*$("#loading").hide();
-                          $("#wrapper").hide();*/
+                          $("#loading").hide();
+                          $("#wrapper").hide();
+                          console.log(result);
                         if(result.response==='success'){
                             alert("儲存成功");
                             location.reload();
                             window.location.reload(true);
                         }else {
-                            console.log("儲存失敗重新檢查格式:"+result.message);
+                            alert("儲存失敗重新檢查格式:"+result.message);
                         }
                     }).
                         fail(function (XMLHttpResponse,textStatus,errorThrown) {
@@ -633,8 +662,8 @@ $Account="00FUZZY";
                     AddBtn_IoType.clear();
                 }
 
-                $(".PItem").children().children();
-                CreatDefultElement.MainElement();
+                $(".PItem").children().children().remove();
+                CreatDefaultElement.MainElement();
 
                 $("#PageBtn").children().prop('disabled',false);
                 $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
@@ -646,19 +675,27 @@ $Account="00FUZZY";
                 SerchCallBack=false;
 
             }
+
             function Serchcallback(AESobj){
+
+                const Pagearr =['A','B','C','D','E','F','G','H'];
                 let obj=JSON.parse(AESDeCode(AESobj));
 
-                let sTraID=obj.splice(-1, 1);
+                let PatientID=obj.splice(0, 3);
+                let sTraID=PatientID[0];
+                let IdPt=PatientID[1];
+                let InIdPt=PatientID[2];
+                if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val()){
+                    alert("病人資訊以異動,請重新操作");
+                    return false;
+                }
 
-              $("#sTraID").val(sTraID);
-                console.log(obj);
-                const Pagearr =['A','B','C','D','E','F','G','H'];
+
+
                 ThisPageJson.clear();
                 $.each(Pagearr,function (index,page) {
                       $("#item"+page).children().remove();
                   });
-
                 $.each(obj,function (index) {
                     let page="";
                     let PageArr=obj[index];
@@ -690,6 +727,7 @@ $Account="00FUZZY";
                         default:
                             break;
                     }
+
                    $.each(PageArr,function (i) {
                        let Obj= JSON.parse(PageArr[i]);
                        let Qty=Obj.QUNTY==='-1'?"":Obj.QUNTY;
@@ -713,8 +751,14 @@ $Account="00FUZZY";
                 });
 
                 SerchCallBack=true;
+                $("#sTraID").val(sTraID);
                 $("#DELBtn").prop('disabled',false);
                 $("#ISTM").hide();
+
+            }
+            function ThrdClassCallback(data) {
+                let obj=JSON.parse(AESDeCode(data));
+                console.log(obj);
             }
             function checkBEDwindow() {
                 if(!BEDwindow){
@@ -738,51 +782,67 @@ $Account="00FUZZY";
                     }
                 }
             }
+            function checkThrdClassWindow() {
+                if(!ThrdClassWindow){
+                    return "true";
+                }else {
+                    if(ThrdClassWindow.closed){
+                        return "true";
+                    }else {
+                        return "false";
+                    }
+                }
+            }
             function CreatOmodal(Page,JMM_arr,JColor_arr,len,mode) {
                 for (let i=0;i<len;i++){
                     if(mode==="A"){
                        i=$("#item"+Page).children().length-1;
                     }
-                    if ($('#M_'+Page+i).length===0){
+                    if ($('#M_'+Page+i).length===0)
+                    {
 
-                $("#OtherModalbody").append(
+                         $("#OtherModalbody").append(
                             `
-                       <div id="${'M_'+Page+i}" class="M_Omodal row">
+                               <div id="${'M_'+Page+i}" class="M_Omodal row">
 
-                            <div class="col-12">
-                                  <input type="text" class="form-control" >
-                            </div>
+                                    <div class="col-12">
+                                          <input type="text" class="form-control" >
+                                    </div>
 
-                            <div class="col-12">
-                                <div class="form-group">
-                                     <label for="${'O_'+Page+i}" style="color: #0f6674">備註:</label>
-                                     <textarea class="form-control rounded-0" id="${'O_'+Page+i}" rows="10"></textarea>
+                                    <div id="${'IOType'+Page + i}" class="col-12" >
+                                        <div>
+                                            <label style="color: #0f6674">方式:</label>
+
+                                        </div>
+                                    </div>
+
+                                    <div id="${'Color'+Page + i}" class="col-12">
+                                        <div>
+                                            <label style="color: #0f6674">顏色:</label>
+
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                             <label for="${'O_'+Page+i}" style="color: #0f6674">備註:</label>
+                                             <textarea class="form-control rounded-0" id="${'O_'+Page+i}" rows="10"></textarea>
+                                        </div>
+                                    </div>
+
+
                                 </div>
-                            </div>
-
-                            <div id="${'IOType'+Page + i}" class="col-12" >
-                                <div>
-                                    <label style="color: #0f6674">方式:</label>
-
-                                </div>
-                            </div>
-
-                            <div id="${'Color'+Page + i}" class="col-12">
-                                <div>
-                                    <label style="color: #0f6674">顏色:</label>
-
-                                </div>
-                            </div>
-
-
-                        </div>
-                          `
+                            `
                         );
 
                         $.each(JMM_arr,function (index,val) {
                             $("#IOType" + Page + i).append(
                             `
-                              <label><input id="${i + Page + val.JID_KEY}" class="${'IOCK_' + Page + i}" type="checkbox" name="${'IOCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">${val.NM_ITEM}</label>
+                              <label style="font-size: 1.5rem;">
+                               <input id="${i + Page + val.JID_KEY}" class="${'IOCK_' + Page + i}" type="radio" name="${'IOCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">
+                               ${val.NM_ITEM}
+                              </label>
                               `
                             );
                         });
@@ -790,7 +850,10 @@ $Account="00FUZZY";
                         $.each(JColor_arr,function (index,val) {
                             $("#Color" + Page + i).append(
                                 `
-                              <label><input id="${i + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + i}"  type="checkbox"  name="${'COLORCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">${val.NM_ITEM}</label>
+                              <label style="font-size: 1.5rem;">
+                                <input id="${i + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + i}"  type="radio"  name="${'COLORCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">
+                                ${val.NM_ITEM}
+                              </label>
                               `
                             );
                         });
@@ -798,9 +861,15 @@ $Account="00FUZZY";
 
                     }
 
-
-
+                    if (JMM_arr.length===0){
+                        $("#IOType" + Page + i).hide();
+                    }
+                    if (JColor_arr.length===0){
+                        $("#Color" + Page + i).hide();
+                    }
                 }
+
+
 
             }
             function OpenOmodal(Page,index) {
@@ -809,7 +878,6 @@ $Account="00FUZZY";
                 $("#M_"+Page+index).show();
                 $("#OtherModal").modal('show');
             }
-
         });
     </script>
 </head>
@@ -895,10 +963,7 @@ $Account="00FUZZY";
         word-break: break-all;
     }
 
-    input[type=checkbox]{
-        width: 3.5vmin;
-        height: 3.5vmin;
-    }
+
     #loading{
         position: absolute;
         z-index: 9999;
@@ -926,6 +991,10 @@ $Account="00FUZZY";
         background-color: black;
         opacity: 0.5;
         z-index: 9998;
+    }
+    input[type=radio]{
+        width: 1.5rem;
+        height: 1.5rem;
     }
 </style>
 <body>
@@ -964,18 +1033,13 @@ $Account="00FUZZY";
     <!----------------------------------------------------------Time-------------------------------------------------------------------------->
         <div class="Otimer" >
 
-<!--            <div  class="DateTime input-group">
-                <label >評估時間:</label>
-                <input id='sDate' type="text" class="form-control" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
-                <input id='sTime'  type="text" class="form-control" value=""  placeholder="HHMM" maxlength="4" autocomplete="off">
-                <button id="thirdClass"  class="btn btn-outline-primary " type="button">三班</button>
-            </div>-->
 
-      <div class="DateTime">
+
+            <div class="DateTime">
                 <label >評估時間:</label>
                 <input type="text" id="sDate" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
                 <input type="text" id="sTime" value=""  placeholder="HHMM" maxlength="4" autocomplete="off">
-                <button type="button" id="thirdClass" class="btn btn-outline-primary  btn-lg">三班</button>
+                <button type="button" id="ThirdClassBtn" class="btn btn-outline-primary  btn-lg">三班</button>
             </div>
 
 
@@ -1078,6 +1142,7 @@ $Account="00FUZZY";
                 </div>
             </div>
         </div>
+
 </div>
 </body>
 </html>
