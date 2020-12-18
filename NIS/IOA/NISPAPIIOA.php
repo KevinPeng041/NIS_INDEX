@@ -793,26 +793,26 @@ function GetDTJson($conn,$Idpt,$INPt){
 function GetPrintJson($conn,$Idpt,$INPt,$DT)
 {
 
-
-
-
-
-
-
-
-    $SQL = "SELECT ID_ITEM, ST_TEXT1 FROM NSCLSI WHERE CID_CLASS = 'IODT'";
+    $SQL = "SELECT ID_ITEM, ST_TEXT1,ST_TEXT2,CID_SPECIAL FROM NSCLSI WHERE CID_CLASS = 'IODT'";
 
     $stid = oci_parse($conn, $SQL);
     oci_execute($stid);
 
-    $Tm_Start='';
+    $Tm_Start=[];
+    $TmSTtoE=[];
     while (oci_fetch_array($stid)) {
-        $Tm_Start = oci_result($stid, "ST_TEXT1");
-       break;
+        $Tm_S = oci_result($stid, "ST_TEXT1");
+        $Tm_E = oci_result($stid, "ST_TEXT2");
+        $CID_SPECIAL= oci_result($stid, "CID_SPECIAL");
+        array_push($Tm_Start,$Tm_S);
+
+        $TmSTtoE[]=Array("Start"=>$Tm_S,"End"=>$Tm_E,"IO"=>$CID_SPECIAL);
+
+
     }
 
-    $Dt_now=GetNewDateTime($DT,$Tm_Start,0,0);
-    $Dt_next=GetNewDateTime($DT,$Tm_Start,1,-1);
+    $Dt_now=GetNewDateTime($DT,$Tm_Start[0],0,0);
+    $Dt_next=GetNewDateTime($DT,$Tm_Start[0],1,-1);
 
     $S_Sql="SELECT ID_BED, DT_EXCUTE, TM_EXCUTE, CID_SPECIAL as CID_EXCUTE, CID_IO, P0.JID_KEY, QUANTITY, NM_COLOR, ST_LOSS, NM_PHARMACY, 
                 P0.NM_ITEM, P0.ID_ITEM, NM_USER, JID_NSRANK, MM_IO,  DB_REMAIN,  TM_START,  TM_END,  NM_IOWAY,  CID_IOWAY,  NM_TUBE_SHORT
@@ -829,6 +829,7 @@ function GetPrintJson($conn,$Idpt,$INPt,$DT)
     $arr=[];
 
     while (oci_fetch_array($S_stid)){
+
         $BED=oci_result($S_stid,"ID_BED");
         $DT=oci_result($S_stid,"DT_EXCUTE");
         $TM=oci_result($S_stid,"TM_EXCUTE");
@@ -861,7 +862,7 @@ function GetPrintJson($conn,$Idpt,$INPt,$DT)
 
 
 
-  return json_encode( ArrayGrouping($conn,$arr),JSON_UNESCAPED_UNICODE);
+  return json_encode( ArrayGrouping($conn,$arr,$TmSTtoE),JSON_UNESCAPED_UNICODE);
 }
 function GetNewDateTime($Date,$Time,$Dnum,$Tnum){
 //日期
@@ -891,16 +892,12 @@ function GetNewDateTime($Date,$Time,$Dnum,$Tnum){
     $Date_C->setTime($h,$m,$Tnum);
 
     $Date_C->modify('-1911 year');
- /* echo  ltrim(date_format($Date_C,'YmdHis'),'0');*/
-
-
-
 
     return ltrim(date_format($Date_C,'YmdHis'),'0');
 
 
 }
-function ArrayGrouping($conn,$arr1){
+function ArrayGrouping($conn,$arr1,$TmSTtoE){
 
 $Sql="SELECT ST_TEXT1, ID_ITEM, NM_ITEM, MM_ITEM sSQL
       FROM NSCLSI
@@ -921,15 +918,8 @@ for ($i=0;$i<count($arr1);$i++)
             array_push($arr[$key],$arr1[$i]);
         }
     };
+    $arr['TmSTtoE']=$TmSTtoE;
 }
-
-
-
-
-
-
-
-
 
 return $arr;
 }
