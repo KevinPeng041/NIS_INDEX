@@ -388,14 +388,31 @@ $Account="00FUZZY";
                 }
 
             });
-            $(document).on('keydown',"input[type=text]",function(){
-               let id=$(this).attr('id');
+            $(document).on('keydown',"input[type=text]",function(e){
+                let id=$(this).attr('id');
+                console.log(id);
+                let key=e.keyCode;
+                let Page=$("#PageVal").val();
+                let OK_keycode=[8,48,49,50,51,52,53,54,55,56,57,97,98,99,100
+                    ,101,102,103,104,105,110,190];
+                let RexResult=OK_keycode.filter(function (value) {
+                    return value===key
+                });
 
-               let Page=$("#PageVal").val();
+                if (id.substring(0,3)==="Num" || id.substring(0,4)==="Last")
+                {
+                    //Input Only Number
+                    if (RexResult.length===0){
+                        return false;
+                    }
+                }
+
                  if (id.substring(0,3)==="Num" && Page==="B" || Page==="E"  || Page==="F"){
+
                      $("#Last"+id.substring(3,id.length)).val("");
                  }
                  if (id.substring(0,4)==="Last" && Page==="B"  || Page==="E"  || Page==="F"){
+
                      $("#Num"+id.substring(4,id.length)).val("");
                  }
             });
@@ -794,6 +811,10 @@ $Account="00FUZZY";
                 }
             }
             function CreatOmodal(Page,JMM_arr,JColor_arr,len,mode) {
+
+
+                let PageName=$("#"+Page).text();
+
                 for (let i=0;i<len;i++){
                     if(mode==="A"){
                        i=$("#item"+Page).children().length-1;
@@ -806,7 +827,7 @@ $Account="00FUZZY";
                                <div id="${'M_'+Page+i}" class="M_Omodal row">
 
                                     <div class="col-12">
-                                          <input type="text" class="form-control" >
+                                          <input type="text" class="form-control" value="${PageName}" readonly>
                                     </div>
 
                                     <div id="${'IOType'+Page + i}" class="col-12" >
@@ -917,6 +938,12 @@ $Account="00FUZZY";
         margin-left: 5px;
         margin-top: 5px;
         border: 1px white;
+    }
+    #ISTM{
+        margin-top: 5px;
+    }
+    #ThirdClassBtn{
+        margin-bottom: 10px;
     }
    #thirdClass{
         background-color: white;
