@@ -22,66 +22,20 @@
         })();
 
 
-
-        const T_Date=['08-16','16-00','00-08','24小時'];
-
-
+        let Time=new Map();
         $(".tb3_tr").children().css({'width': '93px','height': '30px'});
-        $.each(T_Date,function (index,val) {
 
-            $(".tb2").append(
-                `
-                <tr>
-                        <td>${val}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-
-                        <td></td>
-                        <td></td>
-                    </tr>
-                `
-            );
-
-
-
-            $("#tb3").append(`
-
-             <tr>
-                <td>${val}</td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-             </tr>
-
-            `)
-        });
         function GetPrintJson(IdPt,InIdPt) {
              console.log("http://localhost"+"/webservice/NISPWIOAPRINT.php?str="+AESEnCode('sFm=IOA&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+'00FUZZY'));
             $.ajax("/webservice/NISPWIOAPRINT.php?str="+AESEnCode('sFm=IOA&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+'00FUZZY'))
                 .done(function(data) {
                     let obj=JSON.parse(AESDeCode(data));
 
-                    console.log(obj);
+                    Time.set('Time',obj.TmSTtoE);
+                    delete obj.TmSTtoE;
+                    delete obj.SB;
                     Table1Append(obj);
-
+                    Table2Append(obj);
                 })
                 .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
@@ -163,7 +117,158 @@
 
 
         }
+        function Table2Append(obj){
+            let AllTime={'Start':'24小時','End':'','IO':'S'};
+            let splice_Arr=[];
+            Time.get('Time').push(AllTime);
 
+            //tb2 default
+            $.each(Time.get('Time'),function (index,val) {
+                let Ts=val.Start;
+                let Te=val.End;
+                let IO_id=val.IO;
+                if (index<3){
+                    Ts=(val.Start).substring(0,2)+"-";
+                    Te=(val.End).substring(0,2);
+                }
+
+                $(".tb2").append(
+                    `
+                <tr>
+                        <td>${Ts+Te}</td>
+                        <td id="${IO_id+'IA'+index}"></td>
+                        <td id="${IO_id+'IB'+index}"></td>
+                        <td id="${IO_id+'IC'+index}"></td>
+                        <td id="${IO_id+'ID'+index}"></td>
+                        <td id="${IO_id+'IE'+index}"></td>
+                        <td id="${IO_id+'IQT'+index}" class="IQT"></td>
+
+                        <td id="${IO_id+'OA'+index}"></td>
+                        <td id="${IO_id+'OB'+index}"></td>
+                        <td id="${IO_id+'OC'+index}"></td>
+                        <td id="${IO_id+'OD'+index}"></td>
+                        <td id="${IO_id+'OG'+index}"></td>
+                        <td id="${IO_id+'OE'+index}"></td>
+                        <td id="${IO_id+'OF'+index}"></td>
+                        <td id="${IO_id+'OQT'+index}"></td>
+
+                        <td></td>
+                        <td></td>
+                    </tr>
+                `
+                );
+                $("#tb3").append
+                (
+                    `
+                         <tr>
+                            <td>${Ts+Te}</td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                         </tr>
+                `
+                )
+            });
+
+            console.log(obj);
+
+            let S_Sum=[];//24小時
+            let QT_Sum=[[],[],[]];//總量
+            let page=[];
+
+            for (let index in obj){
+
+                page.push(index);
+                let arr=obj[index];
+
+                let DSum_IQTY=0;
+                let DSum_OQTY=0;
+
+                let NSum_IQTY=0;
+
+                let MSum_IQTY=0;
+
+                let SSum_QTY=0;
+                $.each(arr,function (i,val) {
+
+                    let QTY=val.QUANTITY;
+                    let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
+                    let IO=val.CID_IO;//I(輸入),O(輸出)
+
+
+                    if (QTY === 'NaN'  || QTY === null){
+                        QTY=0;
+                    }
+
+                    if (CID_EXC==="D"){
+                        DSum_IQTY+=parseInt(QTY);
+                    }else  if(CID_EXC==="N"){
+                        NSum_IQTY+=parseInt(QTY);
+                    }else if (CID_EXC==="M"){
+                        MSum_IQTY+=parseInt(QTY);
+                    }
+
+                });
+                QT_Sum[0].push(DSum_IQTY);
+                QT_Sum[1].push(NSum_IQTY);
+                QT_Sum[2].push(MSum_IQTY);
+
+            }
+
+            for (let i=0;i<3;i++){
+                let  Class="D";
+                /***********************I****************************/
+                let I_arr= QT_Sum[i].splice(0,6);
+                let I_Sum_QT= I_arr.reduce((prev, curr)=>prev+curr);
+                splice_Arr.push(I_arr);
+
+                if (i===1){
+                    Class="N";
+                }else  if(i===2){
+                    Class="M";
+                }
+
+                //I =>0~6
+                for (let j=0;j<6;j++)
+                {
+                    $("#"+Class+page[j]+i).text((I_arr[j]).toString());
+
+                    $("#S"+page[j]+"3").text();
+
+                }
+
+                $("#"+Class+"IQT"+i).text(I_Sum_QT.toString());
+
+                //O =>7~16 星期一補 O的資料
+
+                /*for (let j=7;j<16;j++){
+                    $("#"+Class+page[j]+i).text((QT_Sum[j]).toString());
+
+                }*/
+
+
+
+
+            }
+
+            SumAllDayQT(splice_Arr,6,page);
+
+        }
+        function SumAllDayQT(arr,nums,page) {
+            let IQT=[];
+            for (let i=0;i<nums;i++){
+               let S_QTY=arr[0][i]+arr[1][i]+arr[2][i];
+                $("#S"+page[i]+"3").text(S_QTY.toString());
+                IQT.push(S_QTY);
+            }
+            let SumIQT=IQT.reduce((pre,cur)=>pre+cur);
+            $("#SIQT3").text(SumIQT.toString());
+        }
     });
 </script>
 <style>
