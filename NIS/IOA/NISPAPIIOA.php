@@ -848,13 +848,15 @@ function GetPrintJson($conn,$Idpt,$INPt,$DT)
         $DB_REMAIN=oci_result($S_stid,"DB_REMAIN");
         $TM_START=oci_result($S_stid,"TM_START");
         $TM_END=oci_result($S_stid,"TM_END");
-        $NM_IOWAY=oci_result($S_stid,"NM_IOWAY");
+        $NM_IOWAY=oci_result($S_stid,"NM_IOWAY")==null?"":oci_result($S_stid,"NM_IOWAY");
         $CID_IOWAY=oci_result($S_stid,"CID_IOWAY");
         $NM_TUBE_SHORT=oci_result($S_stid,"NM_TUBE_SHORT");
-        $arr[]=array("ID_BED"=>$BED,"DT"=>$DT,"TM"=>$TM,"CID_EXCUTE"=>$CID_EXCUTE,"CID_IO"=>$CID_IO,"QUANTITY"=>$QUANTITY,
+        $arr[]=array(
+            "ID_BED"=>$BED,"DT"=>$DT,"TM"=>$TM,"CID_EXCUTE"=>$CID_EXCUTE,"CID_IO"=>$CID_IO,"QUANTITY"=>$QUANTITY,
             "NM_PHARMACY"=>$NM_PHARMACY,"NM_ITEM"=>$NM_ITEM,
             "NM_COLOR"=>$NM_COLOR,"ST_LOSS"=>$ST_LOSS,"ID_ITEM"=>$ID_ITEM,"NM_USER"=>$NM_USER,"MM_IO"=>$MM_IO,
-            "TM_START"=>$TM_START,"TM_END"=>$TM_END,"NM_IOWAY"=>$NM_IOWAY,"CID_IOWAY"=>$CID_IOWAY);
+            "TM_START"=>$TM_START,"TM_END"=>$TM_END,"NM_IOWAY"=>$NM_IOWAY,"CID_IOWAY"=>$CID_IOWAY
+        );
 
     }
 
