@@ -19,6 +19,7 @@
 
         (function () {
             GetPrintJson("","");
+
         })();
 
 
@@ -35,7 +36,18 @@
                     delete obj.TmSTtoE;
                     delete obj.SB;
                     Table1Append(obj);
+
+
+
                     Table2Append(obj);
+
+                    Table3Append(obj.IA); // oc
+
+                    Table4Append(obj);
+
+
+                  /*  window.print();
+                    window.close();*/
                 })
                 .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
@@ -46,7 +58,7 @@
                     );
                 });
         }
-        function Table1Append(obj) {
+        function Table1Append(obj){
             let count=[];
 
             for(let index in obj ){
@@ -118,11 +130,12 @@
 
         }
         function Table2Append(obj){
+            let QT_Sum=[[],[],[]];//總量
+            let nmMap={};
+
             let AllTime={'Start':'24小時','End':'','IO':'S'};
-            let splice_Arr=[];
             Time.get('Time').push(AllTime);
 
-            //tb2 default
             $.each(Time.get('Time'),function (index,val) {
                 let Ts=val.Start;
                 let Te=val.End;
@@ -134,71 +147,47 @@
 
                 $(".tb2").append(
                     `
-                <tr>
+                <tr class="${'tb2'+IO_id}">
                         <td>${Ts+Te}</td>
-                        <td id="${IO_id+'IA'+index}"></td>
-                        <td id="${IO_id+'IB'+index}"></td>
-                        <td id="${IO_id+'IC'+index}"></td>
-                        <td id="${IO_id+'ID'+index}"></td>
-                        <td id="${IO_id+'IE'+index}"></td>
-                        <td id="${IO_id+'IQT'+index}" class="IQT"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
 
-                        <td id="${IO_id+'OA'+index}"></td>
-                        <td id="${IO_id+'OB'+index}"></td>
-                        <td id="${IO_id+'OC'+index}"></td>
-                        <td id="${IO_id+'OD'+index}"></td>
-                        <td id="${IO_id+'OG'+index}"></td>
-                        <td id="${IO_id+'OE'+index}"></td>
-                        <td id="${IO_id+'OF'+index}"></td>
-                        <td id="${IO_id+'OQT'+index}"></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
 
                         <td></td>
                         <td></td>
                     </tr>
                 `
                 );
-                $("#tb3").append
-                (
-                    `
-                         <tr>
-                            <td>${Ts+Te}</td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                         </tr>
-                `
-                )
+
             });
 
-            console.log(obj);
-
-            let S_Sum=[];//24小時
-            let QT_Sum=[[],[],[]];//總量
-            let page=[];
 
             for (let index in obj){
 
-                page.push(index);
                 let arr=obj[index];
 
-                let DSum_IQTY=0;
-                let DSum_OQTY=0;
+                let DSum_QTY=0;
 
-                let NSum_IQTY=0;
+                let NSum_QTY=0;
 
-                let MSum_IQTY=0;
+                let MSum_QTY=0;
 
-                let SSum_QTY=0;
                 $.each(arr,function (i,val) {
-
                     let QTY=val.QUANTITY;
                     let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
-                    let IO=val.CID_IO;//I(輸入),O(輸出)
+                    let NM_Suer=val.NM_USER;
 
 
                     if (QTY === 'NaN'  || QTY === null){
@@ -206,74 +195,261 @@
                     }
 
                     if (CID_EXC==="D"){
-                        DSum_IQTY+=parseInt(QTY);
+                        DSum_QTY+=parseInt(QTY);
+                        nmMap.D=NM_Suer;
                     }else  if(CID_EXC==="N"){
-                        NSum_IQTY+=parseInt(QTY);
+                        NSum_QTY+=parseInt(QTY);
+                        nmMap.N=NM_Suer;
                     }else if (CID_EXC==="M"){
-                        MSum_IQTY+=parseInt(QTY);
+                        MSum_QTY+=parseInt(QTY);
+                        nmMap.M=NM_Suer;
                     }
 
                 });
-                QT_Sum[0].push(DSum_IQTY);
-                QT_Sum[1].push(NSum_IQTY);
-                QT_Sum[2].push(MSum_IQTY);
+
+
+                QT_Sum[0].push(DSum_QTY);
+                QT_Sum[1].push(NSum_QTY);
+                QT_Sum[2].push(MSum_QTY);
+            }
+
+            //預設值 包含0
+            for (let i=0;i<16;i++){
+                let num=i+1;
+                let S_sum=QT_Sum[0][i]+QT_Sum[1][i]+QT_Sum[2][i];
+                $('.tb2'+'D').find('td:eq('+num+')').text((QT_Sum[0][i]).toString());
+                $('.tb2'+'N').find('td:eq('+num+')').text((QT_Sum[1][i]).toString());
+                $('.tb2'+'M').find('td:eq('+num+')').text((QT_Sum[2][i]).toString());
+                $('.tb2'+'S').find('td:eq('+num+')').text(S_sum.toString());
+            }
+
+
+            let Icount=0;
+            let Ocount=0;
+            let TCcount=0;
+
+            for (let i=0;i<3;i++){
+                let PgName="D";
+                if (i===1){
+                    PgName="N"
+                }else if(i===2){
+                    PgName="M";
+                }
+
+                Icount+=ArrayReduce(QT_Sum[i],0,6);
+                Ocount+=ArrayReduce(QT_Sum[i],5,12);
+                $('.tb2'+PgName).find('td:eq(6)').text(ArrayReduce(QT_Sum[i],0,6));//I 總量
+
+                $('.tb2'+PgName).find('td:eq(14)').text(ArrayReduce(QT_Sum[i],5,12));//O 總量
+
+
+                $('.tb2'+PgName).find('td:eq(15)').text(ArrayReduce(QT_Sum[i],5,12)-ArrayReduce(QT_Sum[i],0,6));//輸出入量(D,N,M)
+
+
+                $('.tb2'+PgName).find('td:eq(16)').text(nmMap[PgName]);//評估人員
+
+
+                TCcount+= parseInt($('.tb2'+PgName).find('td:eq(15)').text());//輸出入量(S)
+            }
+
+            $('.tb2'+'S').find('td:eq(6)').text(Icount);
+            $('.tb2'+'S').find('td:eq(14)').text(Ocount);
+            $('.tb2'+'S').find('td:eq(15)').text(TCcount);
+
+            //td:0轉空白
+            $("td").each(function () {
+              if ($(this).text()==="0"){
+                  $(this).text(" ");
+              }
+            });
+        }
+        function Table3Append(arr){
+
+            $.each(Time.get('Time'),function (index,val) {
+                let Ts=val.Start;
+                let Te=val.End;
+                let IO_id=val.IO;
+                if (index<3){
+                    Ts=(val.Start).substring(0,2)+"-";
+                    Te=(val.End).substring(0,2);
+                }
+
+                  $("#tb3").append
+                  (
+                      `
+                           <tr class='${IO_id}'>
+                              <td>${Ts+Te}</td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                              <td></td>
+                           </tr>
+                  `
+                  )
+            });
+
+            $.each(arr,function (index,val) {
+
+              let Title_tr=$(".tb3_tr");
+              let num=index+1;
+              let IO=val.CID_EXCUTE;
+              Title_tr.find('td:eq('+index+')').text(val.NM_PHARMACY);
+
+              if (IO==="D"){
+                  $(".D").find('td:eq('+num+')').text(val.QUANTITY);
+              }else if(IO==="N"){
+                  $(".N").find('td:eq('+num+')').text(val.QUANTITY);
+              }else  if (IO==="M"){
+                  $(".M").find('td:eq('+num+')').text(val.QUANTITY);
+              }
+
+              let D_val=isNaN(parseInt($(".D").find('td:eq('+num+')').text()))?0:parseInt($(".D").find('td:eq('+num+')').text());
+              let N_val =isNaN(parseInt($(".N").find('td:eq('+num+')').text()))?0:parseInt($(".N").find('td:eq('+num+')').text());
+              let M_val =isNaN(parseInt($(".M").find('td:eq('+num+')').text()))?0:parseInt($(".M").find('td:eq('+num+')').text()) ;
+
+              $(".S").find('td:eq('+num+')').text(D_val+N_val+M_val);
+
+          });
+
+
+
+        }
+        function Table4Append(obj) {
+            let A_Map = new Map();
+
+
+            for (let index in obj) {
+                let arr = obj[index];
+
+                if (arr.length > 0) {
+                    arr.forEach(element => A_Map.set(element.DT + element.TM, []));
+                }
+
+            }//set DateTime Default[]
+            for (let index in obj) {
+                let arr = obj[index];
+
+                if (arr.length > 0) {
+
+                    $.each(arr, function (i, val) {
+                        InsertInMap(A_Map, val.DT + val.TM, val)
+                    });
+                }
 
             }
 
-            for (let i=0;i<3;i++){
-                let  Class="D";
-                /***********************I****************************/
-                let I_arr= QT_Sum[i].splice(0,6);
-                let I_Sum_QT= I_arr.reduce((prev, curr)=>prev+curr);
-                splice_Arr.push(I_arr);
 
-                if (i===1){
-                    Class="N";
-                }else  if(i===2){
-                    Class="M";
-                }
+            for (let [key, value] of A_Map){
+                let str='';
+                let dt=key.substring(0,11);
+                let DateTime=dt.substring(0,3)+'/'+dt.substring(3,5)+'/'+dt.substring(5,7)+
+                        ' '+dt.substring(7,9)+':'+dt.substring(9,11);
+                $.each(value,function (i,val) {
+                    let FieldByName=val.ID_ITEM;
 
-                //I =>0~6
-                for (let j=0;j<6;j++)
-                {
-                    $("#"+Class+page[j]+i).text((I_arr[j]).toString());
+                    if (FieldByName==="IB" || FieldByName==="OC"){
 
-                    $("#S"+page[j]+"3").text();
 
-                }
+                        str+=(val.NM_PHARMACY).trim()!==null?'、'+val.NM_PHARMACY:'、'+val.NM_ITEM+' '+val.QUANTITY;
 
-                $("#"+Class+"IQT"+i).text(I_Sum_QT.toString());
+                    }else if(val.CID_IO==="I" || val.CID_IO==="O"){
 
-                //O =>7~16 星期一補 O的資料
+                        if (FieldByName==="IA" || FieldByName==="IC" || FieldByName==="OG" ){
+                            str+='、'+val.NM_ITEM+' '+val.NM_PHARMACY+val.QUANTITY;
+                        }
+                        else {
+                            str+=(val.NM_ITEM).trim()!==null?val.NM_ITEM:val.NM_PHARMACY+' '+val.QUANTITY;
+                        }
 
-                /*for (let j=7;j<16;j++){
-                    $("#"+Class+page[j]+i).text((QT_Sum[j]).toString());
+                    }
+
+                    if ((val.ST_LOSS).trim()!==''){
+                        str+=('LOSS'+(val.ST_LOSS).trim());
+                    }
+                    if ((val.NM_IOWAY).trim()!==''){
+                        str+=' '+(val.NM_IOWAY);
+                    }
+                    if ((val.NM_COLOR).trim()!==''){
+                        str+=' '+(val.NM_COLOR);
+                    }
+                    if ((val.MM_IO).trim()!==''){
+                        str+='-'+(val.MM_IO);
+                    }
+                    if (value.length===i){
+                        str+='<br>';
+                    }
+                });
+
+
+
+
+
+                $(".tb4_b").append(
+                    `
+                    <tr>
+                        <td >${DateTime}</td>
+                        <td style="text-align: left">${str.substring(1,str.length)}</td>
+                    </tr>
+                    `
+
+                );
+
+               /* tb_H+=$('.tb4').innerHeight();
+
+
+                if (tb_H>580.4){
 
                 }*/
 
 
 
 
+
+                /*let td_width=$(".tb4").find('td:eq(0)').innerWidth();*/
+
+
+              /*  $(".tb4").find('td:eq(0)').text(DateTime+' '+str.substring(1,str.length));*/
+
             }
 
-            SumAllDayQT(splice_Arr,6,page);
+        }
+        /**
+         * @return {number}
+         */
+        function ArrayReduce(arr,start,end) {
+            let count=0;
 
-        }
-        function SumAllDayQT(arr,nums,page) {
-            let IQT=[];
-            for (let i=0;i<nums;i++){
-               let S_QTY=arr[0][i]+arr[1][i]+arr[2][i];
-                $("#S"+page[i]+"3").text(S_QTY.toString());
-                IQT.push(S_QTY);
+            for (let i=start;i<end;i++){
+
+                count+=arr[i];
             }
-            let SumIQT=IQT.reduce((pre,cur)=>pre+cur);
-            $("#SIQT3").text(SumIQT.toString());
+            return count;
         }
+        function InsertInMap(A_Map,DateTime,obj) {
+            console.log(obj);
+            for (let [key ,value] of A_Map.entries()){
+
+                if (key===DateTime){
+                    value.push(obj);
+                }
+            }
+        }
+
+
     });
 </script>
+
 <style>
+    .container{
+        margin-top: 5%;
+        page-break-after: always;
+    }
     table{
-        width: 1000px;
+        width: 100%;
     }
 
     table,
@@ -281,29 +457,49 @@
         border: 1px solid #333;
         text-align: center;
     }
-
     table  tr td{
         height: 40px;
-        width:55px;
-      /*  min-width: 55px;
-        min-height: 40px;*/
-    }
+        min-width: 55px;
 
-    .T_Date{
-        width: 83px;
     }
     h1,h2{
         text-align: center;
     }
 
+    .T_Date{
+        width: 83px;
+    }
+
+
+    .tb4 td:nth-child(1){
+        width: 15%;
+        padding-bottom: 23px;
+        border-right: white solid 1px;
+    }
+    .tb4 td{
+        border-bottom: white solid 1px;
+    }
+
+    .tb4_b tr:last-child{
+
+        border-bottom: black solid 2px;
+    }
 </style>
 <body>
 <div class="container">
-    <div class="title">
-        <h1 >悅晟醫院</h1>
-        <h2 >加強醫護出入量紀錄</h2>
-    </div>
 
+        <div class="row">
+            <div class="col-4">
+
+            </div>
+            <div class="col-4">
+                <h1 >悅晟醫院</h1>
+                <h2 >加強醫護出入量紀錄</h2>
+            </div>
+            <div class="col-4" style="border: black solid 1px">
+                123
+            </div>
+        </div>
 
 
     <table>
@@ -357,8 +553,8 @@
 
         <tr>
             <td>靜脈</td>
-            <td>輸血</td>
             <td>腸胃</td>
+            <td>輸血</td>
             <td>TPN/PP</td>
             <td>其他</td>
             <td>總量</td>
@@ -399,19 +595,12 @@
         </tbody>
     </table>
 
-    <table>
-        <tbody>
-            <tr>
-                <th>詳細內容</th>
+    <table class="tb4">
+        <tbody class="tb4_b">
+            <tr >
+                <th colspan="2">詳細內容</th>
             </tr>
-            <tr>
-                <td>
-                    106/07/11 11:36 管灌食物 4、管灌食物 4、TPN / PPN 2、TPN / PPN 2、其他攝入量 3、其他攝入量 3、開水 1、開水 1、
-                    尿量 5(Loss 6) 自排 鮮紅色、尿量 5(Loss 6) 自排 鮮紅色、排便量 3、排便量 3、NG tube(鼻) 45、
-                    NG tube(鼻) 45、嘔吐 5-33、嘔吐 5-33、洗腎脫水量 7-22、洗腎脫水量 7-22、腹膜透析量 6-44、
-                    腹膜透析量 6-44
-                </td>
-            </tr>
+
         </tbody>
     </table>
     <p>排尿方式: F:F A:自排 B:膀胱造廔 C:洗腎</p>
