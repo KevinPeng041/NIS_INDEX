@@ -168,7 +168,7 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
 
     oci_free_statement($TP_Stid);
     oci_commit($conn);
-    $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave);
+    $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave,'FORMSEQANCE_WT'=>$FORMSEQANCE_WT);
     return json_encode($JsonBack,JSON_UNESCAPED_UNICODE);
 }
 function GetIOAPageJson($conn,$sPg,$sTraID){
@@ -690,7 +690,7 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
             $DataSeq=$Obj[$j]->{'DataSeq'};
 
             if (trim($DataSeq)!==""){
-                _DBDEL($conn,$DataSeq,$IdPt,$IdinPt,$sDt,$sTm,$NowDT,$UR_PROCESS);
+                DBDEL($conn,$DataSeq,$IdPt,$IdinPt,$sDt,$sTm,$NowDT,$UR_PROCESS);
             }
 
             if (trim($Quantity)!=="" || trim($Loss)!==""){
@@ -737,7 +737,7 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
     }
     return  $response;
 }
-function _DBDEL($conn,$DtSeq,$IdPt,$InPt,$DT,$TM,$DM_Cand,$UR_Cand){
+function DBDEL($conn,$DtSeq,$IdPt,$InPt,$DT,$TM,$DM_Cand,$UR_Cand){
 
 
     $UP_SQL=" UPDATE NSIOQA SET DM_CANCD=:CAN_DT , UR_CANCD=:CAN_UR
@@ -770,6 +770,7 @@ function _DBDEL($conn,$DtSeq,$IdPt,$InPt,$DT,$TM,$DM_Cand,$UR_Cand){
 
 /*三班*/
 function GetDTJson($conn,$Idpt,$INPt){
+
     $Sql="SELECT DISTINCT NIS_IO_DT_EXECUTE(DT_EXCUTE, TM_EXCUTE) DT_EXECUTE FROM NSIOQA
             WHERE CID_IO IN ('I', 'O', 'R') 
             AND  ID_PATIENT = :IdPt AND ID_INPATIENT = :InIdPt
@@ -860,12 +861,84 @@ function GetPrintJson($conn,$Idpt,$INPt,$DT)
 
     }
 
+    return json_encode( ArrayGrouping($conn,$arr,$TmSTtoE),JSON_UNESCAPED_UNICODE);
+}
+/*function PosNIS_V_IOQA_P0SAVE($conn,$Idpt,$INPt,$DT)
+{
+
+    $SQL = "SELECT ID_ITEM, ST_TEXT1,ST_TEXT2,CID_SPECIAL FROM NSCLSI WHERE CID_CLASS = 'IODT'";
+
+    $stid = oci_parse($conn, $SQL);
+    oci_execute($stid);
+
+    $Tm_Start=[];
+    $TmSTtoE=[];
+    while (oci_fetch_array($stid)) {
+        $Tm_S = oci_result($stid, "ST_TEXT1");
+        $Tm_E = oci_result($stid, "ST_TEXT2");
+        $CID_SPECIAL= oci_result($stid, "CID_SPECIAL");
+        array_push($Tm_Start,$Tm_S);
+
+        $TmSTtoE[]=Array("Start"=>$Tm_S,"End"=>$Tm_E,"IO"=>$CID_SPECIAL);
+
+
+    }
+
+    $Dt_now=GetNewDateTime($DT,$Tm_Start[0],0,0);
+    $Dt_next=GetNewDateTime($DT,$Tm_Start[0],1,-1);
+
+    $S_Sql="SELECT ID_BED, DT_EXCUTE, TM_EXCUTE, CID_SPECIAL as CID_EXCUTE, CID_IO, P0.JID_KEY, QUANTITY, NM_COLOR, ST_LOSS, NM_PHARMACY, 
+                P0.NM_ITEM, P0.ID_ITEM, NM_USER, JID_NSRANK, MM_IO,  DB_REMAIN,  TM_START,  TM_END,  NM_IOWAY,  CID_IOWAY,  NM_TUBE_SHORT
+            FROM NIS_V_IOQA_P0 P0, NSCLSI IODT
+            WHERE ID_PATIENT = '$Idpt' AND ID_INPATIENT = '$INPt'
+              AND (CONCAT(DT_EXCUTE, TM_EXCUTE) >= '$Dt_now' AND CONCAT(DT_EXCUTE, TM_EXCUTE) <= '$Dt_next' )
+              AND IODT.CID_CLASS = 'IODT'
+              AND TM_EXCUTE >= IODT.ST_TEXT1 AND TM_EXCUTE < IODT.ST_TEXT2
+             ORDER BY DT_EXCUTE, TM_EXCUTE, CID_IO, P0.ID_ITEM";
+
+
+    $S_stid=oci_parse($conn,$S_Sql);
+    oci_execute($S_stid);
+    $arr=[];
+
+    while (oci_fetch_array($S_stid)){
+
+        $BED=oci_result($S_stid,"ID_BED");
+        $DT=oci_result($S_stid,"DT_EXCUTE");
+        $TM=oci_result($S_stid,"TM_EXCUTE");
+        $CID_EXCUTE=oci_result($S_stid,"CID_EXCUTE");
+        $CID_IO=oci_result($S_stid,"CID_IO");
+        $JID_KEY=oci_result($S_stid,"JID_KEY");
+        $QUANTITY=oci_result($S_stid,"QUANTITY");
+        $NM_COLOR=oci_result($S_stid,"NM_COLOR");
+        $ST_LOSS=oci_result($S_stid,"ST_LOSS");
+        $NM_PHARMACY=oci_result($S_stid,"NM_PHARMACY");
+        $NM_ITEM=oci_result($S_stid,"NM_ITEM");
+        $ID_ITEM=oci_result($S_stid,"ID_ITEM");
+        $NM_USER=oci_result($S_stid,"NM_USER");
+        $JID_NSRANK=oci_result($S_stid,"JID_NSRANK");
+        $MM_IO=oci_result($S_stid,"MM_IO");
+        $DB_REMAIN=oci_result($S_stid,"DB_REMAIN");
+        $TM_START=oci_result($S_stid,"TM_START");
+        $TM_END=oci_result($S_stid,"TM_END");
+        $NM_IOWAY=oci_result($S_stid,"NM_IOWAY")==null?"":oci_result($S_stid,"NM_IOWAY");
+        $CID_IOWAY=oci_result($S_stid,"CID_IOWAY");
+        $NM_TUBE_SHORT=oci_result($S_stid,"NM_TUBE_SHORT");
+        $arr[]=array(
+            "ID_BED"=>$BED,"DT"=>$DT,"TM"=>$TM,"CID_EXCUTE"=>$CID_EXCUTE,"CID_IO"=>$CID_IO,"QUANTITY"=>$QUANTITY,
+            "NM_PHARMACY"=>$NM_PHARMACY,"NM_ITEM"=>$NM_ITEM,
+            "NM_COLOR"=>$NM_COLOR,"ST_LOSS"=>$ST_LOSS,"ID_ITEM"=>$ID_ITEM,"NM_USER"=>$NM_USER,"MM_IO"=>$MM_IO,
+            "TM_START"=>$TM_START,"TM_END"=>$TM_END,"NM_IOWAY"=>$NM_IOWAY,"CID_IOWAY"=>$CID_IOWAY
+        );
+
+    }
+
 
 
 
 
   return json_encode( ArrayGrouping($conn,$arr,$TmSTtoE),JSON_UNESCAPED_UNICODE);
-}
+}*/
 function GetNewDateTime($Date,$Time,$Dnum,$Tnum){
 //日期
     $Y=(int)substr($Date,0,3)+1911;
