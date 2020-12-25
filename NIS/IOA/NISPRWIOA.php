@@ -15,7 +15,7 @@ $Account="00FUZZY";
     <script src="../../NISCOMMAPI.js"></script>
     <script>
         $(document).ready(function () {
-            var BEDwindow,Serchwindow,ThrdClassWindow;
+            var BEDwindow,Serchwindow;
             let CreatDefaultElement={
                 MainElement:() =>{
                     let DefultElement=new Map();
@@ -29,6 +29,8 @@ $Account="00FUZZY";
                     DefultElement.set('H',{"len":3,"Sum_Str":"In","Last_Str":"Out"});
 
                     for (let [key, value] of DefultElement.entries()) {
+
+
                         for (let i=0;i<value.len;i++){
                             $("#item"+key).append(
                                 `
@@ -291,19 +293,8 @@ $Account="00FUZZY";
                         DB_DEL(sTraID,'<?php echo $Account?>');
                         break;
                     case "ThirdClassBtn":
-                        switch (checkThrdClassWindow()) {
-                            case "false":
-                                alert("查詢視窗已開啟");
-                                break;
-                            case "true":
-                                ThrdClassWindow=window.open("/webservice/NISPWIOATHIRD.php?str="+
-                                    AESEnCode("sFm=IOA&PageVal="+""+"&DA_idpt="+IdPt+"&DA_idinpt="+InPt
-                                        +"&sUser="+"<?php echo $Account?>")
-                                    ,"三班查詢",'width=250px,height=550px,scrollbars=yes,resizable=no');
-                                break;
-                        }
-
-                        ThrdClassWindow.ThrdClassCallback=ThrdClassCallback;
+                        GetDTJson(IdPt,InPt);
+                        $("#TC_sModal").modal('show');
                         break;
                     default:
                         break;
@@ -328,8 +319,7 @@ $Account="00FUZZY";
                     let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
                     let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
                     let Timetxt=($(this).val()).split("");
-
-                    let timer=Timetxt.filter(function (value) { return  value!==":"});
+                    let timer=Timetxt.filter(value => value!==":");
                     let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
 
                     $("#IDTM").val($(this).attr('id'));
@@ -384,39 +374,41 @@ $Account="00FUZZY";
                     obj[index].LOSS=$("#Last"+Page+index).val();
                     obj[index].MM_IO=$("#Dir_s"+Page+index).val();
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
-
                 }
 
             });
-            $(document).on('keydown',"input[type=text]",function(e){
+            $(document).on('keyup',"input[type=text]",function(e){
+
                 let id=$(this).attr('id');
-                console.log(id);
-                let key=e.keyCode;
                 let Page=$("#PageVal").val();
-                let OK_keycode=[8,48,49,50,51,52,53,54,55,56,57,97,98,99,100
-                    ,101,102,103,104,105,110,190];
-                let RexResult=OK_keycode.filter(function (value) {
-                    return value===key
-                });
+                let regex=/^-?\d*[.,]?\d*$/;
+
+
+
 
                 if (id.substring(0,3)==="Num" || id.substring(0,4)==="Last")
                 {
+
                     //Input Only Number
-                    if (RexResult.length===0){
-                        return false;
+
+                    if (/^-?\d*[.,]?\d*$/.test($(this).val())){
+                        this.oldValue=$(this).val();
+                    }else if (this.hasOwnProperty('oldValue')){
+                        $(this).val(this.oldValue);
+                    }else {
+                        $(this).val('');
                     }
                 }
 
-                 if (id.substring(0,3)==="Num" && Page==="B" || Page==="E"  || Page==="F"){
+                if (id.substring(0,3)==="Num" && Page==="B" || Page==="E"  || Page==="F"){
 
-                     $("#Last"+id.substring(3,id.length)).val("");
-                 }
-                 if (id.substring(0,4)==="Last" && Page==="B"  || Page==="E"  || Page==="F"){
+                    $("#Last"+id.substring(3,id.length)).val("");
+                }
+                if (id.substring(0,4)==="Last" && Page==="B"  || Page==="E"  || Page==="F"){
 
-                     $("#Num"+id.substring(4,id.length)).val("");
-                 }
+                    $("#Num"+id.substring(4,id.length)).val("");
+                }
             });
-
             //page on
             $(".PageBtn").on('click',function () {
                 let Page=$(this).attr('id');
@@ -466,6 +458,7 @@ $Account="00FUZZY";
                         Cloen_DefaultObj[0].JID_MM=[];
                         Cloen_DefaultObj[0].JID_COLOR=[];
                         GetPageJson(Page,obj.sTraID,Cloen_DefaultObj);
+                        console.log(obj);
                     })
                     .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -692,7 +685,6 @@ $Account="00FUZZY";
                 SerchCallBack=false;
 
             }
-
             function Serchcallback(AESobj){
 
                 const Pagearr =['A','B','C','D','E','F','G','H'];
@@ -773,10 +765,7 @@ $Account="00FUZZY";
                 $("#ISTM").hide();
 
             }
-            function ThrdClassCallback(data) {
-                let obj=JSON.parse(AESDeCode(data));
-                console.log(obj);
-            }
+
             function checkBEDwindow() {
                 if(!BEDwindow){
                     return "true";
@@ -799,17 +788,7 @@ $Account="00FUZZY";
                     }
                 }
             }
-            function checkThrdClassWindow() {
-                if(!ThrdClassWindow){
-                    return "true";
-                }else {
-                    if(ThrdClassWindow.closed){
-                        return "true";
-                    }else {
-                        return "false";
-                    }
-                }
-            }
+
             function CreatOmodal(Page,JMM_arr,JColor_arr,len,mode) {
 
 
@@ -898,6 +877,35 @@ $Account="00FUZZY";
                 $("#OMindex").val(index);//other modal index
                 $("#M_"+Page+index).show();
                 $("#OtherModal").modal('show');
+            }
+
+            function GetDTJson(IdPt,InIdPt) {
+                $.ajax("/webservice/NISPWIOADT.php?str="+AESEnCode('sFm=IOA_P&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+'00FUZZY'))
+                    .done(function(data) {
+                        let obj=JSON.parse(AESDeCode(data));
+
+                        $("#TC_Content").children().remove();
+
+
+                        $.each(obj,function (index,val) {
+                            $("#TC_Content").append(
+                                `
+                                   <div style="margin-bottom: 5px">
+                                       <button class="btn btn-primary btn-lg" value="${val}" >選擇</button>
+                                       <label style="font-size: 3vmin;"> ${val}</label>
+                                   </div>
+                                 `
+                            )
+                        });
+                    })
+                    .fail(function(XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                    });
             }
         });
     </script>
@@ -1170,6 +1178,22 @@ $Account="00FUZZY";
             </div>
         </div>
 
+    <!----------------------------------------------------------Third_Class Modal-------------------------------------------------------------------------->
+    <div class="modal fade" id="TC_sModal" tabindex="-1" role="dialog"  aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog  modal-dialog-scrollable modal-dialog-centered " role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">三班日期</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div id="TC_Content"  class="modal-body">
+
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </body>
 </html>
