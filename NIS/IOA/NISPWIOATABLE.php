@@ -1,4 +1,31 @@
 <?php
+include '../../NISPWSIFSCR.php';
+$str=$_GET['str'];
+$replaceSpace=str_replace(' ','+',$str);
+$EXPLODE_data=explode('&',AESDeCode($replaceSpace));
+
+$IdPt_STR=$EXPLODE_data[0];
+$IdInPt_STR=$EXPLODE_data[1];
+$Dt_STR=$EXPLODE_data[2];
+$sRank_STR=$EXPLODE_data[3];
+$FSEQ_STR=$EXPLODE_data[4];
+$sUr_STR=$EXPLODE_data[5];
+
+
+$IdPt_value=explode('=',$IdPt_STR);
+$IdInPt_value=explode('=',$IdInPt_STR);
+$Dt_value=explode('=',$Dt_STR);
+$sRank_value=explode('=',$sRank_STR);
+$FSEQ_value=explode('=',$FSEQ_STR);
+$sUr_value=explode('=',$sUr_STR);
+
+$IdPt=$IdPt_value[1];
+$IdInPt=$IdInPt_value[1];
+$Dt=$Dt_value[1];
+$sRank=$sRank_value[1];
+$FSEQ=$FSEQ_value[1];
+$sUr=$sUr_value[1];
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -18,9 +45,13 @@
     $(document).ready(function () {
 
         (function () {
-            GetPrintJson("","");
+
+            GetPrintJson("<?php echo $IdPt?>","<?php echo $IdInPt?>","<?php echo $Dt?>");
 
         })();
+
+
+
 
 
         let Time=new Map();
@@ -28,31 +59,61 @@
         $(document).on('click','button',function () {
             let Page=$(this).val();
             const arr=['I','O','IO_Sum','OC'];
-            arr.forEach(index=>console.log(index));
+            if ($(this).attr('class')==="btn btn-primary"){
+                arr.forEach(index=>$('.'+index).hide());
+                $("."+Page).show();
+            }
 
+        });
+        $("#SubmitBtn").click(function () {
+            DB_SAVE('<?php echo $IdPt?>','<?php echo $IdInPt?>','<?php echo $Dt?>','<?php echo $sRank?>','<?php echo $FSEQ?>','<?php echo $sUr?>');
 
-            arr.forEach(index=>$('.'+index).hide());
-            $("."+Page).show();
         });
 
 
 
-        function GetPrintJson(IdPt,InIdPt) {
-             console.log("http://localhost"+"/webservice/NISPWIOAPRINT.php?str="+AESEnCode('sFm=IOA&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+'00FUZZY'));
-            $.ajax("/webservice/NISPWIOAPRINT.php?str="+AESEnCode('sFm=IOA&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+'00FUZZY'))
+        $(document).on('change','input[type=radio]',function () {
+               console.log($(this).val())
+           });
+
+
+        function GetPrintJson(IdPt,InIdPt,sDt) {
+             console.log("http://localhost"+"/webservice/NISPWIOAPRINT.php?str="+AESEnCode('idPt='+IdPt+'&INPt='+InIdPt+"&sDt="+sDt));
+            $.ajax("/webservice/NISPWIOAPRINT.php?str="+AESEnCode('idPt='+IdPt+'&INPt='+InIdPt+"&sDt="+sDt))
                 .done(function(data) {
                     let obj=JSON.parse(AESDeCode(data));
                     let AllTime={'Start':'24小時','End':'','IO':'S'};
                     Time.set('Time',obj.TmSTtoE);
                     delete obj.TmSTtoE;
                     delete obj.SB;
+                    console.log(obj);
+                    let count=0;
+                    for (let index in obj){
+                        if (obj[index].length===0){
+                            count++;
+                        }
+                    }
+
+                    if (count===16){
+                        alert('查無資料');
+                        window.close();
+                        return false;
+                    }
+
 
                     Table1Append(obj,AllTime);
 
-                    Table3Append(obj.IA); // oc
+                    OCAppend(obj.OC);
 
-                    Table4Append(obj);
+                    DeTailAppend(obj);
 
+                    //td:0轉空白
+                    $("td").each(function () {
+                        if ($(this).text()==="0" || $(this).text()==="NaN")
+                        {
+                            $(this).text(" ");
+                        }
+                    });
                 })
                 .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
@@ -65,7 +126,7 @@
         }
         function Table1Append(obj,AllTime){
             let QT_Sum=[[],[],[]];//總量
-            let nmMap={};
+            let nmObj={};
 
             Time.get('Time').push(AllTime);
             $.each(Time.get('Time'),function (index,val) {
@@ -106,9 +167,9 @@
                     </tr>
                 `
                 );
-                $(".tb3").append(
+                $(".IO_Sum_tb").append(
                     `
-                <tr class="${'tb3'+IO_id}">
+                <tr class="${'IO_Sum_tb'+IO_id}">
                         <td>${Ts+Te}</td>
                         <td></td>
                         <td></td>
@@ -119,9 +180,8 @@
                 `
                 );
             });
-            for (let index in obj){
-                console.log(index,obj[index]);
 
+            for (let index in obj){
 
                 let arr=obj[index];
                 let DSum_QTY=0;
@@ -129,6 +189,7 @@
                 let NSum_QTY=0;
 
                 let MSum_QTY=0;
+
                 $.each(arr,function (i,val) {
                     let QTY=val.QUANTITY;
                     let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
@@ -140,13 +201,13 @@
 
                     if (CID_EXC==="D"){
                         DSum_QTY+=parseInt(QTY);
-                        nmMap.D=NM_Suer;
+                        nmObj.D=NM_Suer;
                     }else  if(CID_EXC==="N"){
                         NSum_QTY+=parseInt(QTY);
-                        nmMap.N=NM_Suer;
+                        nmObj.N=NM_Suer;
                     }else if (CID_EXC==="M"){
                         MSum_QTY+=parseInt(QTY);
-                        nmMap.M=NM_Suer;
+                        nmObj.M=NM_Suer;
                     }
                 });
 
@@ -154,129 +215,13 @@
                 QT_Sum[1].push(NSum_QTY);
                 QT_Sum[2].push(MSum_QTY);
             }
-            QT_Sum.map((value, index) => InsertTdValue(value,index));
 
+            QT_Sum.forEach((value, index) =>InsertTdValue(value,index));
+            InsertSumTdValue(QT_Sum,nmObj);
 
-            //預設值 包含0
-/*
-            for (let i=0;i<5;i++){
-                let num=i+1;
-                let S_sum=QT_Sum[0][i]+QT_Sum[1][i]+QT_Sum[2][i];
-
-
-                $('.tb1'+'D').find('td:eq('+num+')').text((QT_Sum[0][i]).toString());
-                $('.tb1'+'N').find('td:eq('+num+')').text((QT_Sum[1][i]).toString());
-                $('.tb1'+'M').find('td:eq('+num+')').text((QT_Sum[2][i]).toString());
-                $('.tb1'+'S').find('td:eq('+num+')').text(S_sum.toString());
-
-            }
-            console.log(QT_Sum);
-            for (let i=0;i<7;i++){
-
-                let num=i+1;
-                let S_sum=QT_Sum[0][i+7]+QT_Sum[1][i+7]+QT_Sum[2][i+7];
-
-
-                $('.tb2'+'D').find('td:eq('+num+')').text((QT_Sum[0][i+7]).toString());
-                $('.tb2'+'N').find('td:eq('+num+')').text((QT_Sum[1][i+7]).toString());
-                $('.tb2'+'M').find('td:eq('+num+')').text((QT_Sum[2][i+7]).toString());
-                $('.tb2'+'S').find('td:eq('+num+')').text(S_sum.toString());
-            }
-*/
-
-
-
-            /*            for (let index in obj){
-
-                            let arr=obj[index];
-
-                            let DSum_QTY=0;
-
-                            let NSum_QTY=0;
-
-                            let MSum_QTY=0;
-
-                            $.each(arr,function (i,val) {
-                                let QTY=val.QUANTITY;
-                                let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
-                                let NM_Suer=val.NM_USER;
-
-
-                                if (QTY === 'NaN'  || QTY === null){
-                                    QTY=0;
-                                }
-
-                                if (CID_EXC==="D"){
-                                    DSum_QTY+=parseInt(QTY);
-                                    nmMap.D=NM_Suer;
-                                }else  if(CID_EXC==="N"){
-                                    NSum_QTY+=parseInt(QTY);
-                                    nmMap.N=NM_Suer;
-                                }else if (CID_EXC==="M"){
-                                    MSum_QTY+=parseInt(QTY);
-                                    nmMap.M=NM_Suer;
-                                }
-
-                            });
-
-
-                            QT_Sum[0].push(DSum_QTY);
-                            QT_Sum[1].push(NSum_QTY);
-                            QT_Sum[2].push(MSum_QTY);
-                        }
-
-                        //預設值 包含0
-                        for (let i=0;i<16;i++){
-                            let num=i+1;
-                            let S_sum=QT_Sum[0][i]+QT_Sum[1][i]+QT_Sum[2][i];
-                            $('.tb2'+'D').find('td:eq('+num+')').text((QT_Sum[0][i]).toString());
-                            $('.tb2'+'N').find('td:eq('+num+')').text((QT_Sum[1][i]).toString());
-                            $('.tb2'+'M').find('td:eq('+num+')').text((QT_Sum[2][i]).toString());
-                            $('.tb2'+'S').find('td:eq('+num+')').text(S_sum.toString());
-                        }
-
-
-                        let Icount=0;
-                        let Ocount=0;
-                        let TCcount=0;
-
-                        for (let i=0;i<3;i++){
-                            let PgName="D";
-                            if (i===1){
-                                PgName="N"
-                            }else if(i===2){
-                                PgName="M";
-                            }
-
-                            Icount+=ArrayReduce(QT_Sum[i],0,6);
-                            Ocount+=ArrayReduce(QT_Sum[i],5,12);
-                            $('.tb2'+PgName).find('td:eq(6)').text(ArrayReduce(QT_Sum[i],0,6));//I 總量
-
-                            $('.tb2'+PgName).find('td:eq(14)').text(ArrayReduce(QT_Sum[i],5,12));//O 總量
-
-
-                            $('.tb2'+PgName).find('td:eq(15)').text(ArrayReduce(QT_Sum[i],5,12)-ArrayReduce(QT_Sum[i],0,6));//輸出入量(D,N,M)
-
-
-                            $('.tb2'+PgName).find('td:eq(16)').text(nmMap[PgName]);//評估人員
-
-
-                            TCcount+= parseInt($('.tb2'+PgName).find('td:eq(15)').text());//輸出入量(S)
-                        }
-
-                        $('.tb2'+'S').find('td:eq(6)').text(Icount);
-                        $('.tb2'+'S').find('td:eq(14)').text(Ocount);
-                        $('.tb2'+'S').find('td:eq(15)').text(TCcount);*/
-
-            /*            //td:0轉空白
-                        $("td").each(function () {
-                          if ($(this).text()==="0"){
-                              $(this).text(" ");
-                          }
-                        });*/
         }
-        function Table3Append(arr){
-
+        //引流
+        function OCAppend(arr){
             $.each(Time.get('Time'),function (index,val) {
                 let Ts=val.Start;
                 let Te=val.End;
@@ -286,51 +231,30 @@
                     Te=(val.End).substring(0,2);
                 }
 
-                  $("#tb3").append
-                  (
-                      `
-                           <tr class='${IO_id}'>
-                              <td>${Ts+Te}</td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                              <td></td>
-                           </tr>
-                  `
-                  )
+              $(".tb3_tr").find('td:eq('+(index)+')').text(Ts+Te);
+            });
+            $.each(arr,function (index) {
+                $("#tb3").append(
+                    `
+                    <tr class="${'OC'+index}">
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    `
+                );
+
+
             });
 
-            $.each(arr,function (index,val) {
-
-              let Title_tr=$(".tb3_tr");
-              let num=index+1;
-              let IO=val.CID_EXCUTE;
-              Title_tr.find('td:eq('+index+')').text(val.NM_PHARMACY);
-
-              if (IO==="D"){
-                  $(".D").find('td:eq('+num+')').text(val.QUANTITY);
-              }else if(IO==="N"){
-                  $(".N").find('td:eq('+num+')').text(val.QUANTITY);
-              }else  if (IO==="M"){
-                  $(".M").find('td:eq('+num+')').text(val.QUANTITY);
-              }
-
-              let D_val=isNaN(parseInt($(".D").find('td:eq('+num+')').text()))?0:parseInt($(".D").find('td:eq('+num+')').text());
-              let N_val =isNaN(parseInt($(".N").find('td:eq('+num+')').text()))?0:parseInt($(".N").find('td:eq('+num+')').text());
-              let M_val =isNaN(parseInt($(".M").find('td:eq('+num+')').text()))?0:parseInt($(".M").find('td:eq('+num+')').text()) ;
-
-              $(".S").find('td:eq('+num+')').text(D_val+N_val+M_val);
-
-          });
-
-
-
+            InsertOC_TdValue(arr);
         }
-        function Table4Append(obj) {
+
+        //詳細內容
+        function DeTailAppend(obj) {
+
             let A_Map = new Map();
 
 
@@ -397,9 +321,6 @@
                 });
 
 
-
-
-
                 $(".tb4_b").append(
                     `
                     <tr>
@@ -429,18 +350,6 @@
             }
 
         }
-        /**
-         * @return {number}
-         */
-        function ArrayReduce(arr,start,end) {
-            let count=0;
-
-            for (let i=start;i<end;i++){
-
-                count+=arr[i];
-            }
-            return count;
-        }
         function InsertInMap(A_Map,DateTime,obj) {
 
             for (let [key ,value] of A_Map.entries()){
@@ -453,23 +362,120 @@
         function InsertTdValue(arr,index) {
             let I=arr.slice(0,5);
             let O=arr.slice(5,12);
-
+            let I_Sum=I.reduce((acc,cur)=>acc+cur);
+            let O_Sum=O.reduce((acc,cur)=>acc+cur);
+            console.log(I);
+            let IO_Tag='';
             if (index===0){
-               /**/
+                IO_Tag='D';
+                I.forEach((value,N_index)=>$('.tb1D').find('td:eq('+(N_index+1)+')').text(value.toString()));
+                O.forEach((value,N_index)=>$('.tb2D').find('td:eq('+(N_index+1)+')').text(value.toString()));
+            }else if (index===1){
+                IO_Tag='N';
+                I.forEach((value,N_index)=>$('.tb1N').find('td:eq('+(N_index+1)+')').text(value.toString()));
+                O.forEach((value,N_index)=>$('.tb2N').find('td:eq('+(N_index+1)+')').text(value.toString()));
+            }else {
+                IO_Tag='M';
+                I.forEach((value,N_index)=>$('.tb1M').find('td:eq('+(N_index+1)+')').text(value.toString()));
+                O.forEach((value,N_index)=>$('.tb2M').find('td:eq('+(N_index+1)+')').text(value.toString()));
+            }
 
-                for (let i of I){
-                    console.log(i,I);
-                    $('.tb2'+'D').find('td:eq('+i+1+')').text((I[i]).toString());
-                  /*  $('.tb2'+'D').find('td:eq('+i+1+')').text((I[i]).toString());*/
+            $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(1)+')').text(I_Sum);
+            $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(2)+')').text(O_Sum);
+            $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(3)+')').text(O_Sum-I_Sum);
+
+        }
+        function InsertOC_TdValue(arr){
+
+            $.each(arr,function (index,val) {
+                let IO=val.CID_EXCUTE;
+
+
+                $('.OC'+index).find('td:eq(0)').text(val.NM_PHARMACY);
+                if (IO==="D"){
+                    $('.OC'+index).find('td:eq(1)').text(val.QUANTITY);
+                }else if (IO==="N"){
+                    $('.OC'+index).find('td:eq(2)').text(val.QUANTITY);
+                }else if(IO==="M"){
+                    $('.OC'+index).find('td:eq(3)').text(val.QUANTITY);
                 }
+                let D=isNaN(parseInt($('.OC'+index).find('td:eq(1)').text()))?0:parseInt($('.OC'+index).find('td:eq(1)').text());
+                let N=isNaN(parseInt($('.OC'+index).find('td:eq(2)').text()))?0:parseInt($('.OC'+index).find('td:eq(2)').text());
+                let M=isNaN(parseInt($('.OC'+index).find('td:eq(3)').text()))?0:parseInt($('.OC'+index).find('td:eq(3)').text());
 
+                $('.OC'+index).find('td:eq(4)').text(D+N+M);
+
+
+            });
+
+
+
+
+
+        }
+        function InsertSumTdValue(arr,nmObj) {
+
+
+            //輸入
+            for (let i=1;i<=5;i++){
+                let D=parseInt($('.tb1D').find('td:eq('+i+')').text());
+                let N=parseInt($('.tb1N').find('td:eq('+i+')').text());
+                let M=parseInt($('.tb1M').find('td:eq('+i+')').text());
+
+                $(".tb1S").find('td:eq('+i+')').text((D+N+M).toString());
+            }
+            //輸出
+            for (let i=1;i<=7;i++){
+                let D=parseInt($('.tb2D').find('td:eq('+i+')').text());
+                let N=parseInt($('.tb2N').find('td:eq('+i+')').text());
+                let M=parseInt($('.tb2M').find('td:eq('+i+')').text());
+
+                $(".tb2S").find('td:eq('+i+')').text((D+N+M).toString());
+            }
+
+            //總量
+            for (let i=1;i<=3;i++){
+                let D=parseInt($('.IO_Sum_tbD').find('td:eq('+i+')').text());
+                let N=parseInt($('.IO_Sum_tbN').find('td:eq('+i+')').text());
+                let M=parseInt($('.IO_Sum_tbM').find('td:eq('+i+')').text());
+
+
+                $(".IO_Sum_tbS").find('td:eq('+i+')').text(D+N+M);
             }
 
 
-            console.log(I,O,index);
-
+            for (let index in nmObj){
+                $('.tb1'+index).find('td:eq(6)').text(nmObj[index]);
+                $('.tb2'+index).find('td:eq(8)').text(nmObj[index]);
+                $('.IO_Sum_tb'+index).find('td:eq(4)').text(nmObj[index]);
+            }
         }
+        function DB_SAVE(IdPt,IdInPt,Dt,sRank,FSEQ,sUr) {
+            let ck_val=$("input[type=radio]:checked").val();
+            console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA_C'+'&IdPt='+IdPt+'&IdInPt='+IdInPt+'&sDt='+Dt+'&USER='+sUr+'&CID_EXE='+ck_val+'&NULL='+""));
 
+            $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA_C'+'&IdPt='+IdPt+'&IdInPt='+IdInPt+'&sDt='+Dt+'&USER='+sUr+'&CID_EXE='+ck_val+'&USER='+""))
+                .done(function (data) {
+                    let result= JSON.parse(AESDeCode(data));
+                    $("#loading").hide();
+                    $("#wrapper").hide();
+                    console.log(result);
+                    if(result.response==='success'){
+                        alert("儲存成功");
+                       window.close();
+                    }else {
+                        alert("儲存失敗重新檢查格式:"+result.message);
+                    }
+                }).
+            fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                console.log(
+                    "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                    "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                    "3 返回失敗,textStatus:"+textStatus+
+                    "4 返回失敗,errorThrown:"+errorThrown
+                );
+            });
+        }
     });
 </script>
 
@@ -478,7 +484,7 @@
 
         page-break-after: always;
     }
-    table{
+   table{
         width: 100%;
     }
 
@@ -490,17 +496,32 @@
     h1,h2{
         text-align: center;
     }
-
+    .I,.O,.IO_Sum,.OC{
+        margin-top: 10px;
+        display: none;
+    }
 </style>
 <body>
 <div class="container">
 
-    <h1 >加強醫護出入量紀錄</h1>
+    <h1 >加強醫護出入量紀錄<?php echo $Dt?></h1>
+    <div>
+        <label>
+            <input type="radio" value="D" name="ClassDt">白班
+        </label>
+        <label>
+            <input type="radio" value="N" name="ClassDt">小夜班
+        </label>
+        <label>
+            <input type="radio" value="M" name="ClassDt">大夜班
+        </label>
+    </div>
     <div>
         <button class="btn btn-primary" value="I">輸入量</button>
         <button class="btn btn-primary" value="O">排出量</button>
         <button class="btn btn-primary" value="IO_Sum">總量</button>
         <button class="btn btn-primary" value="OC">引流</button>
+        <button class="btn btn-info" id="SubmitBtn">儲存</button>
     </div>
 
 <!--    <table >
@@ -551,6 +572,7 @@
             </tr>
             </tbody>
         </table>
+
     </div>
 
     <div class="O">
@@ -577,7 +599,7 @@
 
     <div class="IO_Sum">
         <table>
-            <tbody class="tb3">
+            <tbody class="IO_Sum_tb">
             <tr>
                 <th  rowspan="2" colspan="1">三班及全日</th>
                 <th  colspan="1">輸入量(公撮)</th>
@@ -593,40 +615,35 @@
 
             </tbody>
         </table>
-    </div>
-
-
-
-<!--
-    <table>
-        <tbody id="tb3">
-        <tr>
-            <th class="T_Date" rowspan="2" >三班及全日</th>
-            <th colspan="8">引流量</th>
-        </tr>
-        <tr class="tb3_tr">
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-
-        </tbody>
-    </table>
-
-    <table class="tb4">
-        <tbody class="tb4_b">
+        <table class="tb4">
+            <tbody class="tb4_b">
             <tr >
                 <th colspan="2">詳細內容</th>
             </tr>
 
-        </tbody>
-    </table>
-    <p>排尿方式: F:F A:自排 B:膀胱造廔 C:洗腎</p>-->
+            </tbody>
+        </table>
+    </div>
+
+    <div class="OC">
+        <table style="max-width: 650px">
+            <tbody id="tb3">
+            <tr>
+                <th rowspan="2">引流量</th>
+                <th colspan="4">三班及全日</th>
+            </tr>
+
+         <tr class="tb3_tr">
+             <td></td>
+             <td></td>
+             <td></td>
+             <td></td>
+         </tr>
+
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
 </body>
