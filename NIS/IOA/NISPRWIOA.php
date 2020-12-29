@@ -201,6 +201,7 @@ $Account="00FUZZY";
                 let sTM=$("#sTime").val();
                 let sDt=$("#sDate").val();
                 let IdPt=$("#DA_idpt").val(),InPt=$("#DA_idinpt").val(),PName=$("#DataTxt").val();
+                let BtnVal=$(this).val();
                 if ($(this).attr('class')==='Obtn btn btn-secondary'){
                     //other btn
                    let FatherEle=$(this).parent().parent();
@@ -210,6 +211,13 @@ $Account="00FUZZY";
                     CreatOmodal(Page,AddBtn_IoType.get(Page),AddBtn_Color.get(Page),$("#item"+Page).children().length,"");
                     OpenOmodal(Page,index);
 
+                }
+
+
+                if ($(this).attr('class')==='DTbtn btn btn-primary btn-lg'){
+
+                    window.open("./NISPWIOATABLE.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+"&DT="+BtnVal+"&sRank="+$("#SRANK").val()+"&FSEQ="+$("#FSEQ_WT").val() +"&sUser="+"<?php echo $Account?>"),
+                                "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no')
                 }
 
                 switch (btnId) {
@@ -454,6 +462,8 @@ $Account="00FUZZY";
                         let obj=JSON.parse(AESDeCode(data));
                         $("#sSave").val(obj.sSave);
                         $("#sTraID").val(obj.sTraID);
+                        $("#SRANK").val(obj.JID_NSRANK);
+                        $("#FSEQ_WT").val(obj.FORMSEQANCE_WT);
                         let Cloen_DefaultObj=[...DefaultObj];
                         Cloen_DefaultObj[0].JID_MM=[];
                         Cloen_DefaultObj[0].JID_COLOR=[];
@@ -571,7 +581,7 @@ $Account="00FUZZY";
                 });
 
                 let SavaJson=JSON.stringify(obj);
-                console.log(SavaJson);
+
 /*
                 console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson));
 */
@@ -625,7 +635,7 @@ $Account="00FUZZY";
                         if(result.response==='success'){
                             alert("儲存成功");
                             location.reload();
-                            window.location.reload(true);
+
                         }else {
                             alert("儲存失敗重新檢查格式:"+result.message);
                         }
@@ -891,7 +901,7 @@ $Account="00FUZZY";
                             $("#TC_Content").append(
                                 `
                                    <div style="margin-bottom: 5px">
-                                       <button class="btn btn-primary btn-lg" value="${val}" >選擇</button>
+                                       <button class="DTbtn btn btn-primary btn-lg" value="${val}" >選擇</button>
                                        <label style="font-size: 3vmin;"> ${val}</label>
                                    </div>
                                  `
@@ -1045,8 +1055,12 @@ $Account="00FUZZY";
         <input id="DA_sBed"     value=""  type="text"  placeholder="DA_sBed">       <!--床號-->
         <input id="sSave"       value=""  type="text"  placeholder="sSave">         <!--存檔權限-->
         <input id="sTraID"      value=""  type="text"  placeholder="sTraID">        <!--交易序號-->
+        <input id="SRANK"       value=""  type="text"  placeholder="JID_NSRANK" >
+        <input id="FSEQ_WT"       value=""  type="text"  placeholder="FORMSEQANCE_WT">
+
         <input id="IDTM"        value=""  type="text"  placeholder="IDTM" >         <!--timeID-->
         <input id="OMindex"     value=""  type="text"  placeholder="OMindex" >      <!--OtherModalIndex-->
+
     </div>
     <!----------------------------------------------------------Function Bar-------------------------------------------------------------------------->
          <span  class="title">
