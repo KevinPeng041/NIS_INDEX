@@ -769,27 +769,57 @@ function DBDEL($conn,$DtSeq,$IdPt,$InPt,$DT,$TM,$DM_Cand,$UR_Cand){
 }
 
 /*三班*/
-function GetDTJson($conn,$Idpt,$INPt){
+function GetDTJson($conn){
 
-    $Sql="SELECT DISTINCT NIS_IO_DT_EXECUTE(DT_EXCUTE, TM_EXCUTE) DT_EXECUTE FROM NSIOQA
-            WHERE CID_IO IN ('I', 'O', 'R') 
-            AND  ID_PATIENT = :IdPt AND ID_INPATIENT = :InIdPt
-            AND  DM_CANCD = ' ' AND UR_CANCD = ' '
-            ORDER BY DT_EXECUTE DESC";
+    $SQL="SELECT NM_ITEM,CID_SPECIAL FROM NSCLSI WHERE CID_CLASS = 'IODT'";
 
-    $stid=oci_parse($conn,$Sql);
-
-    oci_bind_by_name($stid,":IdPt",$Idpt);
-    oci_bind_by_name($stid,":InIdPt",$INPt);
+    $stid=oci_parse($conn,$SQL);
 
     oci_execute($stid);
     $result=[];
+
+     while (oci_fetch_array($stid)){
+         $NM_ITEM=oci_result($stid,'NM_ITEM');
+         $CID_SPECIAL=oci_result($stid,'CID_SPECIAL');
+         $result[]=array("NM_ITEM"=>$NM_ITEM,"CID_S"=>$CID_SPECIAL);
+     }
+
+    return json_encode($result,JSON_UNESCAPED_UNICODE);
+}
+function GetThirdClass($conn,$idPt,$INPt){
+    $sSQL="SELECT NM_ITEM ,CID_SPECIAL FROM NSCLSI WHERE CID_CLASS = 'IODT'";
+    $stid=oci_parse($conn,$sSQL);
+    oci_execute($stid);
+
+    $re=[];
+
     while (oci_fetch_array($stid)){
+        $NM_ITEM=oci_result($stid,'NM_ITEM');
+        $CID_SPECIAL=oci_result($stid,'CID_SPECIAL');
+        $re[]=array("NM_ITEM"=>$NM_ITEM,"CID_NM"=>$CID_SPECIAL);
+    }
+
+    $Sql="SELECT DISTINCT NIS_IO_DT_EXECUTE(DT_EXCUTE, TM_EXCUTE) DT_EXECUTE FROM NSIOQA
+                WHERE CID_IO IN ('I', 'O', 'R') 
+                AND  ID_PATIENT = :IdPt AND ID_INPATIENT = :InIdPt
+                AND  DM_CANCD = ' ' AND UR_CANCD = ' '
+                ORDER BY DT_EXECUTE DESC";
+
+    $stid=oci_parse($conn,$Sql);
+
+    oci_bind_by_name($stid,":IdPt",$idPt);
+    oci_bind_by_name($stid,":InIdPt",$INPt);
+    oci_execute($stid);
+    $result=[];
+    while (oci_fetch_array($stid))
+    {
         $DT_EXECUTE=oci_result($stid,"DT_EXECUTE");
         array_push($result,$DT_EXECUTE);
     }
 
-    return json_encode($result,JSON_UNESCAPED_UNICODE);
+    array_push($re,$result);
+
+    return json_encode($re,JSON_UNESCAPED_UNICODE);
 }
 function GetPrintJson($conn,$Idpt,$INPt,$DT)
 {
@@ -815,23 +845,20 @@ function GetPrintJson($conn,$Idpt,$INPt,$DT)
     $Dt_now=GetNewDateTime($DT,$Tm_Start[0],0,0);
     $Dt_next=GetNewDateTime($DT,$Tm_Start[0],1,-1);
 
-    $S_Sql="SELECT ID_BED, DT_EXCUTE, TM_EXCUTE, CID_SPECIAL as CID_EXCUTE, CID_IO, P0.JID_KEY, QUANTITY, NM_COLOR, ST_LOSS, NM_PHARMACY, 
-                P0.NM_ITEM, P0.ID_ITEM, NM_USER, JID_NSRANK, MM_IO,  DB_REMAIN,  TM_START,  TM_END,  NM_IOWAY,  CID_IOWAY,  NM_TUBE_SHORT
-            FROM NIS_V_IOQA_P0 P0, NSCLSI IODT
-            WHERE ID_PATIENT = '$Idpt' AND ID_INPATIENT = '$INPt'
-              AND (CONCAT(DT_EXCUTE, TM_EXCUTE) >= '$Dt_now' AND CONCAT(DT_EXCUTE, TM_EXCUTE) <= '$Dt_next' )
-              AND IODT.CID_CLASS = 'IODT'
-              AND TM_EXCUTE >= IODT.ST_TEXT1 AND TM_EXCUTE < IODT.ST_TEXT2
-             ORDER BY DT_EXCUTE, TM_EXCUTE, CID_IO, P0.ID_ITEM";
-
-/*echo $S_Sql."<br>";*/
-
+    $S_Sql="SELECT ID_BED, DT_EXCUTE, TM_EXCUTE, CID_SPECIAL as CID_EXCUTE, CID_IO, P0.JID_KEY, QUANTITY, NM_COLOR, ST_LOSS, NM_PHARMACY, P0.NM_ITEM, P0.ID_ITEM, NM_USER, JID_NSRANK
+            , MM_IO, DB_REMAIN, TM_START, TM_END, NM_IOWAY, CID_IOWAY, NM_TUBE_SHORT FROM NIS_V_IOQA_P0 P0, NSCLSI IODT 
+            WHERE ID_PATIENT = '$Idpt' AND ID_INPATIENT = '$INPt' AND
+            (CONCAT(DT_EXCUTE, TM_EXCUTE) >= '$Dt_now' AND
+                CONCAT(DT_EXCUTE, TM_EXCUTE) <= '$Dt_next' ) AND
+            IODT.CID_CLASS = 'IODT'  and DT_EXCUTE='$DT'
+            AND TM_EXCUTE >= IODT.ST_TEXT1 
+            AND TM_EXCUTE <( CASE ST_TEXT2 WHEN '000000' THEN '235959' ELSE LPAD(TO_CHAR(TO_NUMBER(ST_TEXT2)-1),6,'0') END )
+            ORDER BY DT_EXCUTE, TM_EXCUTE, CID_IO, P0.ID_ITEM";
     $S_stid=oci_parse($conn,$S_Sql);
     oci_execute($S_stid);
     $arr=[];
 
     while (oci_fetch_array($S_stid)){
-
         $BED=oci_result($S_stid,"ID_BED");
         $DT=oci_result($S_stid,"DT_EXCUTE");
         $TM=oci_result($S_stid,"TM_EXCUTE");
@@ -862,9 +889,9 @@ function GetPrintJson($conn,$Idpt,$INPt,$DT)
 
     }
 
-    return json_encode( ArrayGrouping($conn,$arr,$TmSTtoE),JSON_UNESCAPED_UNICODE);
+    return json_encode( ArrayGrouping($conn,$arr,$TmSTtoE,$Idpt,$INPt,$DT),JSON_UNESCAPED_UNICODE);
 }
-function PosIOACalssSave($conn,$Idpt,$INPt,$DT,$sUr,$CID_EXECUTE){
+function PosIOACalssSave($conn,$Idpt,$INPt,$DT,$CID_EXECUTE,$sUr){
     date_default_timezone_set('Asia/Taipei');
 
     $sql1 = "SELECT  (SELECT his803.nis_datetimeseq FROM DUAL) ID_TRANSB,
@@ -911,6 +938,8 @@ function PosIOACalssSave($conn,$Idpt,$INPt,$DT,$sUr,$CID_EXECUTE){
     $Insert_SQL="INSERT INTO nsiocs(DATESEQANCE_FL,ID_PATIENT,ID_INPATIENT,NO_OPDSEQ,DT_REGISTER,DT_EXCUTE,CID_EXCUTE,ID_BED,JID_NSRANK,
                 FORMSEQANCE_WT,DM_PROCESS,UR_PROCESS,DM_CANCD,UR_CANCD)
                 VALUES (NIS_DATETIMESEQ,'$Idpt','$INPt','0',' ','$DT','$CID_EXECUTE','$ID_BED','$JID_NSRANK','$FORMSEQANCE_WT','$today','$sUr',' ',' ')";
+
+
     $IStid=oci_parse($conn,$Insert_SQL);
     if (!$IStid){
         $e=oci_error($conn);
@@ -931,6 +960,24 @@ function PosIOACalssSave($conn,$Idpt,$INPt,$DT,$sUr,$CID_EXECUTE){
   return  json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
 
 
+}
+function ComfirmIOA($conn,$IdPt,$InPt,$DT){
+$Sql=" SELECT  UR_PROCESS FROM nsiocs WHERE 
+        ID_PATIENT='$IdPt' AND ID_INPATIENT='$InPt' 
+        AND
+        DT_EXCUTE='$DT' AND DM_CANCD=' '";
+
+$stid=oci_parse($conn,$Sql);
+oci_execute($stid);
+$result=[];
+while (oci_fetch_array($stid)){
+    $UR_PROCESS=oci_result($stid,'UR_PROCESS');
+    if (trim($UR_PROCESS)!==""){
+        array_push($result,$UR_PROCESS);
+    }
+}
+$response=count($result)>0?'Y':'N';
+return $response;
 }
 function GetNewDateTime($Date,$Time,$Dnum,$Tnum){
 //日期
@@ -965,7 +1012,7 @@ function GetNewDateTime($Date,$Time,$Dnum,$Tnum){
 
 
 }
-function ArrayGrouping($conn,$arr1,$TmSTtoE){
+function ArrayGrouping($conn,$arr1,$TmSTtoE,$Idpt,$INPt,$DT){
 
 $Sql="SELECT ST_TEXT1, ID_ITEM, NM_ITEM, MM_ITEM sSQL
       FROM NSCLSI
@@ -987,7 +1034,7 @@ for ($i=0;$i<count($arr1);$i++)
         }
     };
     $arr['TmSTtoE']=$TmSTtoE;
+    $arr['Comfirm']=ComfirmIOA($conn,$Idpt,$INPt,$DT);
 }
-
 return $arr;
 }
