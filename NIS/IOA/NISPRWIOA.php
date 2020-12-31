@@ -184,7 +184,6 @@ $Account="00FUZZY";
             }];
 
             (function () {
-
                 CreatDefaultElement.TimeRadio();
                 $("#loading").hide();
                 $("#wrapper").hide();
@@ -202,8 +201,11 @@ $Account="00FUZZY";
                 let sDt=$("#sDate").val();
                 let IdPt=$("#DA_idpt").val(),InPt=$("#DA_idinpt").val(),PName=$("#DataTxt").val();
                 let BtnVal=$(this).val();
+
+
+                //other btn
                 if ($(this).attr('class')==='Obtn btn btn-secondary'){
-                    //other btn
+
                    let FatherEle=$(this).parent().parent();
                    let index=FatherEle.attr('id').substring(6,FatherEle.attr('id').length);
                     $("#O_"+Page+index).val($("#Dir_s"+Page+index).val());
@@ -213,12 +215,13 @@ $Account="00FUZZY";
 
                 }
 
-
-                if ($(this).attr('class')==='DTbtn btn btn-primary btn-lg'){
-
-                    window.open("./NISPWIOATABLE.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+"&DT="+BtnVal+"&sRank="+$("#SRANK").val()+"&FSEQ="+$("#FSEQ_WT").val() +"&sUser="+"<?php echo $Account?>"),
-                                "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no')
+                //Third_DT   btn
+                if ($(this).attr('class')==='DTbtn btn btn-primary btn-md'){
+                    window.open("./NISPWIOATABLE.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+"&C_DT="+BtnVal+"&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
+                                "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no');
+                    $("#TC_sModal").modal('hide');
                 }
+
 
                 switch (btnId) {
                     case "sbed":
@@ -308,10 +311,7 @@ $Account="00FUZZY";
                         break;
                 }
             });
-
             $(document).on('change',"input[type=radio]",function () {
-
-
                 let index=$(this).val().substring(0,1);
                 let Page=$(this).val().substring(1,2);
                 let id=$(this).val().substring(2,14);
@@ -620,7 +620,6 @@ $Account="00FUZZY";
             }
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
                 let json=JSON.stringify(ThisPageJson.get(Page));
-                console.log(json);
                 DB_WSST(Page,sTraID,json);
 
                  console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr));
@@ -775,7 +774,6 @@ $Account="00FUZZY";
                 $("#ISTM").hide();
 
             }
-
             function checkBEDwindow() {
                 if(!BEDwindow){
                     return "true";
@@ -798,7 +796,6 @@ $Account="00FUZZY";
                     }
                 }
             }
-
             function CreatOmodal(Page,JMM_arr,JColor_arr,len,mode) {
 
 
@@ -888,7 +885,6 @@ $Account="00FUZZY";
                 $("#M_"+Page+index).show();
                 $("#OtherModal").modal('show');
             }
-
             function GetDTJson(IdPt,InIdPt) {
                 $.ajax("/webservice/NISPWIOADT.php?str="+AESEnCode('sFm=IOA_P&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+'00FUZZY'))
                     .done(function(data) {
@@ -901,8 +897,8 @@ $Account="00FUZZY";
                             $("#TC_Content").append(
                                 `
                                    <div style="margin-bottom: 5px">
-                                       <button class="DTbtn btn btn-primary btn-lg" value="${val}" >選擇</button>
-                                       <label style="font-size: 3vmin;"> ${val}</label>
+                                       <button class="DTbtn btn btn-primary btn-md" value="${val.CID_S}" >選擇</button>
+                                       <label style="font-size: 1.5rem;"> ${val.NM_ITEM}</label>
                                    </div>
                                  `
                             )
@@ -1088,7 +1084,7 @@ $Account="00FUZZY";
                 <label >評估時間:</label>
                 <input type="text" id="sDate" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
                 <input type="text" id="sTime" value=""  placeholder="HHMM" maxlength="4" autocomplete="off">
-                <button type="button" id="ThirdClassBtn" class="btn btn-outline-primary  btn-lg">三班</button>
+                <button type="button" id="ThirdClassBtn" class="btn btn-primary  btn-lg">三班</button>
             </div>
 
 
