@@ -7,24 +7,21 @@ $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
 $IdPt_STR=$EXPLODE_data[0];
 $IdInPt_STR=$EXPLODE_data[1];
 $Dt_STR=$EXPLODE_data[2];
-$sRank_STR=$EXPLODE_data[3];
-$FSEQ_STR=$EXPLODE_data[4];
-$sUr_STR=$EXPLODE_data[5];
-
+$sUr_STR=$EXPLODE_data[3];
+$nM_STR=$EXPLODE_data[4];
 
 $IdPt_value=explode('=',$IdPt_STR);
 $IdInPt_value=explode('=',$IdInPt_STR);
 $Dt_value=explode('=',$Dt_STR);
-$sRank_value=explode('=',$sRank_STR);
-$FSEQ_value=explode('=',$FSEQ_STR);
 $sUr_value=explode('=',$sUr_STR);
+$nM_value=explode('=',$nM_STR);
 
 $IdPt=$IdPt_value[1];
 $IdInPt=$IdInPt_value[1];
 $Dt=$Dt_value[1];
-$sRank=$sRank_value[1];
-$FSEQ=$FSEQ_value[1];
 $sUr=$sUr_value[1];
+$nM_P=$nM_value[1];
+
 
 ?>
 <!DOCTYPE html>
@@ -45,66 +42,87 @@ $sUr=$sUr_value[1];
     $(document).ready(function () {
 
         (function () {
-
-            GetPrintJson("<?php echo $IdPt?>","<?php echo $IdInPt?>","<?php echo $Dt?>");
-
+            GetINIJson("<?php echo $IdPt?>","<?php echo $IdInPt?>","<?php echo $Dt?>");
         })();
-
-
-
-
 
         let Time=new Map();
         $(".tb3_tr").children().css({'width': '93px','height': '30px'});
+
         $(document).on('click','button',function () {
             let Page=$(this).val();
             const arr=['I','O','IO_Sum','OC'];
-            if ($(this).attr('class')==="btn btn-primary"){
+            if ($(this).attr('class')==="btn btn-primary btn-lg"){
                 arr.forEach(index=>$('.'+index).hide());
                 $("."+Page).show();
             }
 
         });
-        $("#SubmitBtn").click(function () {
-            DB_SAVE('<?php echo $IdPt?>','<?php echo $IdInPt?>','<?php echo $Dt?>','<?php echo $sRank?>','<?php echo $FSEQ?>','<?php echo $sUr?>');
+        $(document).on('change','select',function () {
+            let val=$(this).val();
+            const arr=['D','N','M','S'];
 
+            if (val==='0'){
+                $("#SubmitBtn").prop('disabled',true);
+                return false;
+            }
+
+
+            $("#SubmitBtn").prop('disabled',false);
+            for (let index of arr){
+                $(".tb1"+index).remove();
+                $(".tb2"+index).remove();
+                $(".IO_Sum_tb"+index).remove();
+
+            }
+
+            $(".tb4_b tr:not(.tb4_title)").remove(); //詳細內容*/
+            $("#tb3 > tr:gt(1)").remove(); //OC
+
+            GetPrintJson("<?php echo $IdPt?>","<?php echo $IdInPt?>",val);
         });
 
+        $("#SubmitBtn").click(function () {
+            DB_SAVE('<?php echo $IdPt?>','<?php echo $IdInPt?>',$('select').val(),'<?php echo $sUr?>');
+        });
 
-
-        $(document).on('change','input[type=radio]',function () {
-               console.log($(this).val())
-           });
-
-
+        function isEmpty(obj) {
+            let count=0;
+            for (let index in obj){
+                if (obj[index].length===0){
+                    count++;
+                }
+            }
+            if (count>=16){
+                return false;
+            }
+                return true;
+        }
         function GetPrintJson(IdPt,InIdPt,sDt) {
-             console.log("http://localhost"+"/webservice/NISPWIOAPRINT.php?str="+AESEnCode('idPt='+IdPt+'&INPt='+InIdPt+"&sDt="+sDt));
             $.ajax("/webservice/NISPWIOAPRINT.php?str="+AESEnCode('idPt='+IdPt+'&INPt='+InIdPt+"&sDt="+sDt))
                 .done(function(data) {
                     let obj=JSON.parse(AESDeCode(data));
                     let AllTime={'Start':'24小時','End':'','IO':'S'};
+                    let isConfirm=obj.Comfirm;
+
                     Time.set('Time',obj.TmSTtoE);
                     delete obj.TmSTtoE;
                     delete obj.SB;
-                    console.log(obj);
-                    let count=0;
-                    for (let index in obj){
-                        if (obj[index].length===0){
-                            count++;
-                        }
-                    }
+                    delete obj.Comfirm;
 
-                    if (count===16){
+
+                    if (!isEmpty(obj)){
+                        $("#SubmitBtn").prop('disabled',true);
+                        $("#DELBtn").prop('disabled',true);
                         alert('查無資料');
-                        window.close();
                         return false;
                     }
 
+                    TableAppend(obj,AllTime);
 
-                    Table1Append(obj,AllTime);
-
+                    //引流
                     OCAppend(obj.OC);
 
+                    //詳細內容
                     DeTailAppend(obj);
 
                     //td:0轉空白
@@ -114,6 +132,15 @@ $sUr=$sUr_value[1];
                             $(this).text(" ");
                         }
                     });
+
+                    if (isConfirm==="N"){
+                        $("#DELBtn").prop('disabled',true);
+                    }else {
+                        $("#SubmitBtn").prop('disabled',true);
+                        $("#DELBtn").prop('disabled',false);
+                    }
+
+
                 })
                 .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
@@ -124,7 +151,7 @@ $sUr=$sUr_value[1];
                     );
                 });
         }
-        function Table1Append(obj,AllTime){
+        function TableAppend(obj,AllTime){
             let QT_Sum=[[],[],[]];//總量
             let nmObj={};
 
@@ -167,6 +194,8 @@ $sUr=$sUr_value[1];
                     </tr>
                 `
                 );
+
+
                 $(".IO_Sum_tb").append(
                     `
                 <tr class="${'IO_Sum_tb'+IO_id}">
@@ -175,7 +204,6 @@ $sUr=$sUr_value[1];
                         <td></td>
                         <td></td>
                         <td></td>
-
                     </tr>
                 `
                 );
@@ -191,7 +219,7 @@ $sUr=$sUr_value[1];
                 let MSum_QTY=0;
 
                 $.each(arr,function (i,val) {
-                    let QTY=val.QUANTITY;
+                    let QTY=isNaN(parseInt(val.QUANTITY))?val.ST_LOSS+"LOSS":val.QUANTITY;
                     let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
                     let NM_Suer=val.NM_USER;
 
@@ -215,23 +243,19 @@ $sUr=$sUr_value[1];
                 QT_Sum[1].push(NSum_QTY);
                 QT_Sum[2].push(MSum_QTY);
             }
-
-            QT_Sum.forEach((value, index) =>InsertTdValue(value,index));
-            InsertSumTdValue(QT_Sum,nmObj);
+           QT_Sum.forEach((value, index) =>InsertTdValue(value,index));
+            InsertSumTdValue(QT_Sum,nmObj,obj);
 
         }
-        //引流
         function OCAppend(arr){
             $.each(Time.get('Time'),function (index,val) {
                 let Ts=val.Start;
                 let Te=val.End;
-                let IO_id=val.IO;
                 if (index<3){
                     Ts=(val.Start).substring(0,2)+"-";
                     Te=(val.End).substring(0,2);
                 }
-
-              $(".tb3_tr").find('td:eq('+(index)+')').text(Ts+Te);
+                $(".tb3_tr td:nth-child("+(index+1)+")").text(Ts+Te);
             });
             $.each(arr,function (index) {
                 $("#tb3").append(
@@ -251,8 +275,6 @@ $sUr=$sUr_value[1];
 
             InsertOC_TdValue(arr);
         }
-
-        //詳細內容
         function DeTailAppend(obj) {
 
             let A_Map = new Map();
@@ -330,23 +352,6 @@ $sUr=$sUr_value[1];
                     `
 
                 );
-
-               /* tb_H+=$('.tb4').innerHeight();
-
-
-                if (tb_H>580.4){
-
-                }*/
-
-
-
-
-
-                /*let td_width=$(".tb4").find('td:eq(0)').innerWidth();*/
-
-
-              /*  $(".tb4").find('td:eq(0)').text(DateTime+' '+str.substring(1,str.length));*/
-
             }
 
         }
@@ -361,10 +366,10 @@ $sUr=$sUr_value[1];
         }
         function InsertTdValue(arr,index) {
             let I=arr.slice(0,5);
-            let O=arr.slice(5,12);
+            let O=arr.slice(6,13);
             let I_Sum=I.reduce((acc,cur)=>acc+cur);
             let O_Sum=O.reduce((acc,cur)=>acc+cur);
-            console.log(I);
+
             let IO_Tag='';
             if (index===0){
                 IO_Tag='D';
@@ -403,9 +408,8 @@ $sUr=$sUr_value[1];
                 let N=isNaN(parseInt($('.OC'+index).find('td:eq(2)').text()))?0:parseInt($('.OC'+index).find('td:eq(2)').text());
                 let M=isNaN(parseInt($('.OC'+index).find('td:eq(3)').text()))?0:parseInt($('.OC'+index).find('td:eq(3)').text());
 
-                $('.OC'+index).find('td:eq(4)').text(D+N+M);
 
-
+                $('.OC'+index+' td:nth-child(5)').text(D+N+M);
             });
 
 
@@ -413,9 +417,7 @@ $sUr=$sUr_value[1];
 
 
         }
-        function InsertSumTdValue(arr,nmObj) {
-
-
+        function InsertSumTdValue(arr,nmObj,obj) {
             //輸入
             for (let i=1;i<=5;i++){
                 let D=parseInt($('.tb1D').find('td:eq('+i+')').text());
@@ -449,17 +451,41 @@ $sUr=$sUr_value[1];
                 $('.tb2'+index).find('td:eq(8)').text(nmObj[index]);
                 $('.IO_Sum_tb'+index).find('td:eq(4)').text(nmObj[index]);
             }
-        }
-        function DB_SAVE(IdPt,IdInPt,Dt,sRank,FSEQ,sUr) {
-            let ck_val=$("input[type=radio]:checked").val();
-            console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA_C'+'&IdPt='+IdPt+'&IdInPt='+IdInPt+'&sDt='+Dt+'&USER='+sUr+'&CID_EXE='+ck_val+'&NULL='+""));
 
-            $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA_C'+'&IdPt='+IdPt+'&IdInPt='+IdInPt+'&sDt='+Dt+'&USER='+sUr+'&CID_EXE='+ck_val+'&USER='+""))
+
+            //有LOSS值
+            let count=0;
+            for (let index in obj){
+                $.each(obj[index],function (i,val) {
+                    if (val.ST_LOSS){
+
+                        if (index==='IB'){
+                           let IB_str=$('.tb1'+val.CID_EXCUTE).find('td:eq('+(count+1)+')').text();
+                            IB_str=IB_str+'LOSS';
+                            $('.tb1'+val.CID_EXCUTE).find('td:eq('+(count+1)+')').text(IB_str);
+                            $('.tb1S').find('td:eq('+(2)+')').text(IB_str);
+                        }
+                        if(index==='OB'){
+                            let OB_str=$('.tb2'+val.CID_EXCUTE).find('td:eq('+(2)+')').text();
+                            OB_str=OB_str+'LOSS';
+                            $('.tb2'+val.CID_EXCUTE).find('td:eq('+(2)+')').text(OB_str);
+                            $('.tb2S').find('td:eq('+(2)+')').text(OB_str);
+                        }
+
+                    }
+                });
+                count++;
+            }
+
+
+        }
+        function DB_SAVE(IdPt,IdInPt,Dt,sUr) {
+            let ck_val=$("input[type=radio]:checked").val();
+            $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA_C'+'&IdPt='+IdPt+'&IdInPt='+IdInPt+'&sDt='+Dt+'&USER='+sUr+'&CID_EXE='+ck_val+'&USER='+sUr))
                 .done(function (data) {
                     let result= JSON.parse(AESDeCode(data));
                     $("#loading").hide();
                     $("#wrapper").hide();
-                    console.log(result);
                     if(result.response==='success'){
                         alert("儲存成功");
                        window.close();
@@ -475,6 +501,47 @@ $sUr=$sUr_value[1];
                     "4 返回失敗,errorThrown:"+errorThrown
                 );
             });
+        }
+        function GetINIJson(IdPt,InIdPt,C_DT){
+
+            $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA_C&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+''))
+                .done(function(data) {
+
+                    let obj=JSON.parse(AESDeCode(data));
+                    let DT=obj.pop();
+
+                    $.each(obj,function (index,val)
+                    {
+
+                           $(".T_Class").append(`
+                               <label>
+                                    <input type="radio" value="${val.CID_NM}" name="ClassDt" disabled>${val.NM_ITEM}
+                                </label>
+                                `);
+                                if (val.CID_NM===C_DT){
+                                    $(".T_Class").find('input:eq('+index+')').prop('checked',true);
+                                }
+                    });
+
+                    $.each(DT,function (index,val) {
+                        $("#DT_SELECT").append(
+                            `
+                             <option value="${val}">${val}</option>
+                              `
+                        )
+                    });
+
+
+
+                })
+                .fail(function(XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
+                });
         }
     });
 </script>
@@ -500,28 +567,40 @@ $sUr=$sUr_value[1];
         margin-top: 10px;
         display: none;
     }
+
+    input[type=radio]{
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+    label{
+        font-size: 3.6vmin;
+    }
+    div{
+        margin-top: 10px;
+    }
 </style>
 <body>
 <div class="container">
 
-    <h1 >加強醫護出入量紀錄<?php echo $Dt?></h1>
-    <div>
-        <label>
-            <input type="radio" value="D" name="ClassDt">白班
-        </label>
-        <label>
-            <input type="radio" value="N" name="ClassDt">小夜班
-        </label>
-        <label>
-            <input type="radio" value="M" name="ClassDt">大夜班
-        </label>
+    <h1 >加強醫護出入量紀錄</h1>
+    <input class="form-control form-control-lg" type="text" value="<?php echo  $nM_P?>" disabled>
+    <div class="T_Class">
+
     </div>
     <div>
-        <button class="btn btn-primary" value="I">輸入量</button>
-        <button class="btn btn-primary" value="O">排出量</button>
-        <button class="btn btn-primary" value="IO_Sum">總量</button>
-        <button class="btn btn-primary" value="OC">引流</button>
-        <button class="btn btn-info" id="SubmitBtn">儲存</button>
+        <select id="DT_SELECT" class="form-control form-control-lg">
+            <option value="0">請選擇</option>
+        </select>
+    </div>
+    <div>
+        <button class="btn btn-info btn-lg" id="SubmitBtn" disabled>儲存</button>
+        <button class="btn btn-info btn-lg" id="DELBtn" disabled>作廢</button>
+    </div>
+    <div>
+        <button class="btn btn-primary btn-lg" value="I">輸入量</button>
+        <button class="btn btn-primary btn-lg" value="O">排出量</button>
+        <button class="btn btn-primary btn-lg" value="IO_Sum">總量</button>
+        <button class="btn btn-primary btn-lg" value="OC">引流</button>
     </div>
 
 <!--    <table >
@@ -574,7 +653,6 @@ $sUr=$sUr_value[1];
         </table>
 
     </div>
-
     <div class="O">
         <table >
             <tbody class="tb2">
@@ -596,7 +674,6 @@ $sUr=$sUr_value[1];
             </tbody>
         </table>
     </div>
-
     <div class="IO_Sum">
         <table>
             <tbody class="IO_Sum_tb">
@@ -617,14 +694,13 @@ $sUr=$sUr_value[1];
         </table>
         <table class="tb4">
             <tbody class="tb4_b">
-            <tr >
+            <tr class="tb4_title">
                 <th colspan="2">詳細內容</th>
             </tr>
 
             </tbody>
         </table>
     </div>
-
     <div class="OC">
         <table style="max-width: 650px">
             <tbody id="tb3">
@@ -633,12 +709,12 @@ $sUr=$sUr_value[1];
                 <th colspan="4">三班及全日</th>
             </tr>
 
-         <tr class="tb3_tr">
-             <td></td>
-             <td></td>
-             <td></td>
-             <td></td>
-         </tr>
+             <tr class="tb3_tr">
+                 <td></td>
+                 <td></td>
+                 <td></td>
+                 <td></td>
+             </tr>
 
             </tbody>
         </table>
