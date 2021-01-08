@@ -178,7 +178,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                     AESEnCode("sFm=CNBD&PageVal="+$('#BUT_NEEDUNIT').val()+"&DA_idpt="+
                                         ""+"&DA_idinpt="+""+
                                         "&sUser="+"<?php echo  $OPID?>"+"&NM_PATIENT="+$('#DataTxt').val())
-                                    ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                    ,"CNBD",'width=750px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
 
