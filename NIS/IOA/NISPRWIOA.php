@@ -37,24 +37,25 @@ $Account="00FUZZY";
                                     <div id="${'Main_'+key+i}">
                                             <div  class="input-group">
                                                     <input id='${'M_Nam'+key+i}' type="text" class="form-control" >
-                                                    <span class="input-group-text" >其他說明截斷字元:</span>
-                                                    <input id='${'Dir_s'+key+i}'  type="text" class="Dir_s form-control" value="" readonly>
-                                                    <button  class="Obtn btn btn-secondary" type="button">其他</button>
-                                            </div>
+                                             </div>
 
-
-                                              <div class="input-group mb-3">
+                                           <div class="input-group">
                                                      <span class="input-group-text" >${value.Sum_Str+":"}</span>
                                                      <input  id="${'Num'+key+i}" type="text"  class="Num form-control">
 
                                                     <span  class="input-group-text" >${value.Last_Str+":"}</span>
                                                     <input id="${'Last'+key+i}" type="text" class="form-control">
 
-                                                    <div class="input-group-prepend">
-                                                       <!--  <button  class="btn btn-secondary" type="button" onclick="openOmodal('${key+i}')">其他</button>
-                                                       <button id="" class="btn btn-info" type="button">查詢</button>-->
-                                                    </div>
                                                </div>
+
+
+                                             <div class="input-group mb-3">
+                                                    <span class="input-group-text" >其他說明截斷字元:</span>
+                                                    <input id='${'Dir_s'+key+i}'  type="text" class="Dir_s form-control" value="" readonly>
+                                                    <button  class="Obtn btn btn-secondary" type="button">其他</button>
+                                             </div>
+
+
                                     </div>
                                         `);
 
@@ -127,25 +128,30 @@ $Account="00FUZZY";
                             Last_Str="Out";
                             break;
                     }
+
                     $("#item"+page).append(
                         `
                                     <div id="${'Main_'+page+index}">
                                                <div  class="input-group">
                                                     <input id="${'M_Nam'+page+index}" type="text" class="form-control" value="${ItemName}">
-                                                    <span class="input-group-text" >其他說明截斷字元:</span>
-                                                    <input id="${'Dir_s'+page+index}" type="text" class="form-control" value="${Dir_s}" readonly>
-                                                    <button  class="Obtn btn btn-secondary" type="button">其他</button>
                                                </div>
 
-
-                                              <div class="input-group mb-3">
+                                               <div class="input-group ">
                                                      <span class="input-group-text" >${Sum_Str+":"}</span>
                                                      <input  id="${'Num'+page+index}" type="text" class="Num form-control" value="${Num}">
 
                                                     <span  class="input-group-text" >${Last_Str+":"}</span>
                                                     <input   id="${'Last'+page+index}" type="text" class="Last form-control"  value="${Last}">
 
-                                              </div>
+                                                </div>
+
+                                               <div  class="input-group mb-3">
+                                                    <span class="input-group-text" >其他說明截斷字元:</span>
+                                                    <input id="${'Dir_s'+page+index}" type="text" class="form-control" value="${Dir_s}" readonly>
+                                                    <button  class="Obtn btn btn-secondary" type="button">其他</button>
+                                               </div>
+
+
                                     </div>
                                         `
                     );
@@ -200,7 +206,7 @@ $Account="00FUZZY";
                 let sTM=$("#sTime").val();
                 let sDt=$("#sDate").val();
                 let IdPt=$("#DA_idpt").val(),InPt=$("#DA_idinpt").val(),PName=$("#DataTxt").val();
-                let BtnVal=$(this).val();
+
 
 
                 //other btn
@@ -215,12 +221,7 @@ $Account="00FUZZY";
 
                 }
 
-                //Third_DT   btn
-                if ($(this).attr('class')==='DTbtn btn btn-primary btn-md'){
-                    window.open("./NISPWIOATABLE.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+"&C_DT="+BtnVal+"&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
-                                "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no');
-                    $("#TC_sModal").modal('hide');
-                }
+
 
 
                 switch (btnId) {
@@ -244,7 +245,7 @@ $Account="00FUZZY";
                                 Serchwindow=window.open("/webservice/NISPWSLKQRY.php?str="+
                                     AESEnCode("sFm=IOA&PageVal="+""+"&DA_idpt="+IdPt+"&DA_idinpt="+InPt
                                         +"&sUser="+"<?php echo $Account?>"+"&NM_PATIENT="+PName)
-                                    ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                    ,"IOA",'width=750px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
 
@@ -304,8 +305,8 @@ $Account="00FUZZY";
                         DB_DEL(sTraID,'<?php echo $Account?>');
                         break;
                     case "ThirdClassBtn":
-                        GetDTJson(IdPt,InPt);
-                        $("#TC_sModal").modal('show');
+                        window.open("../IOA_C/NISPWIOA_C.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+"&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
+                            "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no');
                         break;
                     default:
                         break;
@@ -456,7 +457,7 @@ $Account="00FUZZY";
             function GetINIJson(idPt,INPt,sUr,Page){
                 $("#wrapper").show();
                 /*  console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr));*/
-                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+'00055664'+'&INPt='+'970000884'+"&sUr="+'00FUZZY'))
+                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr))
                     .done(function(data) {
                         $("#wrapper").hide();
                         let obj=JSON.parse(AESDeCode(data));
@@ -468,7 +469,6 @@ $Account="00FUZZY";
                         Cloen_DefaultObj[0].JID_MM=[];
                         Cloen_DefaultObj[0].JID_COLOR=[];
                         GetPageJson(Page,obj.sTraID,Cloen_DefaultObj);
-                        console.log(obj);
                     })
                     .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -487,7 +487,7 @@ $Account="00FUZZY";
                     .done(function (data) {
                         try{
                             let obj=JSON.parse(AESDeCode(data));
-                            console.table(obj);
+                            console.log(obj);
                             if (obj==null ||obj.length===0){
                                 obj=DefaultObj;
                             }
@@ -523,52 +523,6 @@ $Account="00FUZZY";
                     );
                 });
 
-              /*  $.ajax({
-                    url:"/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page),
-                    async:false,
-                    type:'POST',
-                    dataType:"text",
-                    success:function (data){
-                        try{
-                            let obj=JSON.parse(AESDeCode(data));
-                            console.log(obj);
-                            if (obj==null ||obj.length===0){
-                                obj=DefaultObj;
-                            }
-
-                            CreatOmodal(Page,obj[0].JID_MM,obj[0].JID_COLOR,$("#item"+Page).children().length,"");
-
-                            AddBtn_Color.set(Page,obj[0].JID_COLOR);
-                            AddBtn_IoType.set(Page,obj[0].JID_MM);
-
-                            if(ThisPageJson.get(Page)===undefined){
-                                $.each(obj,function (index,val) {
-
-                                    $("#M_Nam"+Page+index).val(val.M_Nam);
-                                    if(val.JID_KEY!==""){
-                                        $("#M_Nam"+Page+index).prop('disabled',true);
-                                    }
-                                    if(val.IO_TYPE)
-                                    delete val.JID_MM;
-                                    delete val.JID_COLOR;
-                                });
-                                ThisPageJson.set(Page,obj);
-                            }
-                        }
-                        catch (e) {
-                            console.log(e);
-                        }
-
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
-                });*/
-
             }
             function DB_WSST(Page,sTraID,json){
                 let obj=JSON.parse(json);
@@ -581,65 +535,37 @@ $Account="00FUZZY";
                 });
 
                 let SavaJson=JSON.stringify(obj);
-
+                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson))
+                    .done(function (data) {
 /*
-                console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson));
-*/
-
-            $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson))
-                .done(function (data) {
-                    let json=JSON.parse(AESDeCode(data));
-                    console.log(json.message);
-                }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
-                console.log(
-                    "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                    "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                    "3 返回失敗,textStatus:"+textStatus+
-                    "4 返回失敗,errorThrown:"+errorThrown
-                );
-            });
-              /*  $.ajax({
-                    'url':'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson),
-                    type:"POST",
-                    dataType:"text",
-                    success:function(data){
                         let json=JSON.parse(AESDeCode(data));
-                        console.log(json.message);
-                    },
-                    error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                        return false;
-                    }
+*/
+                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
+                });
 
-                });*/
             }
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
                 let json=JSON.stringify(ThisPageJson.get(Page));
                 DB_WSST(Page,sTraID,json);
-
-                 console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr));
-
-
-               $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
+                $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
                     .done(function (data) {
                         let result= JSON.parse(AESDeCode(data));
                           $("#loading").hide();
                           $("#wrapper").hide();
-                          console.log(result);
                         if(result.response==='success'){
                             alert("儲存成功");
                             location.reload();
-
                         }else {
                             alert("儲存失敗重新檢查格式:"+result.message);
                         }
                     }).
-                        fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
                         "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
@@ -649,7 +575,6 @@ $Account="00FUZZY";
                 });
             }
             function DB_DEL(sTraID,sUr) {
-              /*   console.log("http://localhost/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr));*/
                 $.ajax("/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr))
                     .done(function (data) {
                         let re=JSON.parse(AESDeCode(data));
@@ -670,6 +595,7 @@ $Account="00FUZZY";
             }
             function bedcallback(data){
                 let dataObj=JSON.parse(AESDeCode(data))[0];
+
                 $("#DA_idpt").val(dataObj.IDPT);
                 $("#DA_idinpt").val(dataObj.IDINPT);
                 $("#DA_sBed").val(dataObj.SBED);
@@ -694,6 +620,7 @@ $Account="00FUZZY";
                 SerchCallBack=false;
 
             }
+
             function Serchcallback(AESobj){
 
                 const Pagearr =['A','B','C','D','E','F','G','H'];
@@ -707,8 +634,6 @@ $Account="00FUZZY";
                     alert("病人資訊以異動,請重新操作");
                     return false;
                 }
-
-
 
                 ThisPageJson.clear();
                 $.each(Pagearr,function (index,page) {
@@ -797,14 +722,13 @@ $Account="00FUZZY";
                 }
             }
             function CreatOmodal(Page,JMM_arr,JColor_arr,len,mode) {
-
-
                 let PageName=$("#"+Page).text();
-
                 for (let i=0;i<len;i++){
+
                     if(mode==="A"){
                        i=$("#item"+Page).children().length-1;
                     }
+
                     if ($('#M_'+Page+i).length===0)
                     {
 
@@ -885,34 +809,7 @@ $Account="00FUZZY";
                 $("#M_"+Page+index).show();
                 $("#OtherModal").modal('show');
             }
-            function GetDTJson(IdPt,InIdPt) {
-                $.ajax("/webservice/NISPWIOADT.php?str="+AESEnCode('sFm=IOA_P&idPt='+IdPt+'&INPt='+InIdPt+"&sUr="+'00FUZZY'))
-                    .done(function(data) {
-                        let obj=JSON.parse(AESDeCode(data));
 
-                        $("#TC_Content").children().remove();
-
-
-                        $.each(obj,function (index,val) {
-                            $("#TC_Content").append(
-                                `
-                                   <div style="margin-bottom: 5px">
-                                       <button class="DTbtn btn btn-primary btn-md" value="${val.CID_S}" >選擇</button>
-                                       <label style="font-size: 1.5rem;"> ${val.NM_ITEM}</label>
-                                   </div>
-                                 `
-                            )
-                        });
-                    })
-                    .fail(function(XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    });
-            }
         });
     </script>
 </head>
@@ -958,16 +855,10 @@ $Account="00FUZZY";
     }
     #ThirdClassBtn{
         margin-bottom: 10px;
+        max-width: 75px;
+        max-height: 45px;
     }
-   #thirdClass{
-        background-color: white;
-        margin-bottom: 9px;
-       font-weight: bold;
-    }
-   #thirdClass:hover{
-     border-color: #0f6674;
-    background-color: #0f6674;
-    }
+
    .Otimer .DateTime:first-child{
        font-size: 4vmin;
    }
@@ -992,7 +883,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-       /* display: none;*/
+      /*  display: none;*/
         background-color: #00FF00;
     }
     .Dir_s{
@@ -1077,17 +968,12 @@ $Account="00FUZZY";
         </div>
     <!----------------------------------------------------------Time-------------------------------------------------------------------------->
         <div class="Otimer" >
-
-
-
             <div class="DateTime">
                 <label >評估時間:</label>
                 <input type="text" id="sDate" value=""  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
                 <input type="text" id="sTime" value=""  placeholder="HHMM" maxlength="4" autocomplete="off">
-                <button type="button" id="ThirdClassBtn" class="btn btn-primary  btn-lg">三班</button>
+                <button type="button" id="ThirdClassBtn" class="btn btn-info  btn-lg">三班</button>
             </div>
-
-
             <div id="ISTM"></div>
         </div>
     <!----------------------------------------------------------Page Button-------------------------------------------------------------------------->
@@ -1148,7 +1034,6 @@ $Account="00FUZZY";
 
         <div class="ItemBtn">
              <button id="AddItemBtn" class="btn btn-outline-warning"><b>新增</b></button>
-
         </div>
     <!----------------------------------------------------------OtherModal-------------------------------------------------------------------------->
         <div class="modal fade" id="OtherModal" tabindex="-1" role="dialog"  aria-hidden="true" data-backdrop="static">
