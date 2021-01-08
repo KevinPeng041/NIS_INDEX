@@ -343,7 +343,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                                     AESEnCode("sFm=ILSGA&PageVal="+$("#PageVal").val()+"&DA_idpt="+
                                         $('#DA_idpt').val()+"&DA_idinpt="+$('#DA_idinpt').val()+
                                         "&sUser="+$('#sUser').val()+"&NM_PATIENT="+$('#DataTxt').val())
-                                    ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                    ,"ILSGA",'width=750px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
 
