@@ -153,7 +153,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                     AESEnCode("sFm=CBLD&PageVal="+sPg+"&DA_idpt="+
                                         $('#DA_idpt').val()+"&DA_idinpt="+$('#DA_idinpt').val()+
                                         "&sUser="+$('#'+sPg+'_UR').val()+"&NM_PATIENT="+$('#DataTxt').val())
-                                    ,"查詢",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                    ,"CBLD",'width=750px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
 
