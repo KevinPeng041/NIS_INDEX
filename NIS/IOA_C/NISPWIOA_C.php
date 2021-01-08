@@ -427,7 +427,8 @@ $sUr='00FUZZY';
             InsertOC_TdValue(arr);
         }
         function DeTailAppend(obj) {
-
+            let DateTimeKEY=[];
+            let ID_ITEM_Arr=[];
             let A_Map = new Map();
 
 
@@ -436,35 +437,110 @@ $sUr='00FUZZY';
 
                 if (arr.length > 0) {
                     arr.forEach(element => A_Map.set(element.DT + element.TM, []));
+
+                    arr.map(value=>InMapSameTimeData(A_Map, value.DT+value.TM,value));
+
+                    DateTimeKEY.push(arr.map(value=>(value.DT+value.TM)).filter((element, index, arr)=> arr.indexOf(element)===index));
+                    ID_ITEM_Arr.push(index);
+                }
+
+            }
+
+
+            let FlatDT_KEY= DateTimeKEY.flat(Infinity);
+            let obj_a={};
+            FlatDT_KEY.forEach(value=>tt(value,obj_a,ID_ITEM_Arr));
+
+            let strArr=[];
+
+           for (let index in obj_a){
+             let arr= A_Map.get(index);
+
+             /*index==date+time*/
+
+             $.each(arr,function (i,val) {
+
+                 if ((val.QUANTITY).trim()){
+
+                     obj_a[val.DT+val.TM][val.ID_ITEM].push(parseInt(val.QUANTITY));
+
+                 }
+
+             });
+
+           }
+
+            //print str
+           for (let index in obj_a){
+                let dt=index.substring(0,11);
+                let DateTime=dt.substring(0,3)+'/'+dt.substring(3,5)+'/'+dt.substring(5,7)+
+                    ' '+dt.substring(7,9)+':'+dt.substring(9,11);
+
+                for (let ITEM of ID_ITEM_Arr){
+
+                    let QTY=obj_a[index][ITEM];
+
+                    if (QTY.length>0){
+                        QTY=QTY.reduce((acc,cur)=>acc+cur);
+                    }
+                    else {
+                        continue;
+                    }
+                    console.log(QTY,ITEM,obj[ITEM],DateTime);
+                  /*  DE_str(obj[ITEM],QTY,DateTime);*/
+                    $(".tb4_b").append(
+                        `
+                        <tr class="${DateTime}">
+                            <td >${DateTime}</td>
+                            <td ></td>
+                        </tr>
+                        `
+                    );
+
+                }
+
+
+
+
+
+            }
+
+              /*    let A_Map = new Map();
+            let NotNullArr=[];
+
+            for (let index in obj) {
+                let arr = obj[index];
+
+                if (arr.length > 0) {
+                    NotNullArr.push(index);
+                    arr.forEach(element => A_Map.set(element.DT + element.TM, []));
+
                     $.each(arr, function (i, val) {
-
-
-
-
-                        InsertInMap(A_Map, val.DT + val.TM, val);
+                        InsertSameTimeData(A_Map, val.DT + val.TM, val);
                     });
                 }
 
             }
-            //set DateTime Default[]
+            console.log(A_Map);
+            let str="";
+            $.each(NotNullArr,function (index,value) {
 
-
-
-            for (let [key, value] of A_Map){
+            });*/
+              /* for (let [key, value] of A_Map){
                 let str='';
-
-
                 if (!isNaN(key)){
                     let dt=key.substring(0,11);
                     let DateTime=dt.substring(0,3)+'/'+dt.substring(3,5)+'/'+dt.substring(5,7)+
                         ' '+dt.substring(7,9)+':'+dt.substring(9,11);
 
 
+
                     $.each(value,function (i,val) {
+
                         let FieldByName=val.ID_ITEM;
 
                         if (FieldByName==="IB" || FieldByName==="OC"){
-                            str+=(val.NM_PHARMACY).trim()!==null?'、'+val.NM_PHARMACY:'、'+val.NM_ITEM+' '+val.QUANTITY;
+                            str+=(val.NM_PHARMACY).trim()!==null?'、'+val.NM_PHARMACY+' '+val.QUANTITY:'、'+val.NM_ITEM+' '+val.QUANTITY;
 
                         }
                         else if(val.CID_IO==="I" || val.CID_IO==="O"){
@@ -499,25 +575,72 @@ $sUr='00FUZZY';
                     if (str.substring(0,1)==="、"){
                         str=str.substring(1,str.length)
                     }
-
+                    str=str.substring(0,str.length);
 
                     $(".tb4_b").append(
                         `
                           <tr>
                             <td >${DateTime}</td>
-                            <td style="text-align: left">${str.substring(0,str.length)}</td>
+                            <td style="text-align: left">${str}</td>
                         </tr>
                         `
                     );
                 }
-            }
+            }*/
+
+        }
+        function tt(sDt,obj,ID_ITEM_Arr) {
+            let Nen_obj={};
+            ID_ITEM_Arr.forEach(element=>Nen_obj[element]=[]);
+            obj[sDt]=Nen_obj;
+        }
+        function DE_str(arr,QTY,sDt) {
+            let str='';
+
+            $.each(arr,function (index,val) {
+            console.log(val);
+
+/*                let FieldByName=val.ID_ITEM;
+
+                if (FieldByName==="IB" || FieldByName==="OC"){
+                    str+=(val.NM_PHARMACY).trim()!==null?'、'+val.NM_PHARMACY+' '+val.QUANTITY:'、'+val.NM_ITEM+' '+val.QUANTITY;
+
+                }
+                else if(val.CID_IO==="I" || val.CID_IO==="O"){
+
+                    if (FieldByName==="IA" || FieldByName==="IC" || FieldByName==="OG" ){
+                        str+='、'+val.NM_ITEM+' '+val.NM_PHARMACY+val.QUANTITY;
+                    }
+                    else {
+                        str+=(val.NM_ITEM).trim()!==null?val.NM_ITEM+' '+val.QUANTITY:val.NM_PHARMACY+' '+val.QUANTITY;
+
+                    }
+
+                }
+
+                if ((val.ST_LOSS).trim()!==''){
+                    str+=('LOSS'+(val.ST_LOSS).trim());
+                }
+                if ((val.NM_IOWAY).trim()!==''){
+                    str+=' '+(val.NM_IOWAY);
+                }
+                if ((val.NM_COLOR).trim()!==''){
+                    str+=' '+(val.NM_COLOR);
+                }
+                if ((val.MM_IO).trim()!==''){
+                    str+='-'+(val.MM_IO);
+                }
+                if (value.length===i){
+                    str+='<br>';
+                }*/
+            });
+
 
         }
 
-        function InsertInMap(A_Map,DateTime,obj) {
-
+        function InMapSameTimeData(A_Map,DateTime,obj) {
+            //同時段資料
             for (let [key ,value] of A_Map.entries()){
-
                 if (key===DateTime){
                     value.push(obj);
                 }
@@ -662,6 +785,17 @@ $sUr='00FUZZY';
             return count >=16;
         }
 
+        function QTY_Str(arr) {
+            let Qty_Arr=[];
+            /*QUANTITY*/
+            let nm="";
+            $.each(arr,function (index,value) {
+                Qty_Arr.push(parseInt(value.QUANTITY));
+                nm=value.NM_ITEM;
+            });
+
+            return   nm+Qty_Arr.reduce((acc,cur)=>acc+cur).toString();
+        }
 
     });
 </script>
