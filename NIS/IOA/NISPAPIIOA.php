@@ -25,12 +25,14 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
         $ST_DATAF=oci_result($IT_stid,"ST_DATAF")->load();
         $ST_DATAH=oci_result($IT_stid,"ST_DATAH")->load();
     }
+
     oci_free_statement($IT_stid);
 
     $A_SQL=" SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM  FROM NIS_V_HORD_QI
             WHERE ID_INPATIENT = '$INPt' AND DT_BEGIN <= '1090101'
             AND (DT_DC = ' ' Or DT_DC >= '1090101')
             ORDER by NM_ITEM ";
+
 
     $C_SQL="SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM FROM NIS_V_HORD_QB
             WHERE ID_INPATIENT = '$INPt'
@@ -64,19 +66,19 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
         $NM_ITEM=oci_result($A_stid,"NM_ITEM");
         $JID_KEY=oci_result($A_stid,"JID_KEY");
         $CID_CLASS=oci_result($A_stid,"CID_CLASS");
-        $ST_DATAA[]=array("M_Nam"=>$NM_ITEM,"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
+        $ST_DATAA[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000IA',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
     }
     while (oci_fetch_array($C_stid)){
         $NM_ITEM=oci_result($C_stid,"NM_ITEM");
         $JID_KEY=oci_result($C_stid,"JID_KEY");
         $CID_CLASS=oci_result($C_stid,"CID_CLASS");
-        $ST_DATAC[]=array("M_Nam"=>$NM_ITEM,"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
+        $ST_DATAC[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000IC',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
     }
     while (oci_fetch_array($D_stid)){
         $NM_ITEM=oci_result($D_stid,"NM_ITEM");
         $JID_KEY=oci_result($D_stid,"JID_KEY");
         $CID_CLASS=oci_result($D_stid,"CID_CLASS");
-        $ST_DATAD[]=array("M_Nam"=>$NM_ITEM,"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
+        $ST_DATAD[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000ID',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
     }
     while (oci_fetch_array($G_stid)){
         $NM_ITEM=oci_result($G_stid,"NM_ITEM");
@@ -84,8 +86,10 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
         $CID_CLASS=oci_result($G_stid,"CID_CLASS");
         $NO_PROBLEM=oci_result($G_stid,"NO_PROBLEM");
 
-        $ST_DATAG[]=array("M_Nam"=>$NM_ITEM,"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS,"NO_PROBLEM"=>$NO_PROBLEM);
+        $ST_DATAG[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000OC',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS,"NO_PROBLEM"=>$NO_PROBLEM);
     }
+
+
     $JsonA=json_encode($ST_DATAA,JSON_UNESCAPED_UNICODE);
     $JsonC=json_encode($ST_DATAC,JSON_UNESCAPED_UNICODE);
     $JsonD=json_encode($ST_DATAD,JSON_UNESCAPED_UNICODE);
@@ -171,6 +175,8 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
     $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave,'FORMSEQANCE_WT'=>$FORMSEQANCE_WT,"JID_NSRANK"=>$JID_NSRANK);
     return json_encode($JsonBack,JSON_UNESCAPED_UNICODE);
 }
+
+
 function GetIOAPageJson($conn,$sPg,$sTraID){
     $TP_SQL="SELECT ST_DATA".$sPg." FROM HIS803.NISWSTP WHERE ID_TRANSACTION=:sTraID AND ID_TABFORM = 'IOA'" ;
      $TP_stid=oci_parse($conn,$TP_SQL);
@@ -178,7 +184,7 @@ function GetIOAPageJson($conn,$sPg,$sTraID){
         $e=oci_error($conn);
         return $e['message'];
     }
-
+/*    echo $sPg,$sTraID."<br>".$TP_SQL."<br>";*/
     oci_bind_by_name($TP_stid,":sTraID",$sTraID);
     $r=oci_execute($TP_stid);
     if (!$r){
@@ -191,77 +197,11 @@ function GetIOAPageJson($conn,$sPg,$sTraID){
         $DATA=oci_result($TP_stid,"ST_DATA".$sPg)->load();
 
     }
-    $obj=json_decode($DATA);
+    $obj_Arr=json_decode($DATA);
+//    print_r(ObjectMap(Get_IoType($conn,$obj_Arr)));
 
-    $Type="";
-    $Cid_Io='';
-    if($sPg==="A" || $sPg==="B" || $sPg==="C" || $sPg==="D"){
-        $Type="IOTP000000"."I".$sPg;
-        $Cid_Io='I';
-    }else{
-        $TypesPg="";
-        $Cid_Io='O';
-        if ($sPg==="E")
-        {
-            $TypesPg='A';
-        }else if ($sPg==="F"){
-            $TypesPg='B';
-        }else if ($sPg==="G"){
-            $TypesPg='C';
-        }else{
-            $TypesPg='D';
-        }
-        $Type="IOTP000000"."O".$TypesPg;
-    }
+   return  json_encode(ObjectMap(Get_IoType($conn,$obj_Arr)),JSON_UNESCAPED_UNICODE);
 
-    $Color_SQL="SELECT SI2.JID_KEY,SI2.NM_ITEM
-                FROM
-                (SELECT * FROM NSCLSI  WHERE  CID_CLASS ='IOTP') SI1,
-                (SELECT * FROM NSCLSI  WHERE  CID_CLASS ='IOCL' AND ST_TEXT2=:IoType) SI2
-                WHERE SI1.jid_key = SI2.st_text2";
-
-
-    $MM_SQL="SELECT SI2.JID_KEY,SI2.NM_ITEM from
-              (SELECT * from NSCLSI  WHERE  CID_CLASS ='IOTP') SI1,
-              (SELECT * from NSCLSI  WHERE  CID_CLASS ='IOWY' AND ST_TEXT2=:IoType) SI2
-              WHERE SI1.jid_key = SI2.st_text2";
-
-    $Is_Sum_SQL="SELECT ST_TEXT2 FROM NSCLSI  WHERE  CID_CLASS ='IOTP' AND JID_KEY=:IoType";
-
-
-
-    $MM_Stid=oci_parse($conn,$MM_SQL);
-    $Color_Stid=oci_parse($conn,$Color_SQL);
-    $Is_Sum_Stid=oci_parse($conn,$Is_Sum_SQL);
-
-
-    oci_bind_by_name($MM_Stid,":IoType",$Type);
-    oci_bind_by_name($Color_Stid,":IoType",$Type);
-    oci_bind_by_name($Is_Sum_Stid,":IoType",$Type);
-
-    oci_execute($MM_Stid);
-    oci_execute($Color_Stid);
-    oci_execute($Is_Sum_Stid);
-    $re=[];
-    $Color=[];
-
-    while (oci_fetch_array($MM_Stid)){
-        $MM_JID_KEY=oci_result($MM_Stid,"JID_KEY");
-        $NM_ITEM=oci_result($MM_Stid,"NM_ITEM");
-        $re[]=array("JID_KEY"=>$MM_JID_KEY,"NM_ITEM"=>$NM_ITEM);
-    }
-
-    while (oci_fetch_array($Color_Stid)){
-        $Color_JID_KEY=oci_result($Color_Stid,"JID_KEY");
-        $Color_ITEM=oci_result($Color_Stid,"NM_ITEM");
-        $Color[]=array("JID_KEY"=>$Color_JID_KEY,"NM_ITEM"=>$Color_ITEM);
-    }
-    $Is_Sum="";
-    while (oci_fetch_array($Is_Sum_Stid)){
-        $Is_Sum=oci_result($Is_Sum_Stid,"ST_TEXT2");
-    }
-
-   return  json_encode(ObjectMap($obj,$re,$Color,$Type,$Cid_Io,$Is_Sum),JSON_UNESCAPED_UNICODE);
 }
 function PosIOASave($conn,$sTraID,$sPg,$sDt,$sTm,$sUr){
 
@@ -626,29 +566,21 @@ function PosIOACancel($conn,$sFm,$sTraID,$sUr){
 function GetIOACheck($sTraID,$sPg){
 
 }
-function ObjectMap($arr,$MM_arr,$Color_arr,$Type,$Cid_Io,$Is_Sum){
+function ObjectMap($arr){
     $len= count($arr)===0?1:count($arr);
 
     for ($i=0;$i<$len;$i++){
         if (count($arr)===0){
             $arr[$i]->M_Nam="";
             $arr[$i]->CID_CLASS="HIS";
-            $arr[$i]->JID_KEY="";
         }
 
         $arr[$i]->DataSeq="";
-        $arr[$i]->CID_IO=$Cid_Io;
-        $arr[$i]->IO_TYPE=$Type;
         $arr[$i]->QUNTY="";
         $arr[$i]->LOSS="";
         $arr[$i]->COLOR="";
         $arr[$i]->IOWAY="";
         $arr[$i]->MM_IO="";
-        $arr[$i]->JID_MM=$MM_arr;
-        $arr[$i]->JID_COLOR=$Color_arr;
-        $arr[$i]->IS_SUM=$Is_Sum;
-
-
     }
     return $arr;
 }
@@ -764,5 +696,95 @@ function DBDEL($conn,$DtSeq,$IdPt,$InPt,$DT,$TM,$DM_Cand,$UR_Cand){
     return true;
 }
 
+function Get_Color($conn,$Io_Type){
+    $Sql="SELECT SI2.JID_KEY,SI2.NM_ITEM
+                FROM
+                (SELECT * FROM NSCLSI  WHERE  CID_CLASS ='IOTP') SI1,
+                (SELECT * FROM NSCLSI  WHERE  CID_CLASS ='IOCL' AND ST_TEXT2=:IoType) SI2
+                WHERE SI1.jid_key = SI2.st_text2";
 
+    $Stid=oci_parse($conn,$Sql);
+
+    oci_bind_by_name($Stid,":IoType",$Io_Type);
+    oci_execute($Stid);
+    $Color=[];
+    while (oci_fetch_array($Stid)){
+        $Color_JID_KEY=oci_result($Stid,"JID_KEY");
+        $Color_ITEM=oci_result($Stid,"NM_ITEM");
+        $Color[]=array("JID_KEY"=>$Color_JID_KEY,"NM_ITEM"=>$Color_ITEM);
+    }
+    return $Color;
+}
+
+function Get_MM($conn,$Io_Type){
+    $Sql="SELECT SI2.JID_KEY,SI2.NM_ITEM from
+              (SELECT * from NSCLSI  WHERE  CID_CLASS ='IOTP') SI1,
+              (SELECT * from NSCLSI  WHERE  CID_CLASS ='IOWY' AND ST_TEXT2=:IoType) SI2
+              WHERE SI1.jid_key = SI2.st_text2";
+
+    $Stid=oci_parse($conn,$Sql);
+
+    oci_bind_by_name($Stid,":IoType",$Io_Type);
+    oci_execute($Stid);
+    $MM=[];
+    while (oci_fetch_array($Stid)){
+        $MM_JID_KEY=oci_result($Stid,"JID_KEY");
+        $NM_ITEM=oci_result($Stid,"NM_ITEM");
+        $MM[]=array("JID_KEY"=>$MM_JID_KEY,"NM_ITEM"=>$NM_ITEM);
+    }
+    return $MM;
+
+
+}
+
+function Get_IoType($conn,$array){
+    $len= count($array)===0?1:count($array);
+
+    for ($i=0;$i<$len;$i++){
+        $NM_ITEM=$array[$i]->M_Nam;
+
+            $Sql="SELECT JID_KEY,ST_TEXT1 ,MM_ITEM sSQL
+              FROM NSCLSI
+              WHERE CID_CLASS = 'IOTP' AND IS_ACTIVE = 'Y' AND NM_ITEM='$NM_ITEM'
+              ORDER BY ST_TEXT1, DB_DOWN";
+
+            $Stid=oci_parse($conn,$Sql);
+            oci_execute($Stid);
+            $JID_KEY="";
+            $ST_TEXT1="";
+            while (oci_fetch_array($Stid)){
+                $JID_KEY=oci_result($Stid,"JID_KEY");
+                $ST_TEXT1=oci_result($Stid,"ST_TEXT1");
+            }
+
+        if (count($array)===0){
+            $array[$i]->M_Nam="";
+            $array[$i]->JID_KEY="";
+            $array[$i]->CID_CLASS="";
+        }
+        if (!trim($array[$i]->IO_TYPE)){
+            $array[$i]->IO_TYPE=$JID_KEY;
+        }
+
+        $array[$i]->CID_IO=$ST_TEXT1;
+        $array[$i]->JID_MM=Get_MM($conn,$JID_KEY);
+        $array[$i]->JID_COLOR=Get_Color($conn,$JID_KEY);
+        $array[$i]->IS_SUM=Is_Sum($conn,$JID_KEY);
+    }
+    return $array;
+}
+
+function Is_Sum($conn,$Io_Type){
+    $Sql="SELECT ST_TEXT2 FROM NSCLSI  WHERE  CID_CLASS ='IOTP' AND JID_KEY=:IoType";
+
+    $Stid=oci_parse($conn,$Sql);
+
+    oci_bind_by_name($Stid,":IoType",$Io_Type);
+    oci_execute($Stid);
+    $Is_Sum="";
+    while (oci_fetch_array($Stid)){
+        $Is_Sum=oci_result($Stid,"ST_TEXT2");
+    }
+    return $Is_Sum;
+}
 
