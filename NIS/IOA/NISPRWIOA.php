@@ -23,7 +23,7 @@ $Account="00FUZZY";
                     DefultElement.set('B',{"len":3,"Sum_Str":"量","Last_Str":"LO"});
                     DefultElement.set('C',{"len":3,"Sum_Str":"量","Last_Str":""});
                     DefultElement.set('D',{"len":3,"Sum_Str":"量","Last_Str":"餘"});
-                    DefultElement.set('E',{"len":3,"Sum_Str":"量","Last_Str":"LO"});
+                    DefultElement.set('E',{"len":4,"Sum_Str":"量","Last_Str":"LO"});
                     DefultElement.set('F',{"len":3,"Sum_Str":"量","Last_Str":"LO"});
                     DefultElement.set('G',{"len":3,"Sum_Str":"量","Last_Str":""});
                     DefultElement.set('H',{"len":3,"Sum_Str":"In","Last_Str":"Out"});
@@ -66,7 +66,6 @@ $Account="00FUZZY";
                             }
                         }
                     }
-
                 },
                 TimeRadio:() =>{
                     /*console.log("http://localhost/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm=ILSGA&sPg=A"));*/
@@ -86,7 +85,7 @@ $Account="00FUZZY";
                                 )
                             });
                         },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                            errorModal(
+                            console.log(
                                 "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
                                 "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
                                 "3 返回失敗,textStatus:"+textStatus+
@@ -189,6 +188,7 @@ $Account="00FUZZY";
                 IS_SUM:""
             }];
 
+
             (function () {
                 CreatDefaultElement.TimeRadio();
                 $("#loading").hide();
@@ -228,7 +228,7 @@ $Account="00FUZZY";
                     case "sbed":
                         switch (checkBEDwindow()) {
                             case "false":
-                                errorModal("責任床位視窗已開啟");
+                                alert("責任床位視窗已開啟");
                                 break;
                             case "true":
                                 BEDwindow=window.open("/webservice/NISPWSLKCBD.php?str="+AESEnCode("sFm=IOA&sIdUser=<?php echo $Account?>"),"責任床位(血)",'width=850px,height=650px,scrollbars=yes,resizable=no');
@@ -264,7 +264,7 @@ $Account="00FUZZY";
                             CID_CLASS: CLASS,
                             CID_IO: Cid_io,
                             COLOR: "",
-                            IO_TYPE: IoType,
+                            IO_TYPE: "",
                             IOWAY: "",
                             JID_MM:"",
                             JID_COLOR:"",
@@ -275,6 +275,7 @@ $Account="00FUZZY";
                             QUNTY: "",
                             IS_SUM:""
                         };
+
                         ThisPageJson.get(Page).push(emptyObj);
                         break;
                     case "O_ConfirmBtn":
@@ -303,6 +304,14 @@ $Account="00FUZZY";
                         break;
                     case "DELBtn":
                         DB_DEL(sTraID,'<?php echo $Account?>');
+                        break;
+                    case "ReSetBtn":
+                        $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
+                        $("input[type=text]:not(.Parametertable>input)").val("");
+                        $("input[type=radio]").prop("checked",false);
+                        $(".PItem").hide();
+                        $(".ItemBtn").hide();
+
                         break;
                     case "ThirdClassBtn":
                         window.open("../IOA_C/NISPWIOA_C.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+"&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
@@ -357,6 +366,7 @@ $Account="00FUZZY";
                 let TypeID="";
                 let CidIo="";
                 let obj=ThisPageJson.get(Page);
+
                 if (Id !=="sDate" && Id!=="sTime"){
                     if(Page==="A" || Page==="B" || Page==="C" || Page==="D"){
                         TypeID="I"+Page;
@@ -377,12 +387,18 @@ $Account="00FUZZY";
                         CidIo="O";
                     }
 
-                    obj[index].IO_TYPE="IOTP000000"+TypeID;
+                    if (obj[index]===undefined){
+                        let Cloen_DefaultObj=[...DefaultObj];
+                        obj.push(Cloen_DefaultObj[0])
+                    }
+
+               /*   obj[index].IO_TYPE="IOTP000000"+TypeID; 比對字串 */
                     obj[index].CID_IO=CidIo;
                     obj[index].QUNTY=$("#Num"+Page+index).val();
                     obj[index].LOSS=$("#Last"+Page+index).val();
                     obj[index].MM_IO=$("#Dir_s"+Page+index).val();
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
+
                 }
 
             });
@@ -461,13 +477,16 @@ $Account="00FUZZY";
                     .done(function(data) {
                         $("#wrapper").hide();
                         let obj=JSON.parse(AESDeCode(data));
+                        console.log(obj);
                         $("#sSave").val(obj.sSave);
                         $("#sTraID").val(obj.sTraID);
                         $("#SRANK").val(obj.JID_NSRANK);
                         $("#FSEQ_WT").val(obj.FORMSEQANCE_WT);
                         let Cloen_DefaultObj=[...DefaultObj];
+
                         Cloen_DefaultObj[0].JID_MM=[];
                         Cloen_DefaultObj[0].JID_COLOR=[];
+
                         GetPageJson(Page,obj.sTraID,Cloen_DefaultObj);
                     })
                     .fail(function(XMLHttpResponse,textStatus,errorThrown) {
@@ -485,35 +504,45 @@ $Account="00FUZZY";
 */
                 $.ajax("/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page))
                     .done(function (data) {
-                        try{
+
                             let obj=JSON.parse(AESDeCode(data));
+
+                            if (obj.length === 0){
+
+                                    obj=DefaultObj;
+                                }
+
+                            let Item_leng=$("#item"+Page).children().length;
+
                             console.log(obj);
-                            if (obj==null ||obj.length===0){
-                                obj=DefaultObj;
-                            }
+                            $.each(obj,function (index,val) {
+                                CreatOmodal(Page,val.M_Nam,val.JID_MM,val.JID_COLOR,index,Item_leng,"");
+                            });
 
-                            CreatOmodal(Page,obj[0].JID_MM,obj[0].JID_COLOR,$("#item"+Page).children().length,"");
 
-                            AddBtn_Color.set(Page,obj[0].JID_COLOR);
-                            AddBtn_IoType.set(Page,obj[0].JID_MM);
+                               /*   CreatOmodal(Page,obj[0].JID_MM,obj[0].JID_COLOR,Item_leng,"");*/
 
-                            if(ThisPageJson.get(Page)===undefined){
-                                $.each(obj,function (index,val) {
+                                  AddBtn_Color.set(Page,obj[0].JID_COLOR);
+                                  AddBtn_IoType.set(Page,obj[0].JID_MM);
 
-                                    $("#M_Nam"+Page+index).val(val.M_Nam);
-                                    if(val.JID_KEY!==""){
-                                        $("#M_Nam"+Page+index).prop('disabled',true);
-                                    }
-                                    if(val.IO_TYPE)
-                                        delete val.JID_MM;
-                                        delete val.JID_COLOR;
-                                });
-                                ThisPageJson.set(Page,obj);
-                            }
-                        }
-                        catch (e) {
-                            console.log(e);
-                        }
+                                  if(ThisPageJson.get(Page)===undefined){
+                                      $.each(obj,function (index,val) {
+
+                                          $("#M_Nam"+Page+index).val(val.M_Nam);
+                                          if(val.JID_KEY!==""){
+                                              $("#M_Nam"+Page+index).prop('disabled',true);
+                                          }
+                                          if(val.IO_TYPE){
+                                              delete val.JID_MM;
+                                              delete val.JID_COLOR;
+                                          }
+
+                                      });
+                                      ThisPageJson.set(Page,obj);
+                                  }
+
+
+
                     }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -524,8 +553,14 @@ $Account="00FUZZY";
                 });
 
             }
+
+
+
+
+
             function DB_WSST(Page,sTraID,json){
                 let obj=JSON.parse(json);
+                console.log(obj);
                 $.each(obj,function (index,val) {
                     if ((val.M_Nam).indexOf('&')>0){
                         val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
@@ -608,10 +643,12 @@ $Account="00FUZZY";
                 }
 
                 $(".PItem").children().children().remove();
+
                 CreatDefaultElement.MainElement();
 
                 $("#PageBtn").children().prop('disabled',false);
                 $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
+                $("input[type=radio]").prop("checked",false);
 
                 $(".PItem").hide();
                 $(".ItemBtn").hide();
@@ -632,13 +669,15 @@ $Account="00FUZZY";
                 let InIdPt=PatientID[2];
                 if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val()){
                     alert("病人資訊以異動,請重新操作");
-                    return false;
+                    return ;
                 }
 
                 ThisPageJson.clear();
                 $.each(Pagearr,function (index,page) {
                       $("#item"+page).children().remove();
                   });
+
+
                 $.each(obj,function (index) {
                     let page="";
                     let PageArr=obj[index];
@@ -721,16 +760,88 @@ $Account="00FUZZY";
                     }
                 }
             }
-            function CreatOmodal(Page,JMM_arr,JColor_arr,len,mode) {
-                let PageName=$("#"+Page).text();
-                for (let i=0;i<len;i++){
+            function CreatOmodal(Page,TagName,JMM_arr,JColor_arr,index,len,mode) {
+
+                if ($('#M_'+Page+index).length===0){
+
+                    $("#OtherModalbody").append(
+                        `
+                               <div id="${'M_'+Page+index}" class="M_Omodal row">
+
+                                    <div class="col-12">
+                                          <input type="text" class="form-control" value="${TagName}" readonly>
+                                    </div>
+
+                                    <div id="${'IOType'+Page + index}" class="col-12" >
+                                        <div>
+                                              <label style="color: #0f6674">方式:</label>
+                                        </div>
+                                    </div>
+
+                                    <div id="${'Color'+Page + index}" class="col-12">
+                                        <div>
+                                            <label style="color: #0f6674">顏色:</label>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-12">
+                                        <div class="form-group">
+                                             <label for="${'O_'+Page+index}" style="color: #0f6674">備註:</label>
+                                             <textarea class="form-control rounded-0" id="${'O_'+Page+index}" rows="10"></textarea>
+                                        </div>
+                                    </div>
+
+
+                                </div>
+                            `
+                    );
+
+                }
+                $.each(JMM_arr,function (i,val) {
+                    $("#IOType" + Page + index).append(
+                        `
+                          <label style="font-size: 1.5rem;">
+                               <input id="${index + Page + val.JID_KEY}" class="${'IOCK_' + Page + index}" type="radio" name="${'IOCK_' + Page + index}"  value="${index + Page +val.JID_KEY}">
+                               ${val.NM_ITEM}
+                          </label>
+                        `
+                    )
+
+                });
+
+                for (let i=0;i<JColor_arr.length;i++){
+                    let val=JColor_arr[i];
+                    $("#Color" + Page + index).append(
+                        `
+                          <label style="font-size: 1.5rem;">
+                              <input id="${index + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +val.JID_KEY}">
+                               ${val.NM_ITEM}
+                         </label>
+                         `
+                    );
+                }
+
+             /*   $.each(JColor_arr,function (i,val) {
+                    console.log(val.NM_ITEM);
+
+                });*/
+                /*                $.each(JColor_arr,function (i,val) {
+                                    $("#Color" + Page + index).append(
+                                        `
+                                          <label style="font-size: 1.5rem;">
+                                              <input id="${index + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +val.JID_KEY}">
+                                               ${val.NM_ITEM}
+                                          </label>
+                                         `
+                                    );
+                                });*/
+            /*    for (let i=0;i<len;i++){
 
                     if(mode==="A"){
                        i=$("#item"+Page).children().length-1;
                     }
-
-                    if ($('#M_'+Page+i).length===0)
-                    {
+                    if ($('#M_'+Page+i).length===0){
 
                          $("#OtherModalbody").append(
                             `
@@ -767,38 +878,37 @@ $Account="00FUZZY";
                             `
                         );
 
-                        $.each(JMM_arr,function (index,val) {
-                            $("#IOType" + Page + i).append(
-                            `
+                            $.each(JMM_arr,function (index,val) {
+                                $("#IOType" + Page + i).append(
+                                    `
                               <label style="font-size: 1.5rem;">
                                <input id="${i + Page + val.JID_KEY}" class="${'IOCK_' + Page + i}" type="radio" name="${'IOCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">
                                ${val.NM_ITEM}
                               </label>
                               `
-                            );
-                        });
+                                );
+                            });
 
-                        $.each(JColor_arr,function (index,val) {
-                            $("#Color" + Page + i).append(
-                                `
+
+                             $.each(JColor_arr,function (index,val) {
+                                 $("#Color" + Page + i).append(
+                                     `
                               <label style="font-size: 1.5rem;">
                                 <input id="${i + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + i}"  type="radio"  name="${'COLORCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">
                                 ${val.NM_ITEM}
                               </label>
                               `
-                            );
-                        });
-
-
+                                 );
+                             });
                     }
 
-                    if (JMM_arr.length===0){
+                   if (JMM_arr.length===0){
                         $("#IOType" + Page + i).hide();
                     }
                     if (JColor_arr.length===0){
                         $("#Color" + Page + i).hide();
                     }
-                }
+                }*/
 
 
 
@@ -883,7 +993,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-      /*  display: none;*/
+        display: none;
         background-color: #00FF00;
     }
     .Dir_s{
@@ -960,7 +1070,7 @@ $Account="00FUZZY";
             <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" >查詢</button>
             <button type="button" id="DELBtn" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal">作廢</button>
-            <button type="button" id="ReSet" class="btn btn-primary btn-md"  >清除</button>
+            <button type="button" id="ReSetBtn" class="btn btn-primary btn-md"  >清除</button>
         </span>
     <!----------------------------------------------------------Patient Name-------------------------------------------------------------------------->
         <div>
