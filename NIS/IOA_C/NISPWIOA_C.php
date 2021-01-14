@@ -44,6 +44,7 @@ $sUr='00FUZZY';
         (function () {
             GetINIJson("<?php echo $IdPt?>","<?php echo $IdInPt?>","<?php echo $sUr?>");
         })();
+
         var Serchwindow;
         let Save_Obj="";
         $(".tb3_tr").children().css({'width': '93px','height': '30px'});
@@ -68,7 +69,6 @@ $sUr='00FUZZY';
                     DB_SAVE("C",TransKEY,$("#sDate").val(),"","",sUser);
                     break;
                 case "SearchBtn":
-
                     if (checkSerchwindow()===true)
                     {
                         Serchwindow = window.open("/webservice/NISPWSLKQRY.php?str=" +
@@ -97,13 +97,6 @@ $sUr='00FUZZY';
                 $("."+Page).show();
             }
         });
-
-
-
-
-
-
-
 
         function DB_WSST(Page,sTraID,json){
             $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA_C&sTraID='+sTraID+'&sPg='+Page+'&sData='+json))
@@ -220,6 +213,9 @@ $sUr='00FUZZY';
                         let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
 
                         let sDt=yyyy-1911+MM+dd;
+
+
+                        console.log(obj);
                         Time.set('Time',obj.TmSTtoE);
                         delete obj.TmSTtoE;
                         delete obj.SB;
@@ -240,7 +236,7 @@ $sUr='00FUZZY';
             let sTraID=obj.sTraID;
             let AllTime={'Start':'24小時','End':'','IO':'I'};
             let Time=new Map();
-
+            console.log(Data_Json);
 
             Time.set('Time',Data_Json.TmSTtoE);
             delete Data_Json.TmSTtoE;
@@ -359,7 +355,7 @@ $sUr='00FUZZY';
                 let MSum_QTY=0;
 
                 $.each(arr,function (i,val) {
-                    let QTY=isNaN(parseInt(val.QUANTITY))?val.ST_LOSS+"LOSS":val.QUANTITY;
+                    let QTY=isNaN(parseInt(val.QUANTITY))?val.ST_LOSS:val.QUANTITY;
                     let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
 
 
@@ -397,7 +393,6 @@ $sUr='00FUZZY';
             });
         }
 
-
         function OCAppend(arr,Time){
             $.each(Time.get('Time'),function (index,val) {
                 let Ts=val.Start;
@@ -427,225 +422,107 @@ $sUr='00FUZZY';
             InsertOC_TdValue(arr);
         }
         function DeTailAppend(obj) {
-            let DateTimeKEY=[];
-            let ID_ITEM_Arr=[];
-            let A_Map = new Map();
-
+            let DateTimeK=[];
 
             for (let index in obj) {
                 let arr = obj[index];
 
                 if (arr.length > 0) {
-                    arr.forEach(element => A_Map.set(element.DT + element.TM, []));
 
-                    arr.map(value=>InMapSameTimeData(A_Map, value.DT+value.TM,value));
-
-                    DateTimeKEY.push(arr.map(value=>(value.DT+value.TM)).filter((element, index, arr)=> arr.indexOf(element)===index));
-                    ID_ITEM_Arr.push(index);
+                    arr.forEach(element=>DateTimeK.push(element.DT + element.TM));
                 }
 
             }
+            const DT_KEY=DateTimeK.filter((element, index, arr)=> arr.indexOf(element)===index);
 
-
-            let FlatDT_KEY= DateTimeKEY.flat(Infinity);
-            let obj_a={};
-            FlatDT_KEY.forEach(value=>tt(value,obj_a,ID_ITEM_Arr));
-
-            let strArr=[];
-
-           for (let index in obj_a){
-             let arr= A_Map.get(index);
-
-             /*index==date+time*/
-
-             $.each(arr,function (i,val) {
-
-                 if ((val.QUANTITY).trim()){
-
-                     obj_a[val.DT+val.TM][val.ID_ITEM].push(parseInt(val.QUANTITY));
-
-                 }
-
-             });
-
-           }
-
-            //print str
-           for (let index in obj_a){
-                let dt=index.substring(0,11);
+            $.each(DT_KEY,function (index,val) {
+                let dt=val.substring(0,11);
                 let DateTime=dt.substring(0,3)+'/'+dt.substring(3,5)+'/'+dt.substring(5,7)+
                     ' '+dt.substring(7,9)+':'+dt.substring(9,11);
 
-                for (let ITEM of ID_ITEM_Arr){
+                //判斷同時段,同ID_ITEM的量 判斷DT=class
 
-                    let QTY=obj_a[index][ITEM];
-
-                    if (QTY.length>0){
-                        QTY=QTY.reduce((acc,cur)=>acc+cur);
-                    }
-                    else {
-                        continue;
-                    }
-                    console.log(QTY,ITEM,obj[ITEM],DateTime);
-                  /*  DE_str(obj[ITEM],QTY,DateTime);*/
-                    $(".tb4_b").append(
-                        `
-                        <tr class="${DateTime}">
-                            <td >${DateTime}</td>
-                            <td ></td>
+                $(".tb4_b").append(
+                    `
+                        <tr class="${val}">
+                            <td>${DateTime}</td>
+                            <td></td>
                         </tr>
                         `
-                    );
+                );
 
-                }
+                $("."+val+" td:nth-child(2)").text(GetSameTimeData(obj,val));
 
-
-
-
-
-            }
-
-              /*    let A_Map = new Map();
-            let NotNullArr=[];
-
-            for (let index in obj) {
-                let arr = obj[index];
-
-                if (arr.length > 0) {
-                    NotNullArr.push(index);
-                    arr.forEach(element => A_Map.set(element.DT + element.TM, []));
-
-                    $.each(arr, function (i, val) {
-                        InsertSameTimeData(A_Map, val.DT + val.TM, val);
-                    });
-                }
-
-            }
-            console.log(A_Map);
-            let str="";
-            $.each(NotNullArr,function (index,value) {
-
-            });*/
-              /* for (let [key, value] of A_Map){
-                let str='';
-                if (!isNaN(key)){
-                    let dt=key.substring(0,11);
-                    let DateTime=dt.substring(0,3)+'/'+dt.substring(3,5)+'/'+dt.substring(5,7)+
-                        ' '+dt.substring(7,9)+':'+dt.substring(9,11);
-
-
-
-                    $.each(value,function (i,val) {
-
-                        let FieldByName=val.ID_ITEM;
-
-                        if (FieldByName==="IB" || FieldByName==="OC"){
-                            str+=(val.NM_PHARMACY).trim()!==null?'、'+val.NM_PHARMACY+' '+val.QUANTITY:'、'+val.NM_ITEM+' '+val.QUANTITY;
-
-                        }
-                        else if(val.CID_IO==="I" || val.CID_IO==="O"){
-
-                            if (FieldByName==="IA" || FieldByName==="IC" || FieldByName==="OG" ){
-                                str+='、'+val.NM_ITEM+' '+val.NM_PHARMACY+val.QUANTITY;
-                            }
-                            else {
-                                str+=(val.NM_ITEM).trim()!==null?val.NM_ITEM+' '+val.QUANTITY:val.NM_PHARMACY+' '+val.QUANTITY;
-
-                            }
-
-                        }
-
-                        if ((val.ST_LOSS).trim()!==''){
-                            str+=('LOSS'+(val.ST_LOSS).trim());
-                        }
-                        if ((val.NM_IOWAY).trim()!==''){
-                            str+=' '+(val.NM_IOWAY);
-                        }
-                        if ((val.NM_COLOR).trim()!==''){
-                            str+=' '+(val.NM_COLOR);
-                        }
-                        if ((val.MM_IO).trim()!==''){
-                            str+='-'+(val.MM_IO);
-                        }
-                        if (value.length===i){
-                            str+='<br>';
-                        }
-                    });
-
-                    if (str.substring(0,1)==="、"){
-                        str=str.substring(1,str.length)
-                    }
-                    str=str.substring(0,str.length);
-
-                    $(".tb4_b").append(
-                        `
-                          <tr>
-                            <td >${DateTime}</td>
-                            <td style="text-align: left">${str}</td>
-                        </tr>
-                        `
-                    );
-                }
-            }*/
-
-        }
-        function tt(sDt,obj,ID_ITEM_Arr) {
-            let Nen_obj={};
-            ID_ITEM_Arr.forEach(element=>Nen_obj[element]=[]);
-            obj[sDt]=Nen_obj;
-        }
-        function DE_str(arr,QTY,sDt) {
-            let str='';
-
-            $.each(arr,function (index,val) {
-            console.log(val);
-
-/*                let FieldByName=val.ID_ITEM;
-
-                if (FieldByName==="IB" || FieldByName==="OC"){
-                    str+=(val.NM_PHARMACY).trim()!==null?'、'+val.NM_PHARMACY+' '+val.QUANTITY:'、'+val.NM_ITEM+' '+val.QUANTITY;
-
-                }
-                else if(val.CID_IO==="I" || val.CID_IO==="O"){
-
-                    if (FieldByName==="IA" || FieldByName==="IC" || FieldByName==="OG" ){
-                        str+='、'+val.NM_ITEM+' '+val.NM_PHARMACY+val.QUANTITY;
-                    }
-                    else {
-                        str+=(val.NM_ITEM).trim()!==null?val.NM_ITEM+' '+val.QUANTITY:val.NM_PHARMACY+' '+val.QUANTITY;
-
-                    }
-
-                }
-
-                if ((val.ST_LOSS).trim()!==''){
-                    str+=('LOSS'+(val.ST_LOSS).trim());
-                }
-                if ((val.NM_IOWAY).trim()!==''){
-                    str+=' '+(val.NM_IOWAY);
-                }
-                if ((val.NM_COLOR).trim()!==''){
-                    str+=' '+(val.NM_COLOR);
-                }
-                if ((val.MM_IO).trim()!==''){
-                    str+='-'+(val.MM_IO);
-                }
-                if (value.length===i){
-                    str+='<br>';
-                }*/
             });
-
-
         }
+        /**
+         * @return {string}
+         */
+        function GetSameTimeData(obj,sDT) {
 
-        function InMapSameTimeData(A_Map,DateTime,obj) {
-            //同時段資料
-            for (let [key ,value] of A_Map.entries()){
-                if (key===DateTime){
-                    value.push(obj);
+            let A_Map=new Map();
+            let D_Map=new Map();
+            A_Map.clear();
+
+            for (let index in obj){
+                let arr=obj[index];
+                if (arr.length>0){
+
+                    const Filter_Arr=arr.filter(value=>(value.DT+value.TM)===sDT);
+
+                    if(Filter_Arr.length>0){
+                        $.each(Filter_Arr,function (index,val) {
+                            let DeTail_str="";
+                            let NM_ITEM=(val.NM_PHARMACY).trim()===""?val.NM_ITEM:val.NM_PHARMACY;
+                            let Qty=val.QUANTITY===null||val.QUANTITY===""?val.ST_LOSS:val.QUANTITY;
+                            let Loss=(val.ST_LOSS).trim();
+                            let NM_IOWAY=val.NM_IOWAY;
+                            let NM_COLOR=val.NM_COLOR;
+                            let MM_IO=val.MM_IO;
+
+
+
+
+                            /*****************判斷是否有相同的名稱數值相加*********************************/
+                            if (A_Map.get(NM_ITEM)){
+                                A_Map.set(NM_ITEM, (parseInt(A_Map.get(NM_ITEM))+parseInt(Qty))*-1);
+                            }else {
+
+                                A_Map.set(NM_ITEM,Qty);
+                            }
+                            /**************************************************************************/
+                            if (Loss){
+                                DeTail_str+='LOSS'+Loss;
+                            }
+                            if (NM_IOWAY){
+                                DeTail_str+=NM_IOWAY+' ';
+                            }
+                            if (NM_COLOR){
+                                DeTail_str+=NM_COLOR;
+                            }
+                            if (MM_IO){
+                                DeTail_str+=MM_IO;
+                            }
+
+                            D_Map.set(NM_ITEM,DeTail_str);
+
+
+                        });
+
+                    }
                 }
+
             }
+            let str=[];
+
+            for (let [key,value] of A_Map){
+                str.push(key+' '+value+' '+D_Map.get(key));
+
+            }
+            return str.join('、');
         }
+
+
         function InsertTdValue(arr,index) {
             let I=arr.slice(0,6);
 
@@ -700,17 +577,8 @@ $sUr='00FUZZY';
 
 
         }
-
-        function ComFirmUserNm(str) {
-            let obj=JSON.parse(str);
-            $.each(obj,function (index,value) {
-                $('.IO_Sum_tb'+value.CID_EXCUTE).find('td:eq(4)').text(value.NM_ITEM);
-                if (value.CID_EXCUTE==="M"){
-                    $('.IO_Sum_tbI').find('td:eq(4)').text(value.NM_ITEM);
-                }
-            });
-        }
         function InsertSumTdValue(arr,obj) {
+
             //輸入
             for (let i=1;i<=6;i++){
                 let D=parseInt($('.tb1D').find('td:eq('+i+')').text());
@@ -719,6 +587,7 @@ $sUr='00FUZZY';
 
                 $(".tb1I").find('td:eq('+i+')').text((D+N+M).toString());
             }
+
             //輸出
             for (let i=1;i<=7;i++){
                 let D=parseInt($('.tb2D').find('td:eq('+i+')').text());
@@ -749,13 +618,12 @@ $sUr='00FUZZY';
 
                         if (index==='IB'){
                            let IB_str=$('.tb1'+val.CID_EXCUTE).find('td:eq('+(count+1)+')').text();
-                            IB_str=IB_str+'LOSS';
                             $('.tb1'+val.CID_EXCUTE).find('td:eq('+(count+1)+')').text(IB_str);
                             $('.tb1S').find('td:eq('+(2)+')').text(IB_str);
                         }
                         if(index==='OB'){
                             let OB_str=$('.tb2'+val.CID_EXCUTE).find('td:eq('+(2)+')').text();
-                            OB_str=OB_str+'LOSS';
+
                             $('.tb2'+val.CID_EXCUTE).find('td:eq('+(2)+')').text(OB_str);
                             $('.tb2S').find('td:eq('+(2)+')').text(OB_str);
                         }
@@ -766,6 +634,16 @@ $sUr='00FUZZY';
             }
 
 
+        }
+
+        function ComFirmUserNm(str) {
+            let obj=JSON.parse(str);
+            $.each(obj,function (index,value) {
+                $('.IO_Sum_tb'+value.CID_EXCUTE).find('td:eq(4)').text(value.NM_ITEM);
+                if (value.CID_EXCUTE==="M"){
+                    $('.IO_Sum_tbI').find('td:eq(4)').text(value.NM_ITEM);
+                }
+            });
         }
         function checkSerchwindow() {
             if(!Serchwindow){
@@ -785,16 +663,12 @@ $sUr='00FUZZY';
             return count >=16;
         }
 
-        function QTY_Str(arr) {
-            let Qty_Arr=[];
-            /*QUANTITY*/
-            let nm="";
-            $.each(arr,function (index,value) {
-                Qty_Arr.push(parseInt(value.QUANTITY));
-                nm=value.NM_ITEM;
-            });
 
-            return   nm+Qty_Arr.reduce((acc,cur)=>acc+cur).toString();
+
+
+
+        function CreatTable() {
+
         }
 
     });
@@ -828,7 +702,11 @@ $sUr='00FUZZY';
     }
     input[type=text]{
        margin-top: 10px;
+        font-size: 4vmin;
 
+    }
+    .form-control:disabled, .form-control[readonly] {
+      background-color: white;
     }
     label{
         font-size: 3.6vmin;
@@ -836,9 +714,28 @@ $sUr='00FUZZY';
     div{
         margin-top: 10px;
     }
+    .Patient_NM :first-child{
+        background-color: #FFFBCC;
+    }
+    .sDate{
+        background-color: #baeeff;
+        border-radius:3px;
+    }
+
+   .T_Class{
+        background-color: #baeeff;
+        border-radius:3px;
+        margin-top: -10px;
+       padding-top: 10px;
+    }
+
     .Parametertable input{
          display: none;
         background-color: #00FF00;
+    }
+    button{
+        margin-top: 5px;
+        margin-bottom: 5px;
     }
 </style>
 <body>
@@ -855,16 +752,19 @@ $sUr='00FUZZY';
     </div>
 
     <!----------------------------------------------------------Patient Name-------------------------------------------------------------------------->
-    <div>
+    <div class="Patient_NM">
         <input class="form-control form-control-lg" type="text" value="<?php echo $nM_P?>" readonly>
     </div>
     <!----------------------------------------------------------Time-------------------------------------------------------------------------->
-   <form class="form-inline">
-       <div class="form-group mb-2" >
-           <label for="sDate">評估時間:</label>
-           <input type="text" id="sDate" class="form-control form-control-md" value="" autocomplete="off" readonly>
-       </div>
-   </form>
+    <div class="sDate">
+        <form class="form-inline">
+            <div class="form-group mb-2" >
+                <label for="sDate">評估時間:</label>
+                <input type="text" id="sDate" class="form-control form-control-md" value="" autocomplete="off" readonly>
+            </div>
+        </form>
+    </div>
+
 
     <div class="T_Class">
 
