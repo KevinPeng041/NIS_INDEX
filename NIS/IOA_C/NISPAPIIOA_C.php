@@ -15,7 +15,7 @@ function GetIOACIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID
     }
 
     $DT_Class=json_encode($result,JSON_UNESCAPED_UNICODE);
-    $DT_DATE=Get_IOAC_DATA($conn,$Idpt,$INPt,substr($date,0,7));
+    $DT_DATA=Get_IOAC_DATA($conn,$Idpt,$INPt,substr($date,0,7));
 
 
     $TP_SQL="INSERT INTO HIS803.NISWSTP(
@@ -24,7 +24,7 @@ function GetIOACIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID
                     ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
                      VALUES (
                      'IOA_C','$sTraID','$Idpt','$INPt',' ',' ',
-                     '$DT_Class','$DT_DATE',' ',' ',' ',' ',' ',' ',
+                     '$DT_Class','$DT_DATA',' ',' ',' ',' ',' ',' ',
                     '$ID_BED','$date','$sUr','$JID_NSRANK','$FORMSEQANCE_WT')";
 
     $TP_stid=oci_parse($conn,$TP_SQL);
@@ -360,6 +360,9 @@ function Get_IOAC_DATA($conn,$Idpt,$INPt,$sDt){
             AND TM_EXCUTE >= IODT.ST_TEXT1 
             AND TM_EXCUTE <( CASE ST_TEXT2 WHEN '000000' THEN '235959' ELSE LPAD(TO_CHAR(TO_NUMBER(ST_TEXT2)-1),6,'0') END )
             ORDER BY DT_EXCUTE, TM_EXCUTE, CID_IO, P0.ID_ITEM";
+
+
+
     $S_stid=oci_parse($conn,$S_Sql);
     oci_execute($S_stid);
     $arr=[];
@@ -394,8 +397,6 @@ function Get_IOAC_DATA($conn,$Idpt,$INPt,$sDt){
         );
 
     }
-
-
 
 
     return json_encode(ArrayGrouping($conn,$arr,$TmSTtoE,GetConFirmUser($conn,$Idpt,$INPt,$sDt)),JSON_UNESCAPED_UNICODE);
