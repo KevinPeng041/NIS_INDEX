@@ -17,56 +17,6 @@ $Account="00FUZZY";
         $(document).ready(function () {
             var BEDwindow,Serchwindow;
             let CreatDefaultElement={
-                MainElement:() =>{
-                    let DefultElement=new Map();
-                    DefultElement.set('A',{"len":8,"Sum_Str":"量","Last_Str":"餘"});
-                    DefultElement.set('B',{"len":3,"Sum_Str":"量","Last_Str":"LO"});
-                    DefultElement.set('C',{"len":3,"Sum_Str":"量","Last_Str":""});
-                    DefultElement.set('D',{"len":3,"Sum_Str":"量","Last_Str":"餘"});
-                    DefultElement.set('E',{"len":4,"Sum_Str":"量","Last_Str":"LO"});
-                    DefultElement.set('F',{"len":3,"Sum_Str":"量","Last_Str":"LO"});
-                    DefultElement.set('G',{"len":3,"Sum_Str":"量","Last_Str":""});
-                    DefultElement.set('H',{"len":3,"Sum_Str":"In","Last_Str":"Out"});
-
-                    for (let [key, value] of DefultElement.entries()) {
-
-
-                        for (let i=0;i<value.len;i++){
-                            $("#item"+key).append(
-                                `
-                                    <div id="${'Main_'+key+i}">
-                                            <div  class="input-group">
-                                                    <input id='${'M_Nam'+key+i}' type="text" class="form-control" >
-                                             </div>
-
-                                           <div class="input-group">
-                                                     <span class="input-group-text" >${value.Sum_Str+":"}</span>
-                                                     <input  id="${'Num'+key+i}" type="text"  class="Num form-control">
-
-                                                    <span  class="input-group-text" >${value.Last_Str+":"}</span>
-                                                    <input id="${'Last'+key+i}" type="text" class="form-control">
-
-                                               </div>
-
-
-                                             <div class="input-group mb-3">
-                                                    <span class="input-group-text" >其他說明截斷字元:</span>
-                                                    <input id='${'Dir_s'+key+i}'  type="text" class="Dir_s form-control" value="" readonly>
-                                                    <button  class="Obtn btn btn-secondary" type="button">其他</button>
-                                             </div>
-
-
-                                    </div>
-                                        `);
-
-
-                            if(key==="C" || key==="G"){
-                                $("#Last"+key+i).prev().hide();
-                                $("#Last"+key+i).hide();
-                            }
-                        }
-                    }
-                },
                 TimeRadio:() =>{
                     /*console.log("http://localhost/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm=ILSGA&sPg=A"));*/
                     $.ajax({
@@ -93,13 +43,97 @@ $Account="00FUZZY";
                             );
                         }
                     });
-                }
+                },
+                MainItem:(arr,Page)=>{
+                    let Qty_Nm='';
+                    let Last_Nm='';
+                    switch (Page) {
+                        case "A":
+                            Qty_Nm='量';
+                            Last_Nm='餘';
+                            break;
+                        case "B":
+                            Qty_Nm='量';
+                            Last_Nm='LO';
+                            break;
+                        case "C":
+                            Qty_Nm='量';
+                            Last_Nm='';
+                            break;
+                        case "D":
+                            Qty_Nm='量';
+                            Last_Nm='餘';
+                            break;
+                        case "E":
+                            Qty_Nm='量';
+                            Last_Nm='LO';
+                            break;
+                        case "F":
+                            Qty_Nm='量';
+                            Last_Nm='LO';
+                            break;
+                        case "G":
+                            Qty_Nm='量';
+                            Last_Nm='';
+                            break;
+                        case "H":
+                            Qty_Nm='In';
+                            Last_Nm='Out';
+                            break;
+                        default:
+                            break;
+                    }
+
+                    $.each(arr,function (index,val) {
+                       $("#item"+Page).append(
+                           `
+                         <div id="${'Main_'+Page+index}">
+                                            <div  class="input-group">
+                                                    <input id='${'M_Nam'+Page+index}' value="${val.M_Nam}" type="text" class="form-control" >
+                                             </div>
+
+                                           <div class="input-group">
+                                                     <span class="input-group-text" >${Qty_Nm+":"}</span>
+                                                     <input  id="${'Num'+Page+index}" type="text" value="${val.QUNTY}"  class="Num form-control">
+
+                                                    <span  class="input-group-text" >${Last_Nm+":"}</span>
+                                                    <input id="${'Last'+Page+index}" type="text"  value="${val.LOSS}" class="form-control">
+
+                                               </div>
+
+
+                                             <div class="input-group mb-3">
+                                                    <span class="input-group-text" >其他說明截斷字元:</span>
+                                                    <input id='${'Dir_s'+Page+index}'  type="text" class="Dir_s form-control" value="" readonly>
+                                                    <button  class="Obtn btn btn-secondary" type="button">其他</button>
+                                             </div>
+
+
+                                    </div>
+
+                           `
+                       );
+
+                        if(Page==="C" || Page==="G"){
+                            $("#Last"+Page+index).prev().hide();
+                            $("#Last"+Page+index).hide();
+                        }
+
+                        if(val.JID_KEY!==""){
+                          $("#M_Nam"+Page+index).prop('disabled',true);
+
+                        }
+                    });
+                    CreatOmodal(Page,arr);
+            }
             };
             let ItemAction={
-                appendItem:(page,ItemName,Dir_s,Num,Last)=>{
+                appendItem:(page)=>{
                     let index=$("#item"+page).children().length;
                     let Last_Str="";
                     let Sum_Str="量";
+
+
                     switch (page) {
                         case "A":
                             Last_Str="餘";
@@ -130,28 +164,31 @@ $Account="00FUZZY";
 
                     $("#item"+page).append(
                         `
-                                    <div id="${'Main_'+page+index}">
-                                               <div  class="input-group">
-                                                    <input id="${'M_Nam'+page+index}" type="text" class="form-control" value="${ItemName}">
-                                               </div>
+                           <div id="${'Main_'+page+index}">
+
+                                               <div class="input-group">
+                                                 <input id="${'M_Nam'+page+index}" type="text" class="form-control">
+                                                  <div class="input-group-append">
+                                                    <button  class="btn btn-outline-primary" type="button">選擇</button>
+                                                  </div>
+                                                </div>
 
                                                <div class="input-group ">
                                                      <span class="input-group-text" >${Sum_Str+":"}</span>
-                                                     <input  id="${'Num'+page+index}" type="text" class="Num form-control" value="${Num}">
+                                                     <input  id="${'Num'+page+index}" type="text" class="Num form-control" >
 
                                                     <span  class="input-group-text" >${Last_Str+":"}</span>
-                                                    <input   id="${'Last'+page+index}" type="text" class="Last form-control"  value="${Last}">
+                                                    <input   id="${'Last'+page+index}" type="text" class="Last form-control">
 
                                                 </div>
 
                                                <div  class="input-group mb-3">
                                                     <span class="input-group-text" >其他說明截斷字元:</span>
-                                                    <input id="${'Dir_s'+page+index}" type="text" class="form-control" value="${Dir_s}" readonly>
+                                                    <input id="${'Dir_s'+page+index}" type="text" class="form-control"  readonly>
                                                     <button  class="Obtn btn btn-secondary" type="button">其他</button>
                                                </div>
 
-
-                                    </div>
+                             </div>
                                         `
                     );
                     if(page==="C" || page==="G"){
@@ -199,6 +236,7 @@ $Account="00FUZZY";
                 $("#DELBtn").prop('disabled',true);
             })();
 
+            /****************************************Click Event***************************************************/
             $(document).on('click','button',function () {
                 let btnId=$(this).attr('id');
                 let Page=$("#PageVal").val();
@@ -212,11 +250,11 @@ $Account="00FUZZY";
                 //other btn
                 if ($(this).attr('class')==='Obtn btn btn-secondary'){
 
-                   let FatherEle=$(this).parent().parent();
-                   let index=FatherEle.attr('id').substring(6,FatherEle.attr('id').length);
+                    let FatherEle=$(this).parent().parent();
+                    let index=FatherEle.attr('id').substring(6,FatherEle.attr('id').length);
                     $("#O_"+Page+index).val($("#Dir_s"+Page+index).val());
 
-                    CreatOmodal(Page,AddBtn_IoType.get(Page),AddBtn_Color.get(Page),$("#item"+Page).children().length,"");
+                  /*  CreatOmodal(Page);*/
                     OpenOmodal(Page,index);
 
                 }
@@ -253,8 +291,9 @@ $Account="00FUZZY";
                         break;
                     case "AddItemBtn":
 
-                        ItemAction.appendItem(Page,'','','','');
-                        CreatOmodal(Page, AddBtn_IoType.get(Page),AddBtn_Color.get(Page),1,"A");
+                      ItemAction.appendItem(Page);
+
+   /*                       CreatOmodal(Page, AddBtn_IoType.get(Page),AddBtn_Color.get(Page),1,"A");
                         let CLASS=ThisPageJson.get(Page)[0].CID_CLASS;
                         let Cid_io=ThisPageJson.get(Page)[0].CID_IO;
                         let IoType=ThisPageJson.get(Page)[0].IO_TYPE;
@@ -276,12 +315,12 @@ $Account="00FUZZY";
                             IS_SUM:""
                         };
 
-                        ThisPageJson.get(Page).push(emptyObj);
+                        ThisPageJson.get(Page).push(emptyObj);*/
                         break;
                     case "O_ConfirmBtn":
-                       let index= $("#OMindex").val();
-                       let MM=$("#O_"+Page+index).val();
-                       let obj=ThisPageJson.get(Page);
+                        let index= $("#OMindex").val();
+                        let MM=$("#O_"+Page+index).val();
+                        let obj=ThisPageJson.get(Page);
 
 
                         obj[index].MM_IO=MM;
@@ -296,7 +335,7 @@ $Account="00FUZZY";
                             obj[index].COLOR= val.substring(index.length+1,val.length);
                         }
 
-                       $("#Dir_s"+Page+index).val(MM);
+                        $("#Dir_s"+Page+index).val(MM);
                         $("#OtherModal").modal('hide');
                         break;
                     case "SubmitBtn":
@@ -321,6 +360,78 @@ $Account="00FUZZY";
                         break;
                 }
             });
+            $(".PageBtn").on('click',function () {
+                let Page=$(this).attr('id');
+                let IdPt=$("#DA_idpt").val(), IdinPt=$("#DA_idinpt").val(),sUr="<?php echo $Account?>",sTraID=$("#sTraID").val();
+                console.log(PageINI);
+
+                if (PageINI===true ){
+
+                    /*if(SerchCallBack===false){
+                        //搜尋後加入
+                    }*/
+
+                    GetPageJson(Page,sTraID);
+
+                    //存第一次選擇的頁面Json
+                    for (let e of ThisPageJson.entries()){
+                        DB_WSST(e[0],sTraID,JSON.stringify(e[1]));
+                    }
+
+                }
+
+
+                /*Get INI Json to FistTime*/
+                if (CallOnce===false){
+
+                    $("#SubmitBtn").prop('disabled',false);
+                    $("#SerchBtn").prop('disabled',false);
+                    GetINIJson(IdPt,IdinPt,sUr,Page);
+                    PageINI=true;
+                }
+
+                $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
+                $(this).css({'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
+                $("#PageVal").val(Page);
+                $(".PItem").hide();
+                $("#item"+Page).show();
+                $(".ItemBtn").show();
+                CallOnce=true;
+            });
+            /******************************************************************************************************/
+
+            /***************************************Text Change Event***************************************************/
+            $(document).on('change',"input[type=text]",function () {
+
+                let Page=$('#PageVal').val();
+                let Id=$(this).attr('id');
+                let index=Id.split('')[Id.length-1];
+
+                let CidIo="";
+                let obj=ThisPageJson.get(Page);
+
+                if (Id !=="sDate" && Id!=="sTime"){
+                    if(Page==="A" || Page==="B" || Page==="C" || Page==="D"){
+                        CidIo="I";
+                    }else if (Page==="H"){
+                        CidIo="R";
+                    }
+                    else {
+                        CidIo="O";
+                    }
+                    obj[index].CID_IO=CidIo;
+                    obj[index].QUNTY=$("#Num"+Page+index).val();
+                    obj[index].LOSS=$("#Last"+Page+index).val();
+                    obj[index].MM_IO=$("#Dir_s"+Page+index).val();
+                    obj[index].M_Nam=$("#M_Nam"+Page+index).val();
+                    console.log(obj);
+                }
+
+            });
+            /***********************************************************************************************************/
+
+
+            /***************************************RadioBtn Change Event***************************************************/
             $(document).on('change',"input[type=radio]",function () {
                 let index=$(this).val().substring(0,1);
                 let Page=$(this).val().substring(1,2);
@@ -358,117 +469,10 @@ $Account="00FUZZY";
 
 
             });
-            $(document).on('change',"input[type=text]",function () {
-
-                let Page=$('#PageVal').val();
-                let Id=$(this).attr('id');
-                let index=Id.split('')[Id.length-1];
-                let TypeID="";
-                let CidIo="";
-                let obj=ThisPageJson.get(Page);
-
-                if (Id !=="sDate" && Id!=="sTime"){
-                    if(Page==="A" || Page==="B" || Page==="C" || Page==="D"){
-                        TypeID="I"+Page;
-                        CidIo="I";
-                    }else {
-                        if (Page==="E"){
-                            TypeID="OA"
-                        }
-                        if (Page==="F"){
-                            TypeID="OB"
-                        }
-                        if (Page==="G"){
-                            TypeID="OC"
-                        }
-                        if (Page==="H"){
-                            TypeID="OD"
-                        }
-                        CidIo="O";
-                    }
-
-                    if (obj[index]===undefined){
-                        let Cloen_DefaultObj=[...DefaultObj];
-                        obj.push(Cloen_DefaultObj[0])
-                    }
-
-               /*   obj[index].IO_TYPE="IOTP000000"+TypeID; 比對字串 */
-                    obj[index].CID_IO=CidIo;
-                    obj[index].QUNTY=$("#Num"+Page+index).val();
-                    obj[index].LOSS=$("#Last"+Page+index).val();
-                    obj[index].MM_IO=$("#Dir_s"+Page+index).val();
-                    obj[index].M_Nam=$("#M_Nam"+Page+index).val();
-
-                }
-
-            });
-            $(document).on('keyup',"input[type=text]",function(e){
-
-                let id=$(this).attr('id');
-                let Page=$("#PageVal").val();
-                let regex=/^-?\d*[.,]?\d*$/;
+            /****************************************************************************************************************/
 
 
 
-
-                if (id.substring(0,3)==="Num" || id.substring(0,4)==="Last")
-                {
-
-                    //Input Only Number
-
-                    if (/^-?\d*[.,]?\d*$/.test($(this).val())){
-                        this.oldValue=$(this).val();
-                    }else if (this.hasOwnProperty('oldValue')){
-                        $(this).val(this.oldValue);
-                    }else {
-                        $(this).val('');
-                    }
-                }
-
-                if (id.substring(0,3)==="Num" && Page==="B" || Page==="E"  || Page==="F"){
-
-                    $("#Last"+id.substring(3,id.length)).val("");
-                }
-                if (id.substring(0,4)==="Last" && Page==="B"  || Page==="E"  || Page==="F"){
-
-                    $("#Num"+id.substring(4,id.length)).val("");
-                }
-            });
-            //page on
-            $(".PageBtn").on('click',function () {
-                let Page=$(this).attr('id');
-                let IdPt=$("#DA_idpt").val(), IdinPt=$("#DA_idinpt").val(),sUr="<?php echo $Account?>",sTraID=$("#sTraID").val();
-
-                if (PageINI===true ){
-                    let Cloen_DefaultObj=[...DefaultObj];
-                    if(SerchCallBack===false){
-                        //搜尋後加入
-                        Cloen_DefaultObj[0].JID_MM=[];
-                        Cloen_DefaultObj[0].JID_COLOR=[];
-                    }
-
-                    GetPageJson(Page,sTraID,Cloen_DefaultObj);
-                    for (let e of ThisPageJson.entries()){
-                        DB_WSST(e[0],sTraID,JSON.stringify(e[1]));
-                    }
-                }
-
-                if (CallOnce===false){
-                    /*Get INI Json to FistTime*/
-                    $("#SubmitBtn").prop('disabled',false);
-                    $("#SerchBtn").prop('disabled',false);
-                    GetINIJson(IdPt,IdinPt,sUr,Page);
-                    PageINI=true;
-                }
-
-                $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
-                $(this).css({'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
-                $("#PageVal").val(Page);
-                $(".PItem").hide();
-                $("#item"+Page).show();
-                $(".ItemBtn").show();
-                CallOnce=true;
-            });
 
             function GetINIJson(idPt,INPt,sUr,Page){
                 $("#wrapper").show();
@@ -477,17 +481,14 @@ $Account="00FUZZY";
                     .done(function(data) {
                         $("#wrapper").hide();
                         let obj=JSON.parse(AESDeCode(data));
-                        console.log(obj);
+
                         $("#sSave").val(obj.sSave);
                         $("#sTraID").val(obj.sTraID);
                         $("#SRANK").val(obj.JID_NSRANK);
                         $("#FSEQ_WT").val(obj.FORMSEQANCE_WT);
-                        let Cloen_DefaultObj=[...DefaultObj];
 
-                        Cloen_DefaultObj[0].JID_MM=[];
-                        Cloen_DefaultObj[0].JID_COLOR=[];
+                        GetPageJson(Page,obj.sTraID);
 
-                        GetPageJson(Page,obj.sTraID,Cloen_DefaultObj);
                     })
                     .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -498,50 +499,16 @@ $Account="00FUZZY";
                         );
                     });
             }
-            function GetPageJson(Page,sTraID,DefaultObj) {
-/*
-                console.log("http://localhost/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page));
-*/
-                $.ajax("/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page))
+            function GetPageJson(Page,sTraID) {
+            $.ajax("/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page))
                     .done(function (data) {
-
-                            let obj=JSON.parse(AESDeCode(data));
-
-                            if (obj.length === 0){
-
-                                    obj=DefaultObj;
-                                }
-
-                            let Item_leng=$("#item"+Page).children().length;
-
-                            console.log(obj);
-                            $.each(obj,function (index,val) {
-                                CreatOmodal(Page,val.M_Nam,val.JID_MM,val.JID_COLOR,index,Item_leng,"");
-                            });
-
-
-                               /*   CreatOmodal(Page,obj[0].JID_MM,obj[0].JID_COLOR,Item_leng,"");*/
-
-                                  AddBtn_Color.set(Page,obj[0].JID_COLOR);
-                                  AddBtn_IoType.set(Page,obj[0].JID_MM);
-
-                                  if(ThisPageJson.get(Page)===undefined){
-                                      $.each(obj,function (index,val) {
-
-                                          $("#M_Nam"+Page+index).val(val.M_Nam);
-                                          if(val.JID_KEY!==""){
-                                              $("#M_Nam"+Page+index).prop('disabled',true);
-                                          }
-                                          if(val.IO_TYPE){
-                                              delete val.JID_MM;
-                                              delete val.JID_COLOR;
-                                          }
-
-                                      });
-                                      ThisPageJson.set(Page,obj);
-                                  }
-
-
+                        let obj=JSON.parse(AESDeCode(data));
+                        console.log(obj);
+                        /*if ($('#item'+Page).children().length>0){
+                            return;
+                        }*/
+                        ThisPageJson.set(Page,obj);
+                        CreatDefaultElement.MainItem(obj,Page);
 
                     }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
@@ -553,14 +520,10 @@ $Account="00FUZZY";
                 });
 
             }
-
-
-
-
-
             function DB_WSST(Page,sTraID,json){
+
                 let obj=JSON.parse(json);
-                console.log(obj);
+
                 $.each(obj,function (index,val) {
                     if ((val.M_Nam).indexOf('&')>0){
                         val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
@@ -644,8 +607,6 @@ $Account="00FUZZY";
 
                 $(".PItem").children().children().remove();
 
-                CreatDefaultElement.MainElement();
-
                 $("#PageBtn").children().prop('disabled',false);
                 $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
                 $("input[type=radio]").prop("checked",false);
@@ -660,82 +621,110 @@ $Account="00FUZZY";
 
             function Serchcallback(AESobj){
 
-                const Pagearr =['A','B','C','D','E','F','G','H'];
-                let obj=JSON.parse(AESDeCode(AESobj));
+             const PageArr =['A','B','C','D','E','F','G','H'];
+             let obj=JSON.parse(AESDeCode(AESobj));
 
-                let PatientID=obj.splice(0, 3);
-                let sTraID=PatientID[0];
-                let IdPt=PatientID[1];
-                let InIdPt=PatientID[2];
-                if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val()){
+
+             /*   if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val()){
                     alert("病人資訊以異動,請重新操作");
                     return ;
                 }
 
-                ThisPageJson.clear();
-                $.each(Pagearr,function (index,page) {
-                      $("#item"+page).children().remove();
-                  });
+             */
+
+             /***初始化****/
+             ThisPageJson.clear();
+             $.each(PageArr,function (index,page) {
+                 $("#item"+page).children().remove();
+             });
 
 
-                $.each(obj,function (index) {
-                    let page="";
-                    let PageArr=obj[index];
-                    switch (index) {
-                        case 0:
-                            page='A';
-                            break;
-                        case 1:
-                            page='B';
-                            break;
-                        case 2:
-                            page='C';
-                            break;
-                        case 3:
-                            page='D';
-                            break;
-                        case 4:
-                            page='E';
-                            break;
-                        case 5:
-                            page='F';
-                            break;
-                        case 6:
-                            page='G';
-                            break;
-                        case 7:
-                            page='H';
-                            break;
-                        default:
-                            break;
-                    }
 
-                   $.each(PageArr,function (i) {
-                       let Obj= JSON.parse(PageArr[i]);
-                       let Qty=Obj.QUNTY==='-1'?"":Obj.QUNTY;
-                       ItemAction.appendItem(page,Obj.M_Nam,Obj.MM_IO,Qty,Obj.LOSS);
+             for(let index in obj){
+
+                 if (PageArr.indexOf(index)>-1){
+                     let arr=obj[index];
+                     CreatDefaultElement.MainItem(arr,index);
+
+                 }
+             }
 
 
-                       $("#sDate").val(Obj.DT);
-                       $("#sTime").val(Obj.TM.substring(0,4));
-                       $("#M_Nam"+page+i).prop('readonly',true);
-                       $("#"+i+page+Obj.IOWAY).prop('checked',true);
-                       $("#"+i+page+Obj.COLOR).prop('checked',true);
+                $("#sDate").val(obj.DT_EXCUTE);
+                $("#sTime").val(obj.TM_EXCUTE.substring(0,4));
+                $("#sTraID").val(obj.sTraID);
 
-                   }) ;
 
-                    if (PageArr.length===0){
-                        ThisPageJson.set(page,[...DefaultObj]);
-                    }else {
-                        ThisPageJson.set(page, JSON.parse("[" + obj[index].join() + "]"));
-                    }
+            /*           let PatientID=obj.splice(0, 3);
+                        let sTraID=PatientID[0];
+                        let IdPt=PatientID[1];
+                        let InIdPt=PatientID[2];
 
-                });
 
-                SerchCallBack=true;
-                $("#sTraID").val(sTraID);
-                $("#DELBtn").prop('disabled',false);
-                $("#ISTM").hide();
+                        ThisPageJson.clear();
+                        $.each(Pagearr,function (index,page) {
+                              $("#item"+page).children().remove();
+                          });
+
+
+                        $.each(obj,function (index) {
+                            let page="";
+                            let PageArr=obj[index];
+                            switch (index) {
+                                case 0:
+                                    page='A';
+                                    break;
+                                case 1:
+                                    page='B';
+                                    break;
+                                case 2:
+                                    page='C';
+                                    break;
+                                case 3:
+                                    page='D';
+                                    break;
+                                case 4:
+                                    page='E';
+                                    break;
+                                case 5:
+                                    page='F';
+                                    break;
+                                case 6:
+                                    page='G';
+                                    break;
+                                case 7:
+                                    page='H';
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                           $.each(PageArr,function (i) {
+                               let Obj= JSON.parse(PageArr[i]);
+                               let Qty=Obj.QUNTY==='-1'?"":Obj.QUNTY;
+                               ItemAction.appendItem(page,Obj.M_Nam,Obj.MM_IO,Qty,Obj.LOSS);
+
+
+                               $("#sDate").val(Obj.DT);
+                               $("#sTime").val(Obj.TM.substring(0,4));
+                               $("#M_Nam"+page+i).prop('readonly',true);
+                               $("#"+i+page+Obj.IOWAY).prop('checked',true);
+                               $("#"+i+page+Obj.COLOR).prop('checked',true);
+
+                           }) ;
+
+                            if (PageArr.length===0){
+                                ThisPageJson.set(page,[...DefaultObj]);
+                            }else {
+                                ThisPageJson.set(page, JSON.parse("[" + obj[index].join() + "]"));
+                            }
+
+                        });
+
+                        SerchCallBack=true;
+                        $("#sTraID").val(sTraID);
+                        $("#DELBtn").prop('disabled',false);
+                        $("#ISTM").hide();*/
 
             }
             function checkBEDwindow() {
@@ -760,16 +749,17 @@ $Account="00FUZZY";
                     }
                 }
             }
-            function CreatOmodal(Page,TagName,JMM_arr,JColor_arr,index,len,mode) {
+            function CreatOmodal(Page,arr) {
 
-                if ($('#M_'+Page+index).length===0){
+               $.each(arr,function (index,val) {
 
-                    $("#OtherModalbody").append(
-                        `
+                   if ($('#M_'+Page+index).length===0){
+                       $("#OtherModalbody").append(
+                           `
                                <div id="${'M_'+Page+index}" class="M_Omodal row">
 
                                     <div class="col-12">
-                                          <input type="text" class="form-control" value="${TagName}" readonly>
+                                          <input type="text" class="form-control" value="${val.M_Nam}" readonly>
                                     </div>
 
                                     <div id="${'IOType'+Page + index}" class="col-12" >
@@ -792,123 +782,44 @@ $Account="00FUZZY";
                                         </div>
                                     </div>
 
-
                                 </div>
                             `
-                    );
+                       );
+                   }
 
-                }
-                $.each(JMM_arr,function (i,val) {
-                    $("#IOType" + Page + index).append(
-                        `
+
+                   if ((val.JID_MM).length>0){
+                       $.each(val.JID_MM,function (i,value) {
+                           $("#IOType" + Page + index).append(
+                               `
                           <label style="font-size: 1.5rem;">
-                               <input id="${index + Page + val.JID_KEY}" class="${'IOCK_' + Page + index}" type="radio" name="${'IOCK_' + Page + index}"  value="${index + Page +val.JID_KEY}">
-                               ${val.NM_ITEM}
+                               <input id="${index + Page + value.JID_KEY}" class="${'IOCK_' + Page + index}" type="radio" name="${'IOCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
+                               ${value.NM_ITEM}
                           </label>
                         `
-                    )
+                           )
 
-                });
+                       });
 
-                for (let i=0;i<JColor_arr.length;i++){
-                    let val=JColor_arr[i];
-                    $("#Color" + Page + index).append(
-                        `
-                          <label style="font-size: 1.5rem;">
-                              <input id="${index + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +val.JID_KEY}">
-                               ${val.NM_ITEM}
-                         </label>
-                         `
-                    );
-                }
+                   }
 
-             /*   $.each(JColor_arr,function (i,val) {
-                    console.log(val.NM_ITEM);
-
-                });*/
-                /*                $.each(JColor_arr,function (i,val) {
-                                    $("#Color" + Page + index).append(
-                                        `
-                                          <label style="font-size: 1.5rem;">
-                                              <input id="${index + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +val.JID_KEY}">
-                                               ${val.NM_ITEM}
-                                          </label>
-                                         `
-                                    );
-                                });*/
-            /*    for (let i=0;i<len;i++){
-
-                    if(mode==="A"){
-                       i=$("#item"+Page).children().length-1;
-                    }
-                    if ($('#M_'+Page+i).length===0){
-
-                         $("#OtherModalbody").append(
-                            `
-                               <div id="${'M_'+Page+i}" class="M_Omodal row">
-
-                                    <div class="col-12">
-                                          <input type="text" class="form-control" value="${PageName}" readonly>
-                                    </div>
-
-                                    <div id="${'IOType'+Page + i}" class="col-12" >
-                                        <div>
-                                            <label style="color: #0f6674">方式:</label>
-
-                                        </div>
-                                    </div>
-
-                                    <div id="${'Color'+Page + i}" class="col-12">
-                                        <div>
-                                            <label style="color: #0f6674">顏色:</label>
-
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-12">
-                                        <div class="form-group">
-                                             <label for="${'O_'+Page+i}" style="color: #0f6674">備註:</label>
-                                             <textarea class="form-control rounded-0" id="${'O_'+Page+i}" rows="10"></textarea>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-                            `
-                        );
-
-                            $.each(JMM_arr,function (index,val) {
-                                $("#IOType" + Page + i).append(
-                                    `
+                   if ((val.JID_COLOR).length>0)
+                   {
+                       $.each(val.JID_COLOR,function (i,value) {
+                           $("#Color" + Page + index).append(
+                               `
                               <label style="font-size: 1.5rem;">
-                               <input id="${i + Page + val.JID_KEY}" class="${'IOCK_' + Page + i}" type="radio" name="${'IOCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">
-                               ${val.NM_ITEM}
-                              </label>
+                                  <input id="${index + Page + value.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
+                                   ${value.NM_ITEM}
+                             </label>
                               `
-                                );
-                            });
+                           );
+                       })
+
+                   }
 
 
-                             $.each(JColor_arr,function (index,val) {
-                                 $("#Color" + Page + i).append(
-                                     `
-                              <label style="font-size: 1.5rem;">
-                                <input id="${i + Page + val.JID_KEY}"  class="${'COLORCK_' + Page + i}"  type="radio"  name="${'COLORCK_' + Page + i}"  value="${i + Page +val.JID_KEY}">
-                                ${val.NM_ITEM}
-                              </label>
-                              `
-                                 );
-                             });
-                    }
-
-                   if (JMM_arr.length===0){
-                        $("#IOType" + Page + i).hide();
-                    }
-                    if (JColor_arr.length===0){
-                        $("#Color" + Page + i).hide();
-                    }
-                }*/
+               });
 
 
 
@@ -993,7 +904,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-        display: none;
+        /*display: none;*/
         background-color: #00FF00;
     }
     .Dir_s{
@@ -1184,7 +1095,7 @@ $Account="00FUZZY";
         </div>
 
     <!----------------------------------------------------------Third_Class Modal-------------------------------------------------------------------------->
-    <div class="modal fade" id="TC_sModal" tabindex="-1" role="dialog"  aria-hidden="true" data-backdrop="static">
+       <div class="modal fade" id="TC_sModal" tabindex="-1" role="dialog"  aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog  modal-dialog-scrollable modal-dialog-centered " role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -1199,6 +1110,7 @@ $Account="00FUZZY";
             </div>
         </div>
     </div>
+    <!----------------------------------------------------------AddItem Modal-------------------------------------------------------------------------->
 </div>
 </body>
 </html>
