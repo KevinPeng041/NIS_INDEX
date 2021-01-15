@@ -1,190 +1,197 @@
 <?php
 function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
 
-    $IT_SQL= "SELECT ST_DATAB, ST_DATAE, ST_DATAF ,ST_DATAH FROM HIS803.NISWSIT WHERE ID_TABFORM = 'IOA'";
-    $IT_stid=oci_parse($conn,$IT_SQL);
-    if(!$IT_stid){
+        $IT_SQL= "SELECT ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG, ST_DATAH 
+                  FROM HIS803.NISWSIT WHERE ID_TABFORM = 'IOA'";
+        $IT_stid=oci_parse($conn,$IT_SQL);
+        if(!$IT_stid){
 
-        $e=oci_error($conn);
-        return $e['message'];
-    }
-   oci_execute($IT_stid);
+            $e=oci_error($conn);
+            return $e['message'];
+        }
+       oci_execute($IT_stid);
 
-    $ST_DATAA=[];
-    $ST_DATAB='';
-    $ST_DATAC=[];
-    $ST_DATAD=[];
-    $ST_DATAE='';
-    $ST_DATAF='';
-    $ST_DATAG=[];
-    $ST_DATAH='';
+        $ST_DATAA=[];
+        $ST_DATAB='';
+        $ST_DATAC=[];
+        $ST_DATAD=[];
+        $ST_DATAE='';
+        $ST_DATAF='';
+        $ST_DATAG=[];
+        $ST_DATAH='';
 
-    while (oci_fetch_array($IT_stid)){
-        $ST_DATAB=oci_result($IT_stid,"ST_DATAB")->load();
-        $ST_DATAE=oci_result($IT_stid,"ST_DATAE")->load();
-        $ST_DATAF=oci_result($IT_stid,"ST_DATAF")->load();
-        $ST_DATAH=oci_result($IT_stid,"ST_DATAH")->load();
-    }
+        while (oci_fetch_array($IT_stid)){
+          //  $ST_DATAA=oci_result($IT_stid,"ST_DATAA")->load();
+            $ST_DATAB=oci_result($IT_stid,"ST_DATAB")->load();
+         //   $ST_DATAC=oci_result($IT_stid,"ST_DATAC")->load();
+         //   $ST_DATAD=oci_result($IT_stid,"ST_DATAD")->load();
+            $ST_DATAE=oci_result($IT_stid,"ST_DATAE")->load();
+            $ST_DATAF=oci_result($IT_stid,"ST_DATAF")->load();
+        //    $ST_DATAG=oci_result($IT_stid,"ST_DATAG")->load();
+            $ST_DATAH=oci_result($IT_stid,"ST_DATAH")->load();
+        }
 
-    oci_free_statement($IT_stid);
+        oci_free_statement($IT_stid);
 
-    $A_SQL=" SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM  FROM NIS_V_HORD_QI
-            WHERE ID_INPATIENT = '$INPt' AND DT_BEGIN <= '1090101'
-            AND (DT_DC = ' ' Or DT_DC >= '1090101')
-            ORDER by NM_ITEM ";
-
-
-    $C_SQL="SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM FROM NIS_V_HORD_QB
-            WHERE ID_INPATIENT = '$INPt'
-            AND DT_BEGIN <= '0970121' AND (DT_DC = ' ' Or DT_DC >= '0970121') 
-            ORDER by NM_ITEM";
-
-    $D_SQL="SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM FROM NIS_V_HORD_QIC
-            WHERE ID_INPATIENT = '$INPt' AND DT_BEGIN <= '1090101' AND (DT_DC = ' ' OR DT_DC >= '1090101') 
-            AND JID_KEY IN (SELECT ID_ITEM FROM NSCLSI WHERE CID_CLASS = 'TPPN' AND IS_ACTIVE = 'Y')
-            ORDER BY NM_ITEM";
-
-    $G_SQL="SELECT DISTINCT CID_CLASS, JID_KEY, NM_TUBE || '(' || NM_ORGAN || ')' AS NM_ITEM, NO_PROBLEM
-            FROM NIS_V_TUPG_QO WHERE ID_INPATIENT = '$INPt'
-            AND DT_EXECUTE <= '1090701'
-            AND (DT_ENDING >= ' ' OR DT_ENDING = ' ')
-            AND IS_IO = 'Y'
-            ORDER BY NO_PROBLEM";
+        $A_SQL=" SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM  FROM NIS_V_HORD_QI
+                WHERE ID_INPATIENT = '$INPt' AND DT_BEGIN <= '1090101'
+                AND (DT_DC = ' ' Or DT_DC >= '1090101')
+                ORDER by NM_ITEM ";
 
 
-    $A_stid=oci_parse($conn,$A_SQL);
-    $C_stid=oci_parse($conn,$C_SQL);
-    $D_stid=oci_parse($conn,$D_SQL);
-    $G_stid=oci_parse($conn,$G_SQL);
+        $C_SQL="SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM FROM NIS_V_HORD_QB
+                WHERE ID_INPATIENT = '$INPt'
+                AND DT_BEGIN <= '0970121' AND (DT_DC = ' ' Or DT_DC >= '0970121')
+                ORDER by NM_ITEM";
 
-    oci_execute($A_stid);
-    oci_execute($C_stid);
-    oci_execute($D_stid);
-    oci_execute($G_stid);
+        $D_SQL="SELECT DISTINCT CID_CLASS, JID_KEY, NM_ITEM FROM NIS_V_HORD_QIC
+                WHERE ID_INPATIENT = '$INPt' AND DT_BEGIN <= '1090101' AND (DT_DC = ' ' OR DT_DC >= '1090101')
+                AND JID_KEY IN (SELECT ID_ITEM FROM NSCLSI WHERE CID_CLASS = 'TPPN' AND IS_ACTIVE = 'Y')
+                ORDER BY NM_ITEM";
 
-    while (oci_fetch_array($A_stid)){
-        $NM_ITEM=oci_result($A_stid,"NM_ITEM");
-        $JID_KEY=oci_result($A_stid,"JID_KEY");
-        $CID_CLASS=oci_result($A_stid,"CID_CLASS");
-        $ST_DATAA[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000IA',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
-    }
-    while (oci_fetch_array($C_stid)){
-        $NM_ITEM=oci_result($C_stid,"NM_ITEM");
-        $JID_KEY=oci_result($C_stid,"JID_KEY");
-        $CID_CLASS=oci_result($C_stid,"CID_CLASS");
-        $ST_DATAC[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000IC',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
-    }
-    while (oci_fetch_array($D_stid)){
-        $NM_ITEM=oci_result($D_stid,"NM_ITEM");
-        $JID_KEY=oci_result($D_stid,"JID_KEY");
-        $CID_CLASS=oci_result($D_stid,"CID_CLASS");
-        $ST_DATAD[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000ID',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
-    }
-    while (oci_fetch_array($G_stid)){
-        $NM_ITEM=oci_result($G_stid,"NM_ITEM");
-        $JID_KEY=oci_result($G_stid,"JID_KEY");
-        $CID_CLASS=oci_result($G_stid,"CID_CLASS");
-        $NO_PROBLEM=oci_result($G_stid,"NO_PROBLEM");
-
-        $ST_DATAG[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000OC',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS,"NO_PROBLEM"=>$NO_PROBLEM);
-    }
+        $G_SQL="SELECT DISTINCT CID_CLASS, JID_KEY, NM_TUBE || '(' || NM_ORGAN || ')' AS NM_ITEM, NO_PROBLEM
+                FROM NIS_V_TUPG_QO WHERE ID_INPATIENT = '$INPt'
+                AND DT_EXECUTE <= '1090701'
+                AND (DT_ENDING >= ' ' OR DT_ENDING = ' ')
+                AND IS_IO = 'Y'
+                ORDER BY NO_PROBLEM";
 
 
-    $JsonA=json_encode($ST_DATAA,JSON_UNESCAPED_UNICODE);
-    $JsonC=json_encode($ST_DATAC,JSON_UNESCAPED_UNICODE);
-    $JsonD=json_encode($ST_DATAD,JSON_UNESCAPED_UNICODE);
-    $JsonG=json_encode($ST_DATAG,JSON_UNESCAPED_UNICODE);
+        $A_stid=oci_parse($conn,$A_SQL);
+        $C_stid=oci_parse($conn,$C_SQL);
+        $D_stid=oci_parse($conn,$D_SQL);
+        $G_stid=oci_parse($conn,$G_SQL);
+
+        oci_execute($A_stid);
+        oci_execute($C_stid);
+        oci_execute($D_stid);
+        oci_execute($G_stid);
+
+        while (oci_fetch_array($A_stid)){
+            $NM_ITEM=oci_result($A_stid,"NM_ITEM");
+            $JID_KEY=oci_result($A_stid,"JID_KEY");
+            $CID_CLASS=oci_result($A_stid,"CID_CLASS");
+            $ST_DATAA[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000IA',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
+        }
+
+        while (oci_fetch_array($C_stid)){
+            $NM_ITEM=oci_result($C_stid,"NM_ITEM");
+            $JID_KEY=oci_result($C_stid,"JID_KEY");
+            $CID_CLASS=oci_result($C_stid,"CID_CLASS");
+            $ST_DATAC[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000IC',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
+        }
+        while (oci_fetch_array($D_stid)){
+            $NM_ITEM=oci_result($D_stid,"NM_ITEM");
+            $JID_KEY=oci_result($D_stid,"JID_KEY");
+            $CID_CLASS=oci_result($D_stid,"CID_CLASS");
+            $ST_DATAD[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000ID',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS);
+        }
+        while (oci_fetch_array($G_stid)){
+            $NM_ITEM=oci_result($G_stid,"NM_ITEM");
+            $JID_KEY=oci_result($G_stid,"JID_KEY");
+            $CID_CLASS=oci_result($G_stid,"CID_CLASS");
+            $NO_PROBLEM=oci_result($G_stid,"NO_PROBLEM");
+
+            $ST_DATAG[]=array("M_Nam"=>$NM_ITEM,"IO_TYPE"=>'IOTP000000OC',"JID_KEY"=>$JID_KEY,"CID_CLASS"=>$CID_CLASS,"NO_PROBLEM"=>$NO_PROBLEM);
+        }
 
 
-
-    oci_free_statement($A_stid);
-    oci_free_statement($C_stid);
-    oci_free_statement($D_stid);
-    oci_free_statement($G_stid);
-
-    $TP_SQL="INSERT INTO HIS803.NISWSTP(
-                    ID_TABFORM,ID_TRANSACTION,ID_PATIENT,ID_INPATIENT,DT_EXCUTE,TM_EXCUTE,
-                    ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG,ST_DATAH,
-                    ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
-                     VALUES (
-                     'IOA',:sTraID,:Idpt,:INPt,' ',' ',
-                     EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),
-                    :BED,:DM_P,:UR_P,:NSRANK,:FormSeq)
-                    RETURNING  ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG,ST_DATAH
-                     INTO :ST_DATAA,:ST_DATAB,:ST_DATAC,:ST_DATAD,:ST_DATAE,:ST_DATAF,:ST_DATAG,:ST_DATAH
-                     ";
-
-
-    $TP_Stid = oci_parse($conn, $TP_SQL);
-    if(!$TP_Stid){
-        $e=oci_error($conn);
-        return $e['message'];
-    }
-
-
-    $clobA=oci_new_descriptor($conn,OCI_D_LOB);
-    $clobB=oci_new_descriptor($conn,OCI_D_LOB);
-    $clobC=oci_new_descriptor($conn,OCI_D_LOB);
-    $clobD=oci_new_descriptor($conn,OCI_D_LOB);
-    $clobE=oci_new_descriptor($conn,OCI_D_LOB);
-    $clobF=oci_new_descriptor($conn,OCI_D_LOB);
-    $clobG=oci_new_descriptor($conn,OCI_D_LOB);
-    $clobH=oci_new_descriptor($conn,OCI_D_LOB);
+        $JsonA=json_encode($ST_DATAA,JSON_UNESCAPED_UNICODE);
+        $JsonC=json_encode($ST_DATAC,JSON_UNESCAPED_UNICODE);
+        $JsonD=json_encode($ST_DATAD,JSON_UNESCAPED_UNICODE);
+        $JsonG=json_encode($ST_DATAG,JSON_UNESCAPED_UNICODE);
 
 
 
+        oci_free_statement($A_stid);
+        oci_free_statement($C_stid);
+        oci_free_statement($D_stid);
+        oci_free_statement($G_stid);
 
-    oci_bind_by_name($TP_Stid,":sTraID",$sTraID);
-    oci_bind_by_name($TP_Stid,":Idpt",$Idpt);
-    oci_bind_by_name($TP_Stid,":INPt",$INPt);
-    oci_bind_by_name($TP_Stid,":BED",$ID_BED);
-    oci_bind_by_name($TP_Stid,":DM_P",$date);
-    oci_bind_by_name($TP_Stid,":UR_P",$sUr);
-    oci_bind_by_name($TP_Stid,":NSRANK",$JID_NSRANK);
-    oci_bind_by_name($TP_Stid,":FormSeq",$FORMSEQANCE_WT);
-
-    //I
-    oci_bind_by_name($TP_Stid,":ST_DATAA",$clobA,-1,OCI_B_CLOB);
-    oci_bind_by_name($TP_Stid,":ST_DATAB",$clobB,-1,OCI_B_CLOB);
-    oci_bind_by_name($TP_Stid,":ST_DATAC",$clobC,-1,OCI_B_CLOB);
-    oci_bind_by_name($TP_Stid,":ST_DATAD",$clobD,-1,OCI_B_CLOB);
-
-    //O
-    oci_bind_by_name($TP_Stid,":ST_DATAE",$clobE,-1,OCI_B_CLOB);
-    oci_bind_by_name($TP_Stid,":ST_DATAF",$clobF,-1,OCI_B_CLOB);
-    oci_bind_by_name($TP_Stid,":ST_DATAG",$clobG,-1,OCI_B_CLOB);
-    oci_bind_by_name($TP_Stid,":ST_DATAH",$clobH,-1,OCI_B_CLOB);
+        $TP_SQL="INSERT INTO HIS803.NISWSTP(
+                        ID_TABFORM,ID_TRANSACTION,ID_PATIENT,ID_INPATIENT,DT_EXCUTE,TM_EXCUTE,
+                        ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG,ST_DATAH,
+                        ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT)
+                         VALUES (
+                         'IOA',:sTraID,:Idpt,:INPt,' ',' ',
+                         EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),
+                        :BED,:DM_P,:UR_P,:NSRANK,:FormSeq)
+                        RETURNING  ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,ST_DATAE,ST_DATAF,ST_DATAG,ST_DATAH
+                         INTO :ST_DATAA,:ST_DATAB,:ST_DATAC,:ST_DATAD,:ST_DATAE,:ST_DATAF,:ST_DATAG,:ST_DATAH
+                         ";
 
 
-    $result = oci_execute($TP_Stid,OCI_NO_AUTO_COMMIT);
-    if(!$result){
-        $e=oci_error($TP_Stid);
-        return $e['message'];
-    }
-    $clobA->save($JsonA);
-    $clobB->save($ST_DATAB);
-    $clobC->save($JsonC);
-    $clobD->save($JsonD);
-    $clobE->save($ST_DATAE);
-    $clobF->save($ST_DATAF);
-    $clobG->save($JsonG);
-    $clobH->save($ST_DATAH);
+        $TP_Stid = oci_parse($conn, $TP_SQL);
+        if(!$TP_Stid){
+            $e=oci_error($conn);
+            return $e['message'];
+        }
 
-    oci_free_statement($TP_Stid);
-    oci_commit($conn);
-    $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave,'FORMSEQANCE_WT'=>$FORMSEQANCE_WT,"JID_NSRANK"=>$JID_NSRANK);
-    return json_encode($JsonBack,JSON_UNESCAPED_UNICODE);
+
+        $clobA=oci_new_descriptor($conn,OCI_D_LOB);
+        $clobB=oci_new_descriptor($conn,OCI_D_LOB);
+        $clobC=oci_new_descriptor($conn,OCI_D_LOB);
+        $clobD=oci_new_descriptor($conn,OCI_D_LOB);
+        $clobE=oci_new_descriptor($conn,OCI_D_LOB);
+        $clobF=oci_new_descriptor($conn,OCI_D_LOB);
+        $clobG=oci_new_descriptor($conn,OCI_D_LOB);
+        $clobH=oci_new_descriptor($conn,OCI_D_LOB);
+
+
+
+
+        oci_bind_by_name($TP_Stid,":sTraID",$sTraID);
+        oci_bind_by_name($TP_Stid,":Idpt",$Idpt);
+        oci_bind_by_name($TP_Stid,":INPt",$INPt);
+        oci_bind_by_name($TP_Stid,":BED",$ID_BED);
+        oci_bind_by_name($TP_Stid,":DM_P",$date);
+        oci_bind_by_name($TP_Stid,":UR_P",$sUr);
+        oci_bind_by_name($TP_Stid,":NSRANK",$JID_NSRANK);
+        oci_bind_by_name($TP_Stid,":FormSeq",$FORMSEQANCE_WT);
+
+        //I
+        oci_bind_by_name($TP_Stid,":ST_DATAA",$clobA,-1,OCI_B_CLOB);
+        oci_bind_by_name($TP_Stid,":ST_DATAB",$clobB,-1,OCI_B_CLOB);
+        oci_bind_by_name($TP_Stid,":ST_DATAC",$clobC,-1,OCI_B_CLOB);
+        oci_bind_by_name($TP_Stid,":ST_DATAD",$clobD,-1,OCI_B_CLOB);
+
+        //O
+        oci_bind_by_name($TP_Stid,":ST_DATAE",$clobE,-1,OCI_B_CLOB);
+        oci_bind_by_name($TP_Stid,":ST_DATAF",$clobF,-1,OCI_B_CLOB);
+        oci_bind_by_name($TP_Stid,":ST_DATAG",$clobG,-1,OCI_B_CLOB);
+        oci_bind_by_name($TP_Stid,":ST_DATAH",$clobH,-1,OCI_B_CLOB);
+
+
+        $result = oci_execute($TP_Stid,OCI_NO_AUTO_COMMIT);
+        if(!$result){
+            $e=oci_error($TP_Stid);
+            return $e['message'];
+        }
+        $clobA->save($JsonA);
+        $clobB->save($ST_DATAB);
+        $clobC->save($JsonC);
+        $clobD->save($JsonD);
+        $clobE->save($ST_DATAE);
+        $clobF->save($ST_DATAF);
+        $clobG->save($JsonG);
+        $clobH->save($ST_DATAH);
+
+        oci_free_statement($TP_Stid);
+        oci_commit($conn);
+        $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave,'FORMSEQANCE_WT'=>$FORMSEQANCE_WT,"JID_NSRANK"=>$JID_NSRANK);
+        return json_encode($JsonBack,JSON_UNESCAPED_UNICODE);
 }
 
 
 function GetIOAPageJson($conn,$sPg,$sTraID){
     $TP_SQL="SELECT ST_DATA".$sPg." FROM HIS803.NISWSTP WHERE ID_TRANSACTION=:sTraID AND ID_TABFORM = 'IOA'" ;
+
      $TP_stid=oci_parse($conn,$TP_SQL);
     if (!$TP_stid){
         $e=oci_error($conn);
         return $e['message'];
     }
-/*    echo $sPg,$sTraID."<br>".$TP_SQL."<br>";*/
+
     oci_bind_by_name($TP_stid,":sTraID",$sTraID);
     $r=oci_execute($TP_stid);
     if (!$r){
@@ -197,10 +204,19 @@ function GetIOAPageJson($conn,$sPg,$sTraID){
         $DATA=oci_result($TP_stid,"ST_DATA".$sPg)->load();
 
     }
-    $obj_Arr=json_decode($DATA);
-//    print_r(ObjectMap(Get_IoType($conn,$obj_Arr)));
 
-   return  json_encode(ObjectMap(Get_IoType($conn,$obj_Arr)),JSON_UNESCAPED_UNICODE);
+    $obj_Arr=json_decode($DATA);
+
+    if ($sPg==="A" || $sPg==="C" || $sPg==="D" || $sPg==="G"){
+        //Has order
+        $result=ObjectMap($conn,$obj_Arr);
+    }else{
+        //No order.
+        $result=ObjectMap($conn,GetDeFaultArray($sPg,$obj_Arr));
+    }
+
+    return json_encode($result,JSON_UNESCAPED_UNICODE);
+
 
 }
 function PosIOASave($conn,$sTraID,$sPg,$sDt,$sTm,$sUr){
@@ -336,7 +352,7 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
 
 
     $SQL=" SELECT
-            DATESEQANCE, DT_EXCUTE,TM_EXCUTE,CID_IO,JID_IOTYPE,
+            DATESEQANCE,CID_IO,JID_IOTYPE,
             CASE SUBSTRING(JID_IOTYPE,-2,2)
             WHEN 'IA' THEN 'A'
             WHEN 'IB' THEN 'B'
@@ -376,8 +392,6 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
 
     while (oci_fetch_array($stid)){
         $DTSEQ=oci_result($stid,"DATESEQANCE");
-        $DT=oci_result($stid,"DT_EXCUTE");
-        $TM=oci_result($stid,"TM_EXCUTE");
         $CID_IO=oci_result($stid,"CID_IO");
         $IOTYPE=oci_result($stid,"JID_IOTYPE");
         $Qty=oci_result($stid,"DB_QUANTITY");
@@ -391,9 +405,14 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
         $MM_IO=oci_result($stid,"MM_IO");
         $PAGE=oci_result($stid,"PAGE");
 
-        $OBJ=json_encode(array("DataSeq"=>$DTSEQ,"DT"=>$DT,"TM"=>$TM,"CID_IO"=>$CID_IO,"CID_CLASS"=>$CID_CLASS,
-                            "COLOR"=>$COLOR,"IO_TYPE"=>$IOTYPE,"IOWAY"=>$IOWAY,"JID_KEY"=>$JID_KEY,"LOSS"=>$LOSS,
-                            "MM_IO"=>$MM_IO,"M_Nam"=>$NM_ITEM,"QUNTY"=>$Qty,"IS_SUM"=>$SUMARY),JSON_UNESCAPED_UNICODE);
+
+
+
+        $OBJ=array("DataSeq"=>$DTSEQ,"CID_IO"=>$CID_IO,"CID_CLASS"=>$CID_CLASS,
+            "COLOR"=>$COLOR,"IO_TYPE"=>$IOTYPE,"IOWAY"=>$IOWAY,"JID_KEY"=>$JID_KEY,"LOSS"=>$LOSS,
+            "MM_IO"=>$MM_IO,"M_Nam"=>$NM_ITEM,"QUNTY"=>$Qty,"JID_COLOR"=>Get_Color($conn,$IOTYPE),
+            "JID_MM"=>Get_MM($conn,$IOTYPE),"IS_SUM"=>$SUMARY);
+
 
         if ($PAGE==="A"){
             array_push($DATAA,$OBJ);
@@ -502,8 +521,9 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
     oci_commit($conn);
 
 
-    $RE=[];
-    array_push($RE,$sTraID,$idPt,$INPt,$DATAA,$DATAB,$DATAC,$DATAD,$DATAE,$DATAF,$DATAG,$DATAH);
+    $RE=array("sTraID"=>$sTraID,"IdPt"=>$idPt,"INPt"=>$INPt,"DT_EXCUTE"=>$sDt,"TM_EXCUTE"=>$sTm,"A"=>$DATAA,"B"=>$DATAB,"C"=>$DATAC,"D"=>$DATAD
+                ,"E"=>$DATAE,"F"=>$DATAF,"G"=>$DATAG,"H"=>$DATAH);
+
 
     return json_encode($RE,JSON_UNESCAPED_UNICODE);
 }
@@ -565,24 +585,6 @@ function PosIOACancel($conn,$sFm,$sTraID,$sUr){
 }
 function GetIOACheck($sTraID,$sPg){
 
-}
-function ObjectMap($arr){
-    $len= count($arr)===0?1:count($arr);
-
-    for ($i=0;$i<$len;$i++){
-        if (count($arr)===0){
-            $arr[$i]->M_Nam="";
-            $arr[$i]->CID_CLASS="HIS";
-        }
-
-        $arr[$i]->DataSeq="";
-        $arr[$i]->QUNTY="";
-        $arr[$i]->LOSS="";
-        $arr[$i]->COLOR="";
-        $arr[$i]->IOWAY="";
-        $arr[$i]->MM_IO="";
-    }
-    return $arr;
 }
 function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FormSeq_WT,$NowDT,$UR_PROCESS){
 
@@ -737,43 +739,6 @@ function Get_MM($conn,$Io_Type){
 
 }
 
-function Get_IoType($conn,$array){
-    $len= count($array)===0?1:count($array);
-
-    for ($i=0;$i<$len;$i++){
-        $NM_ITEM=$array[$i]->M_Nam;
-
-            $Sql="SELECT JID_KEY,ST_TEXT1 ,MM_ITEM sSQL
-              FROM NSCLSI
-              WHERE CID_CLASS = 'IOTP' AND IS_ACTIVE = 'Y' AND NM_ITEM='$NM_ITEM'
-              ORDER BY ST_TEXT1, DB_DOWN";
-
-            $Stid=oci_parse($conn,$Sql);
-            oci_execute($Stid);
-            $JID_KEY="";
-            $ST_TEXT1="";
-            while (oci_fetch_array($Stid)){
-                $JID_KEY=oci_result($Stid,"JID_KEY");
-                $ST_TEXT1=oci_result($Stid,"ST_TEXT1");
-            }
-
-        if (count($array)===0){
-            $array[$i]->M_Nam="";
-            $array[$i]->JID_KEY="";
-            $array[$i]->CID_CLASS="";
-        }
-        if (!trim($array[$i]->IO_TYPE)){
-            $array[$i]->IO_TYPE=$JID_KEY;
-        }
-
-        $array[$i]->CID_IO=$ST_TEXT1;
-        $array[$i]->JID_MM=Get_MM($conn,$JID_KEY);
-        $array[$i]->JID_COLOR=Get_Color($conn,$JID_KEY);
-        $array[$i]->IS_SUM=Is_Sum($conn,$JID_KEY);
-    }
-    return $array;
-}
-
 function Is_Sum($conn,$Io_Type){
     $Sql="SELECT ST_TEXT2 FROM NSCLSI  WHERE  CID_CLASS ='IOTP' AND JID_KEY=:IoType";
 
@@ -788,3 +753,60 @@ function Is_Sum($conn,$Io_Type){
     return $Is_Sum;
 }
 
+function GetDeFaultArray($Page,$arr){
+    $Nm_arr=[];
+    $IoType_arr=[];
+
+    $Result=[];
+
+    if ($Page==="B"){
+        array_push($Nm_arr,'開水','牛奶','管灌食物');
+        array_push($IoType_arr,'IOTP000000IF','IOTP000000IB','IOTP000000IB');
+    }
+    if ($Page==="E"){
+        array_push($Nm_arr,'尿量','嘔吐','洗腎脫水量','腹膜透析量');
+        array_push($IoType_arr,'IOTP000000OA','IOTP000000OD','IOTP000000OE','IOTP000000OF');
+    }
+    if ($Page==="F"){
+        array_push($Nm_arr,'排便量');
+        array_push($IoType_arr,'IOTP000000OB');
+    }
+    if ($Page==="H"){
+        array_push($Nm_arr,'Irrigation');
+        array_push($IoType_arr,'');
+    }
+    for ($i=0;$i<count($Nm_arr);$i++){
+        $arr[$i]->M_Nam=$Nm_arr[$i];
+        $arr[$i]->CID_CLASS='';
+        $arr[$i]->JID_KEY='';
+        $arr[$i]->IO_TYPE=$IoType_arr[$i];
+        array_push($Result,$arr[$i]);
+    }
+
+    return $Result;
+}
+
+function ObjectMap($conn,$arr){
+    $len= count($arr)===0?1:count($arr);
+
+    for ($i=0;$i<$len;$i++){
+        if (count($arr)===0){
+            $arr[$i]->M_Nam="";
+            $arr[$i]->CID_CLASS="";
+            $arr[$i]->JID_KEY="";
+        }
+
+        $arr[$i]->DataSeq="";
+        $arr[$i]->QUNTY="";
+        $arr[$i]->LOSS="";
+        $arr[$i]->COLOR="";
+        $arr[$i]->IOWAY="";
+        $arr[$i]->MM_IO="";
+        $arr[$i]->CID_IO='';
+        $arr[$i]->JID_MM=Get_MM($conn,$arr[$i]->IO_TYPE);
+        $arr[$i]->JID_COLOR=Get_Color($conn,$arr[$i]->IO_TYPE);
+        $arr[$i]->IS_SUM=Is_Sum($conn,$arr[$i]->IO_TYPE);
+
+    }
+    return $arr;
+}
