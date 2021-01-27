@@ -47,6 +47,51 @@ $sUr='00FUZZY';
 
         var Serchwindow;
         let Save_Obj="";
+        let  CreatTable={
+            TIME:(arr)=>{
+                $.each(arr,function (index,val)
+                {
+
+
+                    $(".T_Class").append(`
+                               <label>
+                                    <input type="radio" value="${val.CID_S}" name="ClassDt" >${val.NM_ITEM}
+                                </label>
+                                `);
+
+                    if (index===arr.length-1){
+
+                        $(".T_Class").append(`
+                                       <label>
+                                                 <input type="radio" value="I" name="ClassDt" >24小時
+                                        </label>
+                                    `);
+
+                    }
+
+                });
+
+            }
+
+        };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         $(".tb3_tr").children().css({'width': '93px','height': '30px'});
 
         $(document).on('change','input[type=radio]',function () {
@@ -179,28 +224,7 @@ $sUr='00FUZZY';
 
                     //Print RadioButton Time
                     if (Page==="A"){
-                        $.each(obj,function (index,val)
-                        {
-
-
-                            $(".T_Class").append(`
-                               <label>
-                                    <input type="radio" value="${val.CID_S}" name="ClassDt" >${val.NM_ITEM}
-                                </label>
-                                `);
-
-                            if (index===obj.length-1){
-
-                                $(".T_Class").append(`
-                                       <label>
-                                                 <input type="radio" value="I" name="ClassDt" >24小時
-                                        </label>
-                                    `);
-
-                            }
-
-                        });
-
+                        CreatTable.TIME(obj);
                     }
 
                     //Crete Table and Data(ST_DATAB)
@@ -215,9 +239,10 @@ $sUr='00FUZZY';
                         let sDt=yyyy-1911+MM+dd;
 
 
-                        console.log(obj);
+
                         Time.set('Time',obj.TmSTtoE);
-                        delete obj.TmSTtoE;
+
+                       delete obj.TmSTtoE;
                         delete obj.SB;
                         CreatEle(obj,Time,sDt,AllTime);
                     }
@@ -268,6 +293,7 @@ $sUr='00FUZZY';
             $("input[type=radio]").prop('checked',false);
             $(".IO_Sum").show();
         }
+
         function CreatEle(obj,Time,sDt,AllTime) {
             const arr=['D','N','M','I'];
             let QT_Sum=[[],[],[]];//總量
@@ -278,14 +304,13 @@ $sUr='00FUZZY';
                 $(".IO_Sum_tb"+index).remove();
 
             }
-            $(".tb4_b tr:not(.tb4_title)").remove(); //詳細內容*/
+            $(".tb4_b tr:not(.tb4_title)").remove(); //詳細內容*!/
             $("#tb3 > tr:gt(1)").remove(); //OC
             $("#sDate").val(sDt);
               if(isEmpty(obj))  {
                   console.log("查無資料");
                   return ;
               }
-
 
             Time.get('Time').push(AllTime);
             $.each(Time.get('Time'),function (index,val) {
@@ -305,7 +330,7 @@ $sUr='00FUZZY';
                         <td></td>
                         <td></td>
                         <td></td>
-                        <td style="display: none"></td>
+
                         <td></td>
                     </tr>
                 `
@@ -345,7 +370,22 @@ $sUr='00FUZZY';
             delete obj.ComUser;
 
 
-            for (let index in obj){
+            /*****************obj key sort********************/
+            let keys=[];
+            let objs={};
+            for (let i in obj){
+                keys.push(i);
+            }
+
+            keys.sort();
+
+            for (let index of keys){
+                objs[index]=obj[index];
+
+            }
+
+            /*********************************************/
+            for (let index in objs){
 
                 let arr=obj[index];
                 let DSum_QTY=0;
@@ -357,7 +397,7 @@ $sUr='00FUZZY';
                 $.each(arr,function (i,val) {
                     let QTY=isNaN(parseInt(val.QUANTITY))?val.ST_LOSS:val.QUANTITY;
                     let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
-
+                    let IO=val.CID_IO;
 
                     if (QTY === 'NaN'  || QTY === null){
                         QTY=0;
@@ -379,6 +419,7 @@ $sUr='00FUZZY';
                 QT_Sum[1].push(NSum_QTY);
                 QT_Sum[2].push(MSum_QTY);
             }
+
             QT_Sum.forEach((value, index) =>InsertTdValue(value,index));
             InsertSumTdValue(QT_Sum,obj);
 
@@ -391,7 +432,9 @@ $sUr='00FUZZY';
                     $(this).text(" ");
                 }
             });
+
         }
+        
 
         function OCAppend(arr,Time){
             $.each(Time.get('Time'),function (index,val) {
@@ -524,7 +567,8 @@ $sUr='00FUZZY';
 
 
         function InsertTdValue(arr,index) {
-            let I=arr.slice(0,6);
+
+            let I=arr.slice(0,4).concat(Array.of(arr.slice(4,6).reduce((acc,cur)=>acc+cur)));//合併IF,IE
 
             let O=arr.slice(6,13);
             let I_Sum=I.reduce((acc,cur)=>acc+cur);
@@ -533,17 +577,14 @@ $sUr='00FUZZY';
             let IO_Tag='';
             if (index===0){
                 IO_Tag='D';
-                I.forEach((value,N_index)=>$('.tb1D').find('td:eq('+(N_index+1)+')').text(value.toString()));
-                O.forEach((value,N_index)=>$('.tb2D').find('td:eq('+(N_index+1)+')').text(value.toString()));
             }else if (index===1){
                 IO_Tag='N';
-                I.forEach((value,N_index)=>$('.tb1N').find('td:eq('+(N_index+1)+')').text(value.toString()));
-                O.forEach((value,N_index)=>$('.tb2N').find('td:eq('+(N_index+1)+')').text(value.toString()));
             }else {
                 IO_Tag='M';
-                I.forEach((value,N_index)=>$('.tb1M').find('td:eq('+(N_index+1)+')').text(value.toString()));
-                O.forEach((value,N_index)=>$('.tb2M').find('td:eq('+(N_index+1)+')').text(value.toString()));
             }
+
+            I.forEach((value,N_index)=>$('.tb1'+IO_Tag).find('td:eq('+(N_index+1)+')').text(value.toString()));
+            O.forEach((value,N_index)=>$('.tb2'+IO_Tag).find('td:eq('+(N_index+1)+')').text(value.toString()));
 
             $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(1)+')').text(I_Sum);
             $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(2)+')').text(O_Sum);
@@ -578,6 +619,8 @@ $sUr='00FUZZY';
 
         }
         function InsertSumTdValue(arr,obj) {
+
+
 
             //輸入
             for (let i=1;i<=6;i++){
@@ -665,15 +708,8 @@ $sUr='00FUZZY';
 
 
 
-
-
-        function CreatTable() {
-
-        }
-
     });
 </script>
-
 <style>
     .container{
 
@@ -777,8 +813,6 @@ $sUr='00FUZZY';
         <button class="Page btn btn-primary btn-lg" value="OC">引流</button>
     </div>
 
-
-
     <!--    <table >
             <tbody class="tb2">
             <tr>
@@ -823,12 +857,11 @@ $sUr='00FUZZY';
                 <td >腸胃</td>
                 <td >輸血</td>
                 <td >TPN/PP</td>
-                <td style="display: none">其他</td>
+
                 <td >其他</td>
             </tr>
             </tbody>
         </table>
-
     </div>
     <div class="O">
         <table >
