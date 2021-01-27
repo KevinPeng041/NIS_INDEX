@@ -16,6 +16,9 @@ $Account="00FUZZY";
     <script>
         $(document).ready(function () {
             var BEDwindow,Serchwindow;
+
+            let ThisPageJson=new Map();
+            let OrderList=new Map();
             let CreatDefaultElement={
                 TimeRadio:() =>{
                     /*console.log("http://localhost/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm=ILSGA&sPg=A"));*/
@@ -85,11 +88,12 @@ $Account="00FUZZY";
                     }
 
                     $.each(arr,function (index,val) {
+                        let Name=(val.M_Nam).trim()===""?"其他":val.M_Nam;
                        $("#item"+Page).append(
                            `
                          <div id="${'Main_'+Page+index}">
                                             <div  class="input-group">
-                                                    <input id='${'M_Nam'+Page+index}' value="${val.M_Nam}" type="text" class="form-control" >
+                                                    <input id='${'M_Nam'+Page+index}' value="${Name}" type="text" class="form-control" >
                                              </div>
 
                                            <div class="input-group">
@@ -124,11 +128,12 @@ $Account="00FUZZY";
 
                         }
                     });
-                    CreatOmodal(Page,arr);
+                    CreatOmodal(Page);
+                    $("#Main_H1").hide();
             }
             };
             let ItemAction={
-                appendItem:(page)=>{
+                appendItem:(page,obj)=>{
                     let index=$("#item"+page).children().length;
                     let Last_Str="";
                     let Sum_Str="量";
@@ -167,11 +172,8 @@ $Account="00FUZZY";
                            <div id="${'Main_'+page+index}">
 
                                                <div class="input-group">
-                                                 <input id="${'M_Nam'+page+index}" type="text" class="form-control">
-                                                  <div class="input-group-append">
-                                                    <button  class="btn btn-outline-primary" type="button">選擇</button>
-                                                  </div>
-                                                </div>
+                                                 <input id="${'M_Nam'+page+index}" value="${obj.M_Nam}" type="text" class="form-control" disabled>
+                                               </div>
 
                                                <div class="input-group ">
                                                      <span class="input-group-text" >${Sum_Str+":"}</span>
@@ -195,6 +197,8 @@ $Account="00FUZZY";
                         $("#Last"+page+index).prev().hide();
                         $("#Last"+page+index).hide();
                     }
+
+                    CreatOmodal(page);
                 },
                 removeItem:(page)=>{
                     if($("#item"+page).children().length===1){
@@ -204,26 +208,6 @@ $Account="00FUZZY";
                     }
                 }
             };
-            var CallOnce=false;
-            var PageINI=false;
-            var SerchCallBack=false;
-            let AddBtn_Color=new Map();
-            let AddBtn_IoType=new Map();
-            let ThisPageJson=new Map();
-            let DefaultObj=[{
-                DataSeq:"",
-                CID_CLASS: "",
-                CID_IO: "",
-                COLOR: "",
-                IO_TYPE: "",
-                IOWAY: "",
-                JID_KEY: "",
-                LOSS: "",
-                MM_IO: "",
-                M_Nam: "",
-                QUNTY: "",
-                IS_SUM:""
-            }];
 
 
             (function () {
@@ -237,8 +221,9 @@ $Account="00FUZZY";
             })();
 
             /****************************************Click Event***************************************************/
+
             $(document).on('click','button',function () {
-                let btnId=$(this).attr('id');
+                let Btn=$(this).attr('id');
                 let Page=$("#PageVal").val();
                 let sTraID=$("#sTraID").val();
                 let sTM=$("#sTime").val();
@@ -252,17 +237,20 @@ $Account="00FUZZY";
 
                     let FatherEle=$(this).parent().parent();
                     let index=FatherEle.attr('id').substring(6,FatherEle.attr('id').length);
-                    $("#O_"+Page+index).val($("#Dir_s"+Page+index).val());
-
-                  /*  CreatOmodal(Page);*/
                     OpenOmodal(Page,index);
 
                 }
 
+                //Add item btn
+                if ($(this).attr('class')==='OrderConfirmBtn btn btn-primary'){
+                    let Order_Obj=OrderList.get(Page)[$(this).val()];
+                    ThisPageJson.get(Page).push(Order_Obj);
+                    ItemAction.appendItem(Page,Order_Obj);
 
+                    $("#Order_Modal").modal('hide');
+                }
 
-
-                switch (btnId) {
+                switch (Btn) {
                     case "sbed":
                         switch (checkBEDwindow()) {
                             case "false":
@@ -290,32 +278,22 @@ $Account="00FUZZY";
                         Serchwindow.Serchcallback=Serchcallback;
                         break;
                     case "AddItemBtn":
+                        let Order_DATA=OrderList.get(Page);
 
-                      ItemAction.appendItem(Page);
+                        $("#Order_Content").children().remove();
 
-   /*                       CreatOmodal(Page, AddBtn_IoType.get(Page),AddBtn_Color.get(Page),1,"A");
-                        let CLASS=ThisPageJson.get(Page)[0].CID_CLASS;
-                        let Cid_io=ThisPageJson.get(Page)[0].CID_IO;
-                        let IoType=ThisPageJson.get(Page)[0].IO_TYPE;
+                        $.each(Order_DATA,function (index,val) {
+                            $("#Order_Content").append(
+                                `
+                                <li style="font-size: 120%">
+                                    <button  value="${index}" style="font-size: 130%" class="OrderConfirmBtn btn btn-primary">選擇</button>
+                                    ${val.M_Nam}
+                                </li>
+                                `
+                            );
+                        });
 
-                        let emptyObj={
-                            DataSeq:"",
-                            CID_CLASS: CLASS,
-                            CID_IO: Cid_io,
-                            COLOR: "",
-                            IO_TYPE: "",
-                            IOWAY: "",
-                            JID_MM:"",
-                            JID_COLOR:"",
-                            JID_KEY: "",
-                            LOSS: "",
-                            MM_IO: "",
-                            M_Nam: "",
-                            QUNTY: "",
-                            IS_SUM:""
-                        };
-
-                        ThisPageJson.get(Page).push(emptyObj);*/
+                        $("#Order_Modal").modal('show');
                         break;
                     case "O_ConfirmBtn":
                         let index= $("#OMindex").val();
@@ -329,6 +307,8 @@ $Account="00FUZZY";
                             val=$("input[name="+'IOCK_'+Page+index+"]:checked").val();
                             obj[index].IOWAY= val.substring(index.length+1,val.length);
                         }
+
+
                         if ($("input[name="+'COLORCK_'+Page+index+"]:checked").val()){
 
                             val= $("input[name="+'COLORCK_'+Page+index+"]:checked").val();
@@ -338,6 +318,18 @@ $Account="00FUZZY";
                         $("#Dir_s"+Page+index).val(MM);
                         $("#OtherModal").modal('hide');
                         break;
+                    case "O_CancelBtn":
+                        let C_index= $("#OMindex").val();
+                        let C_obj=ThisPageJson.get(Page);
+
+
+                        $("input[name="+'IOCK_'+Page+C_index+"]").prop('checked',false);
+                        $("input[name="+'COLORCK_'+Page+C_index+"]").prop('checked',false);
+                        $("#O_"+Page+C_index).val("");
+                        C_obj[C_index].IOWAY="";
+                        C_obj[C_index].COLOR="";
+
+                        break;
                     case "SubmitBtn":
                         DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
                         break;
@@ -346,10 +338,11 @@ $Account="00FUZZY";
                         break;
                     case "ReSetBtn":
                         $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
+                        $(".PageBtn").prop('disabled',true);
                         $("input[type=text]:not(.Parametertable>input)").val("");
                         $("input[type=radio]").prop("checked",false);
-                        $(".PItem").hide();
-                        $(".ItemBtn").hide();
+                        $("#ISTM").show();
+                        $(".ItemBtn,.PItem").hide();
 
                         break;
                     case "ThirdClassBtn":
@@ -362,45 +355,42 @@ $Account="00FUZZY";
             });
             $(".PageBtn").on('click',function () {
                 let Page=$(this).attr('id');
-                let IdPt=$("#DA_idpt").val(), IdinPt=$("#DA_idinpt").val(),sUr="<?php echo $Account?>",sTraID=$("#sTraID").val();
-                console.log(PageINI);
+                let sTraID=$("#sTraID").val();
+                let S_Confirm=$("#SearchConfirm").val();
 
-                if (PageINI===true ){
 
-                    /*if(SerchCallBack===false){
-                        //搜尋後加入
-                    }*/
 
+                if ($("#item"+Page).children().length===0 && S_Confirm==="N"){
                     GetPageJson(Page,sTraID);
 
-                    //存第一次選擇的頁面Json
-                    for (let e of ThisPageJson.entries()){
-                        DB_WSST(e[0],sTraID,JSON.stringify(e[1]));
-                    }
-
                 }
 
 
-                /*Get INI Json to FistTime*/
-                if (CallOnce===false){
-
-                    $("#SubmitBtn").prop('disabled',false);
-                    $("#SerchBtn").prop('disabled',false);
-                    GetINIJson(IdPt,IdinPt,sUr,Page);
-                    PageINI=true;
+                for (let e of ThisPageJson.entries()){
+                  DB_WSST(e[0],sTraID,JSON.stringify(e[1]));
                 }
+
+                if (Page==="H" )
+                {
+                    $(".ItemBtn").hide();
+
+
+                }else {
+                    $(".ItemBtn").show();
+
+                }
+
 
                 $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
                 $(this).css({'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
                 $("#PageVal").val(Page);
                 $(".PItem").hide();
                 $("#item"+Page).show();
-                $(".ItemBtn").show();
-                CallOnce=true;
+                $("#SubmitBtn").prop('disabled',false);
             });
-            /******************************************************************************************************/
 
-            /***************************************Text Change Event***************************************************/
+
+            /***************************************Text Change Event**********************************************/
             $(document).on('change',"input[type=text]",function () {
 
                 let Page=$('#PageVal').val();
@@ -415,23 +405,31 @@ $Account="00FUZZY";
                         CidIo="I";
                     }else if (Page==="H"){
                         CidIo="R";
+
                     }
                     else {
                         CidIo="O";
                     }
+
                     obj[index].CID_IO=CidIo;
                     obj[index].QUNTY=$("#Num"+Page+index).val();
                     obj[index].LOSS=$("#Last"+Page+index).val();
+
+                    if (Page==="H"){
+                        obj[1].QUNTY=obj[0].LOSS;
+                        obj[1].CID_IO=obj[0].CID_IO;
+                        obj[0].LOSS="";
+                    }
+
                     obj[index].MM_IO=$("#Dir_s"+Page+index).val();
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
-                    console.log(obj);
                 }
-
+                console.log(obj[index],obj);
             });
-            /***********************************************************************************************************/
 
 
-            /***************************************RadioBtn Change Event***************************************************/
+
+            /***************************************RadioBtn Change Event******************************************/
             $(document).on('change',"input[type=radio]",function () {
                 let index=$(this).val().substring(0,1);
                 let Page=$(this).val().substring(1,2);
@@ -469,26 +467,27 @@ $Account="00FUZZY";
 
 
             });
-            /****************************************************************************************************************/
 
 
 
 
-            function GetINIJson(idPt,INPt,sUr,Page){
+
+            function GetINIJson(idPt,INPt,sUr){
                 $("#wrapper").show();
-                /*  console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr));*/
                 $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr))
                     .done(function(data) {
                         $("#wrapper").hide();
                         let obj=JSON.parse(AESDeCode(data));
-
+                        console.log(obj);
                         $("#sSave").val(obj.sSave);
                         $("#sTraID").val(obj.sTraID);
                         $("#SRANK").val(obj.JID_NSRANK);
                         $("#FSEQ_WT").val(obj.FORMSEQANCE_WT);
 
-                        GetPageJson(Page,obj.sTraID);
-
+                        for (let index in obj.ORDER){
+                            OrderList.set(index,obj.ORDER[index]);
+                        }
+                        console.log(OrderList);
                     })
                     .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -504,12 +503,8 @@ $Account="00FUZZY";
                     .done(function (data) {
                         let obj=JSON.parse(AESDeCode(data));
                         console.log(obj);
-                        /*if ($('#item'+Page).children().length>0){
-                            return;
-                        }*/
                         ThisPageJson.set(Page,obj);
                         CreatDefaultElement.MainItem(obj,Page);
-
                     }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -524,6 +519,7 @@ $Account="00FUZZY";
 
                 let obj=JSON.parse(json);
 
+
                 $.each(obj,function (index,val) {
                     if ((val.M_Nam).indexOf('&')>0){
                         val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
@@ -535,9 +531,8 @@ $Account="00FUZZY";
                 let SavaJson=JSON.stringify(obj);
                 $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson))
                     .done(function (data) {
-/*
+
                         let json=JSON.parse(AESDeCode(data));
-*/
                     }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -551,7 +546,7 @@ $Account="00FUZZY";
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
                 let json=JSON.stringify(ThisPageJson.get(Page));
                 DB_WSST(Page,sTraID,json);
-                $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
+               $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
                     .done(function (data) {
                         let result= JSON.parse(AESDeCode(data));
                           $("#loading").hide();
@@ -599,13 +594,21 @@ $Account="00FUZZY";
                 $("#DA_sBed").val(dataObj.SBED);
                 $("#DataTxt").val(dataObj.DataTxt);
 
+
                 if (ThisPageJson.size>0){
                     ThisPageJson.clear();
-                    AddBtn_Color.clear();
-                    AddBtn_IoType.clear();
                 }
 
-                $(".PItem").children().children().remove();
+                if (OrderList.size > 0 ){
+                    OrderList.clear();
+                }
+
+                $(".PItem").children().remove();
+                $("#OtherModalbody").children().remove();
+
+                GetINIJson(dataObj.IDPT,dataObj.IDINPT,'<?php echo $Account?>');
+
+
 
                 $("#PageBtn").children().prop('disabled',false);
                 $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
@@ -613,118 +616,48 @@ $Account="00FUZZY";
 
                 $(".PItem").hide();
                 $(".ItemBtn").hide();
-                CallOnce=false;
-                PageINI=false;
-                SerchCallBack=false;
+                $("#SerchBtn").prop('disabled',false);
+                $("#SearchConfirm").val('N');
 
             }
-
             function Serchcallback(AESobj){
 
              const PageArr =['A','B','C','D','E','F','G','H'];
              let obj=JSON.parse(AESDeCode(AESobj));
-
-
-             /*   if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val()){
+             let IdPt=obj.IdPt;
+             let InIdPt=obj.INPt;
+             console.log(obj);
+            if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val())
+             {
                     alert("病人資訊以異動,請重新操作");
                     return ;
-                }
+             }
 
-             */
+
 
              /***初始化****/
-             ThisPageJson.clear();
+             //ThisPageJson.clear();
              $.each(PageArr,function (index,page) {
                  $("#item"+page).children().remove();
              });
 
 
-
              for(let index in obj){
-
                  if (PageArr.indexOf(index)>-1){
                      let arr=obj[index];
+                     ThisPageJson.set(index,arr);
                      CreatDefaultElement.MainItem(arr,index);
 
                  }
              }
 
-
                 $("#sDate").val(obj.DT_EXCUTE);
                 $("#sTime").val(obj.TM_EXCUTE.substring(0,4));
                 $("#sTraID").val(obj.sTraID);
-
-
-            /*           let PatientID=obj.splice(0, 3);
-                        let sTraID=PatientID[0];
-                        let IdPt=PatientID[1];
-                        let InIdPt=PatientID[2];
-
-
-                        ThisPageJson.clear();
-                        $.each(Pagearr,function (index,page) {
-                              $("#item"+page).children().remove();
-                          });
-
-
-                        $.each(obj,function (index) {
-                            let page="";
-                            let PageArr=obj[index];
-                            switch (index) {
-                                case 0:
-                                    page='A';
-                                    break;
-                                case 1:
-                                    page='B';
-                                    break;
-                                case 2:
-                                    page='C';
-                                    break;
-                                case 3:
-                                    page='D';
-                                    break;
-                                case 4:
-                                    page='E';
-                                    break;
-                                case 5:
-                                    page='F';
-                                    break;
-                                case 6:
-                                    page='G';
-                                    break;
-                                case 7:
-                                    page='H';
-                                    break;
-                                default:
-                                    break;
-                            }
-
-                           $.each(PageArr,function (i) {
-                               let Obj= JSON.parse(PageArr[i]);
-                               let Qty=Obj.QUNTY==='-1'?"":Obj.QUNTY;
-                               ItemAction.appendItem(page,Obj.M_Nam,Obj.MM_IO,Qty,Obj.LOSS);
-
-
-                               $("#sDate").val(Obj.DT);
-                               $("#sTime").val(Obj.TM.substring(0,4));
-                               $("#M_Nam"+page+i).prop('readonly',true);
-                               $("#"+i+page+Obj.IOWAY).prop('checked',true);
-                               $("#"+i+page+Obj.COLOR).prop('checked',true);
-
-                           }) ;
-
-                            if (PageArr.length===0){
-                                ThisPageJson.set(page,[...DefaultObj]);
-                            }else {
-                                ThisPageJson.set(page, JSON.parse("[" + obj[index].join() + "]"));
-                            }
-
-                        });
-
-                        SerchCallBack=true;
-                        $("#sTraID").val(sTraID);
-                        $("#DELBtn").prop('disabled',false);
-                        $("#ISTM").hide();*/
+                $("#SearchConfirm").val('Y');
+                $("#DELBtn").prop('disabled',false);
+                $("#ISTM").hide();
+                $("#ItemBtn").show();
 
             }
             function checkBEDwindow() {
@@ -749,80 +682,78 @@ $Account="00FUZZY";
                     }
                 }
             }
-            function CreatOmodal(Page,arr) {
+            function CreatOmodal(Page) {
+                let arr=ThisPageJson.get(Page);
+                $.each(arr,function (index,val) {
+                    let Name=(val.M_Nam).trim()===""?$("#M_Nam"+Page+index).val():val.M_Nam;
 
-               $.each(arr,function (index,val) {
-
-                   if ($('#M_'+Page+index).length===0){
-                       $("#OtherModalbody").append(
-                           `
-                               <div id="${'M_'+Page+index}" class="M_Omodal row">
-
-                                    <div class="col-12">
-                                          <input type="text" class="form-control" value="${val.M_Nam}" readonly>
-                                    </div>
-
-                                    <div id="${'IOType'+Page + index}" class="col-12" >
-                                        <div>
-                                              <label style="color: #0f6674">方式:</label>
-                                        </div>
-                                    </div>
-
-                                    <div id="${'Color'+Page + index}" class="col-12">
-                                        <div>
-                                            <label style="color: #0f6674">顏色:</label>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-12">
-                                        <div class="form-group">
-                                             <label for="${'O_'+Page+index}" style="color: #0f6674">備註:</label>
-                                             <textarea class="form-control rounded-0" id="${'O_'+Page+index}" rows="10"></textarea>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            `
-                       );
-                   }
-
-
-                   if ((val.JID_MM).length>0){
-                       $.each(val.JID_MM,function (i,value) {
-                           $("#IOType" + Page + index).append(
+                       if ($('#M_'+Page+index).length===0){
+                           $("#OtherModalbody").append(
                                `
-                          <label style="font-size: 1.5rem;">
-                               <input id="${index + Page + value.JID_KEY}" class="${'IOCK_' + Page + index}" type="radio" name="${'IOCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
-                               ${value.NM_ITEM}
-                          </label>
-                        `
-                           )
+                                   <div id="${'M_'+Page+index}" class="M_Omodal row">
 
-                       });
+                                        <div class="col-12">
+                                              <input type="text" class="form-control" value="${Name}" readonly>
+                                        </div>
 
-                   }
+                                        <div id="${'IOType'+Page + index}" class="col-12" >
+                                            <div>
+                                                  <label style="color: #0f6674">方式:</label>
+                                            </div>
+                                        </div>
 
-                   if ((val.JID_COLOR).length>0)
-                   {
-                       $.each(val.JID_COLOR,function (i,value) {
-                           $("#Color" + Page + index).append(
-                               `
-                              <label style="font-size: 1.5rem;">
-                                  <input id="${index + Page + value.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
-                                   ${value.NM_ITEM}
-                             </label>
-                              `
+                                        <div id="${'Color'+Page + index}" class="col-12">
+                                            <div>
+                                                <label style="color: #0f6674">顏色:</label>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                 <label for="${'O_'+Page+index}" style="color: #0f6674">備註:</label>
+                                                 <textarea class="form-control rounded-0" id="${'O_'+Page+index}" rows="10"></textarea>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                `
                            );
-                       })
-
-                   }
+                       }
 
 
-               });
+                       if ((val.JID_MM).length>0){
+                           $.each(val.JID_MM,function (i,value) {
+                               $("#IOType" + Page + index).append(
+                                   `
+                              <label style="font-size: 1.5rem;">
+                                   <input id="${index + Page + value.JID_KEY}" class="${'IOCK_' + Page + index}" type="radio" name="${'IOCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
+                                   ${value.NM_ITEM}
+                              </label>
+                            `
+                               )
+
+                           });
+
+                       }
+
+                       if ((val.JID_COLOR).length>0)
+                       {
+                           $.each(val.JID_COLOR,function (i,value) {
+                               $("#Color" + Page + index).append(
+                                   `
+                                  <label style="font-size: 1.5rem;">
+                                      <input id="${index + Page + value.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
+                                       ${value.NM_ITEM}
+                                 </label>
+                                  `
+                               );
+                           })
+
+                       }
 
 
-
+                   });
             }
             function OpenOmodal(Page,index) {
                 $(".M_Omodal").hide();
@@ -904,7 +835,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-        /*display: none;*/
+      /*  display: none;*/
         background-color: #00FF00;
     }
     .Dir_s{
@@ -949,13 +880,18 @@ $Account="00FUZZY";
         width: 1.5rem;
         height: 1.5rem;
     }
+    li{
+        list-style: none;
+        margin-bottom: 5px;
+        margin-left: -5px;
+    }
 </style>
 <body>
 <div id="wrapper"></div>
 <div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
 <div class="container">
          <h1>輸出入量作業</h1>
-    <!----------------------------------------------------------Parametertable displaynone-------------------------------------------------------------------------->
+    <!----------------------------------------------------------Parametertable display none-------------------------------------------------------------------------->
     <div class="Parametertable">
         <input id="PageVal"     value=""  type="text"  placeholder="PageVal">       <!--標籤-->
         <input id="DA_idpt"     value=""  type="text"  placeholder="DA_idpt">       <!--病歷號-->
@@ -964,8 +900,10 @@ $Account="00FUZZY";
         <input id="sSave"       value=""  type="text"  placeholder="sSave">         <!--存檔權限-->
         <input id="sTraID"      value=""  type="text"  placeholder="sTraID">        <!--交易序號-->
         <input id="SRANK"       value=""  type="text"  placeholder="JID_NSRANK" >
-        <input id="FSEQ_WT"       value=""  type="text"  placeholder="FORMSEQANCE_WT">
+        <input id="FSEQ_WT"     value=""  type="text"  placeholder="FORMSEQANCE_WT">
 
+
+        <input id="SearchConfirm"  value="N"  type="text"  placeholder="SearchConfirm">
         <input id="IDTM"        value=""  type="text"  placeholder="IDTM" >         <!--timeID-->
         <input id="OMindex"     value=""  type="text"  placeholder="OMindex" >      <!--OtherModalIndex-->
 
@@ -1071,7 +1009,7 @@ $Account="00FUZZY";
                     </div>
                     <div class="modal-footer">
                         <button id="O_ConfirmBtn" type="button" class="btn btn-primary">確認</button>
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">放棄回上一頁</button>
+                        <button id="O_CancelBtn" type="button" class="btn btn-secondary" data-dismiss="modal">放棄回上一頁</button>
                     </div>
                 </div>
             </div>
@@ -1110,7 +1048,25 @@ $Account="00FUZZY";
             </div>
         </div>
     </div>
-    <!----------------------------------------------------------AddItem Modal-------------------------------------------------------------------------->
+    <!----------------------------------------------------------Order Modal-------------------------------------------------------------------------------->
+    <div class="modal fade" id="Order_Modal" tabindex="-1" role="dialog"  aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog  modal-dialog-scrollable modal-dialog-centered " role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">藥名清單</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <ul id="Order_Content">
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 </body>
 </html>
