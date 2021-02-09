@@ -21,7 +21,6 @@ $Account="00FUZZY";
             let OrderList=new Map();
             let CreatDefaultElement={
                 TimeRadio:() =>{
-                    /*console.log("http://localhost/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm=ILSGA&sPg=A"));*/
                     $.ajax({
                         url:"/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm=ILSGA&sPg=A"),
                         type:"POST",
@@ -87,13 +86,14 @@ $Account="00FUZZY";
                             break;
                     }
 
+
+
                     $.each(arr,function (index,val) {
-                        let Name=(val.M_Nam).trim()===""?"其他":val.M_Nam;
                        $("#item"+Page).append(
                            `
                          <div id="${'Main_'+Page+index}">
                                             <div  class="input-group">
-                                                    <input id='${'M_Nam'+Page+index}' value="${Name}" type="text" class="form-control" >
+                                                    <input id='${'M_Nam'+Page+index}' value="${val.M_Nam}" type="text" class="form-control" disabled>
                                              </div>
 
                                            <div class="input-group">
@@ -112,8 +112,7 @@ $Account="00FUZZY";
                                                     <button  class="Obtn btn btn-secondary" type="button">其他</button>
                                              </div>
 
-
-                                    </div>
+                          </div>
 
                            `
                        );
@@ -128,16 +127,17 @@ $Account="00FUZZY";
 
                         }
                     });
+
                     CreatOmodal(Page);
+                    $("#LastH0").val($("#NumH1").val());
                     $("#Main_H1").hide();
-            }
+                }
             };
             let ItemAction={
                 appendItem:(page,obj)=>{
                     let index=$("#item"+page).children().length;
                     let Last_Str="";
                     let Sum_Str="量";
-
 
                     switch (page) {
                         case "A":
@@ -162,8 +162,8 @@ $Account="00FUZZY";
                             Last_Str="";
                             break;
                         case "H":
-                            Sum_Str="IN";
-                            Last_Str="Out";
+                            Sum_Str='In';
+                            Last_Str='Out';
                             break;
                     }
 
@@ -199,6 +199,8 @@ $Account="00FUZZY";
                     }
 
                     CreatOmodal(page);
+                    $("#LastH0").val($("#NumH1").val());
+                    $("#Main_H1").hide();
                 },
                 removeItem:(page)=>{
                     if($("#item"+page).children().length===1){
@@ -234,7 +236,6 @@ $Account="00FUZZY";
 
                 //other btn
                 if ($(this).attr('class')==='Obtn btn btn-secondary'){
-
                     let FatherEle=$(this).parent().parent();
                     let index=FatherEle.attr('id').substring(6,FatherEle.attr('id').length);
                     OpenOmodal(Page,index);
@@ -299,10 +300,10 @@ $Account="00FUZZY";
                         let index= $("#OMindex").val();
                         let MM=$("#O_"+Page+index).val();
                         let obj=ThisPageJson.get(Page);
-
+                        let val='';
 
                         obj[index].MM_IO=MM;
-                        let val='';
+
                         if($("input[name="+'IOCK_'+Page+index+"]:checked").val()){
                             val=$("input[name="+'IOCK_'+Page+index+"]:checked").val();
                             obj[index].IOWAY= val.substring(index.length+1,val.length);
@@ -310,16 +311,14 @@ $Account="00FUZZY";
 
 
                         if ($("input[name="+'COLORCK_'+Page+index+"]:checked").val()){
-
                             val= $("input[name="+'COLORCK_'+Page+index+"]:checked").val();
                             obj[index].COLOR= val.substring(index.length+1,val.length);
                         }
-
                         $("#Dir_s"+Page+index).val(MM);
                         $("#OtherModal").modal('hide');
                         break;
                     case "O_CancelBtn":
-                        let C_index= $("#OMindex").val();
+                    /*    let C_index= $("#OMindex").val();
                         let C_obj=ThisPageJson.get(Page);
 
 
@@ -328,9 +327,10 @@ $Account="00FUZZY";
                         $("#O_"+Page+C_index).val("");
                         C_obj[C_index].IOWAY="";
                         C_obj[C_index].COLOR="";
-
+*/
                         break;
                     case "SubmitBtn":
+
                         DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
                         break;
                     case "DELBtn":
@@ -353,27 +353,25 @@ $Account="00FUZZY";
                         break;
                 }
             });
+
             $(".PageBtn").on('click',function () {
                 let Page=$(this).attr('id');
                 let sTraID=$("#sTraID").val();
                 let S_Confirm=$("#SearchConfirm").val();
 
-
-
                 if ($("#item"+Page).children().length===0 && S_Confirm==="N"){
                     GetPageJson(Page,sTraID);
-
                 }
 
 
                 for (let e of ThisPageJson.entries()){
+                    console.log(e[0],e[1]);
                   DB_WSST(e[0],sTraID,JSON.stringify(e[1]));
                 }
 
                 if (Page==="H" )
                 {
                     $(".ItemBtn").hide();
-
 
                 }else {
                     $(".ItemBtn").show();
@@ -389,8 +387,8 @@ $Account="00FUZZY";
                 $("#SubmitBtn").prop('disabled',false);
             });
 
-
             /***************************************Text Change Event**********************************************/
+
             $(document).on('change',"input[type=text]",function () {
 
                 let Page=$('#PageVal').val();
@@ -407,6 +405,10 @@ $Account="00FUZZY";
                         CidIo="R";
 
                     }
+                    else if (Page==="F"){
+                        CidIo="S";
+
+                    }
                     else {
                         CidIo="O";
                     }
@@ -416,18 +418,16 @@ $Account="00FUZZY";
                     obj[index].LOSS=$("#Last"+Page+index).val();
 
                     if (Page==="H"){
-                        obj[1].QUNTY=obj[0].LOSS;
                         obj[1].CID_IO=obj[0].CID_IO;
+                        obj[1].QUNTY=obj[0].LOSS;
                         obj[0].LOSS="";
                     }
 
                     obj[index].MM_IO=$("#Dir_s"+Page+index).val();
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
                 }
-                console.log(obj[index],obj);
+                console.log( obj);
             });
-
-
 
             /***************************************RadioBtn Change Event******************************************/
             $(document).on('change',"input[type=radio]",function () {
@@ -469,9 +469,6 @@ $Account="00FUZZY";
             });
 
 
-
-
-
             function GetINIJson(idPt,INPt,sUr){
                 $("#wrapper").show();
                 $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr))
@@ -484,10 +481,17 @@ $Account="00FUZZY";
                         $("#SRANK").val(obj.JID_NSRANK);
                         $("#FSEQ_WT").val(obj.FORMSEQANCE_WT);
 
+
                         for (let index in obj.ORDER){
                             OrderList.set(index,obj.ORDER[index]);
                         }
-                        console.log(OrderList);
+
+
+                        ThisPageJson.set('H',obj.P_H);
+                        $.each(obj.P_H,function (index,value) {
+                            ItemAction.appendItem('H',value);
+                        });
+
                     })
                     .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -515,11 +519,10 @@ $Account="00FUZZY";
                 });
 
             }
+
             function DB_WSST(Page,sTraID,json){
 
                 let obj=JSON.parse(json);
-
-
                 $.each(obj,function (index,val) {
                     if ((val.M_Nam).indexOf('&')>0){
                         val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
@@ -533,6 +536,7 @@ $Account="00FUZZY";
                     .done(function (data) {
 
                         let json=JSON.parse(AESDeCode(data));
+                        console.log(json);
                     }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -544,9 +548,9 @@ $Account="00FUZZY";
 
             }
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
-                let json=JSON.stringify(ThisPageJson.get(Page));
-                DB_WSST(Page,sTraID,json);
-               $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
+                let json_str=JSON.stringify(ThisPageJson.get(Page));
+                DB_WSST(Page,sTraID,json_str);
+               $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+$("#FSEQ").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
                     .done(function (data) {
                         let result= JSON.parse(AESDeCode(data));
                           $("#loading").hide();
@@ -627,6 +631,7 @@ $Account="00FUZZY";
              let IdPt=obj.IdPt;
              let InIdPt=obj.INPt;
              console.log(obj);
+
             if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val())
              {
                     alert("病人資訊以異動,請重新操作");
@@ -637,7 +642,8 @@ $Account="00FUZZY";
 
              /***初始化****/
              //ThisPageJson.clear();
-             $.each(PageArr,function (index,page) {
+
+             $.each(PageArr.filter(value => value!=='H'),function (index,page) {
                  $("#item"+page).children().remove();
              });
 
@@ -645,20 +651,31 @@ $Account="00FUZZY";
              for(let index in obj){
                  if (PageArr.indexOf(index)>-1){
                      let arr=obj[index];
-                     ThisPageJson.set(index,arr);
-                     CreatDefaultElement.MainItem(arr,index);
 
+                     /*IPR若有存值,ThisPageJson重新定義*/
+                    if (index !=='H' || obj['H'].length>0){
+                        ThisPageJson.set(index,arr);
+                    }
+                     /*IPR若有存值,畫面重新布置*/
+                     if (obj['H'].length>0){
+                         $("#itemH").children().remove();
+                     }
+                     CreatDefaultElement.MainItem(arr,index);
                  }
+
              }
+
+
+
 
                 $("#sDate").val(obj.DT_EXCUTE);
                 $("#sTime").val(obj.TM_EXCUTE.substring(0,4));
                 $("#sTraID").val(obj.sTraID);
+                $("#FSEQ").val(obj.FORMSEQ);
                 $("#SearchConfirm").val('Y');
                 $("#DELBtn").prop('disabled',false);
                 $("#ISTM").hide();
                 $("#ItemBtn").show();
-
             }
             function checkBEDwindow() {
                 if(!BEDwindow){
@@ -686,10 +703,10 @@ $Account="00FUZZY";
                 let arr=ThisPageJson.get(Page);
                 $.each(arr,function (index,val) {
                     let Name=(val.M_Nam).trim()===""?$("#M_Nam"+Page+index).val():val.M_Nam;
+                    $('#M_'+Page+index).remove();
 
-                       if ($('#M_'+Page+index).length===0){
-                           $("#OtherModalbody").append(
-                               `
+                    $("#OtherModalbody").append(
+                        `
                                    <div id="${'M_'+Page+index}" class="M_Omodal row">
 
                                         <div class="col-12">
@@ -718,12 +735,12 @@ $Account="00FUZZY";
 
                                     </div>
                                 `
-                           );
-                       }
+                    );
 
 
                        if ((val.JID_MM).length>0){
                            $.each(val.JID_MM,function (i,value) {
+
                                $("#IOType" + Page + index).append(
                                    `
                               <label style="font-size: 1.5rem;">
@@ -735,10 +752,12 @@ $Account="00FUZZY";
 
                            });
 
+                       }else {
+                           //沒方式選項->隱藏
+                           $("#IOType" + Page + index).hide();
                        }
 
-                       if ((val.JID_COLOR).length>0)
-                       {
+                       if ((val.JID_COLOR).length>0){
                            $.each(val.JID_COLOR,function (i,value) {
                                $("#Color" + Page + index).append(
                                    `
@@ -750,8 +769,15 @@ $Account="00FUZZY";
                                );
                            })
 
+                       }else {
+                           //沒顏色選項->隱藏
+                           $("#Color" + Page + index).hide();
                        }
 
+                        $("#"+index+Page+val.IOWAY).prop('checked',true);
+                        $("#"+index+Page+val.COLOR).prop('checked',true);
+                        $("#O_"+Page+index).val(val.MM_IO);
+                        $("#Dir_s"+Page+index).val(val.MM_IO);
 
                    });
             }
@@ -899,6 +925,7 @@ $Account="00FUZZY";
         <input id="DA_sBed"     value=""  type="text"  placeholder="DA_sBed">       <!--床號-->
         <input id="sSave"       value=""  type="text"  placeholder="sSave">         <!--存檔權限-->
         <input id="sTraID"      value=""  type="text"  placeholder="sTraID">        <!--交易序號-->
+        <input id="FSEQ"        value=""  type="text"  placeholder="FSEQ">  <!--I/O單號-->
         <input id="SRANK"       value=""  type="text"  placeholder="JID_NSRANK" >
         <input id="FSEQ_WT"     value=""  type="text"  placeholder="FORMSEQANCE_WT">
 
