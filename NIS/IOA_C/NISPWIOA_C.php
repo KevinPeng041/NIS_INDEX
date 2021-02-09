@@ -72,24 +72,7 @@ $sUr='00FUZZY';
                 });
 
             }
-
         };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
         $(".tb3_tr").children().css({'width': '93px','height': '30px'});
@@ -242,9 +225,12 @@ $sUr='00FUZZY';
 
                         Time.set('Time',obj.TmSTtoE);
 
-                       delete obj.TmSTtoE;
-                        delete obj.SB;
+
+
                         CreatEle(obj,Time,sDt,AllTime);
+                        delete obj.TmSTtoE;
+                        delete obj.SB;
+
                     }
                 }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
                 console.log(
@@ -295,7 +281,7 @@ $sUr='00FUZZY';
         }
 
         function CreatEle(obj,Time,sDt,AllTime) {
-            const arr=['D','N','M','I'];
+           const arr=['D','N','M','I'];
             let QT_Sum=[[],[],[]];//總量
 
             for (let index of arr){
@@ -370,7 +356,9 @@ $sUr='00FUZZY';
             delete obj.ComUser;
 
 
+
             /*****************obj key sort********************/
+
             let keys=[];
             let objs={};
             for (let i in obj){
@@ -705,7 +693,6 @@ $sUr='00FUZZY';
 
             return count >=16;
         }
-
 
 
     });
