@@ -41,7 +41,6 @@ function GetIOACIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID
 
     $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave,'FORMSEQANCE_WT'=>$FORMSEQANCE_WT,"JID_NSRANK"=>$JID_NSRANK);
 
-
     return json_encode($JsonBack,JSON_UNESCAPED_UNICODE);
 
 }
@@ -272,7 +271,6 @@ function GetConFirmUser($conn,$IdPt,$InPt,$DT){
     $SQL="SELECT CID_SPECIAL FROM NSCLSI WHERE CID_CLASS = 'IODT'";
 
     $stid=oci_parse($conn,$SQL);
-
     oci_execute($stid);
     $CID_E=[];
 
@@ -352,7 +350,8 @@ function Get_IOAC_DATA($conn,$Idpt,$INPt,$sDt){
     $Dt_next=GetNewDateTime($sDt,$Tm_Start[0],1,-1);
     $S_Sql="SELECT ID_BED, DT_EXCUTE, TM_EXCUTE, CID_SPECIAL as CID_EXCUTE, CID_IO, P0.JID_KEY, QUANTITY, NM_COLOR, ST_LOSS, NM_PHARMACY,
             P0.NM_ITEM, P0.ID_ITEM, NM_USER, JID_NSRANK
-            , MM_IO, DB_REMAIN, TM_START, TM_END, NM_IOWAY, CID_IOWAY, NM_TUBE_SHORT FROM NIS_V_IOQA_P0 P0, NSCLSI IODT 
+            , MM_IO, DB_REMAIN, TM_START, TM_END, NM_IOWAY, CID_IOWAY, NM_TUBE_SHORT 
+            FROM NIS_V_IOQA_P0 P0, NSCLSI IODT 
             WHERE ID_PATIENT = '$Idpt' AND ID_INPATIENT = '$INPt' AND
             (CONCAT(DT_EXCUTE, TM_EXCUTE) >= '$Dt_now' AND
                 CONCAT(DT_EXCUTE, TM_EXCUTE) <= '$Dt_next' ) AND
