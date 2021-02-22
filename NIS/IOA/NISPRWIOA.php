@@ -32,8 +32,10 @@ $Account="00FUZZY";
                             $.each(arr,function (index,item) {
                                 $("#ISTM").append(
                                     `
-                                <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${item.T_ID}' value='${item.name}' style='width: 6vmin;height: 6vmin' >${item.name}</label>
-                                `
+                                        <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${item.T_ID}' value='${item.name}' style='width: 6vmin;height: 6vmin' >
+                                            ${item.name}
+                                        </label>
+                                    `
                                 )
                             });
                         },error:function (XMLHttpResponse,textStatus,errorThrown) {
@@ -98,19 +100,19 @@ $Account="00FUZZY";
 
                                            <div class="input-group">
                                                      <span class="input-group-text" >${Qty_Nm+":"}</span>
-                                                     <input  id="${'Num'+Page+index}" type="text" value="${val.QUNTY}"  class="Num form-control">
+                                                     <input  id="${'Num'+Page+index}" type="text" value="${val.QUNTY}"  class="Num form-control" autocomplete="off">
 
                                                     <span  class="input-group-text" >${Last_Nm+":"}</span>
-                                                    <input id="${'Last'+Page+index}" type="text"  value="${val.LOSS}" class="form-control">
+                                                    <input id="${'Last'+Page+index}" type="text"  value="${val.LOSS}" class="form-control" autocomplete="off">
 
-                                               </div>
+                                           </div>
 
 
-                                             <div class="input-group mb-3">
+                                           <div class="input-group mb-3">
                                                     <span class="input-group-text" >其他說明截斷字元:</span>
-                                                    <input id='${'Dir_s'+Page+index}'  type="text" class="Dir_s form-control" value="" readonly>
+                                                    <input id='${'Dir_s'+Page+index}'  type="text" class="Dir_s form-control" value="" disabled>
                                                     <button  class="Obtn btn btn-secondary" type="button">其他</button>
-                                             </div>
+                                           </div>
 
                           </div>
 
@@ -172,21 +174,21 @@ $Account="00FUZZY";
                            <div id="${'Main_'+page+index}">
 
                                                <div class="input-group">
-                                                 <input id="${'M_Nam'+page+index}" value="${obj.M_Nam}" type="text" class="form-control" disabled>
+                                                 <input id="${'M_Nam'+page+index}" value="${obj.M_Nam}" type="text" class="form-control" autocomplete="off" disabled>
                                                </div>
 
                                                <div class="input-group ">
                                                      <span class="input-group-text" >${Sum_Str+":"}</span>
-                                                     <input  id="${'Num'+page+index}" type="text" class="Num form-control" >
+                                                     <input  id="${'Num'+page+index}" type="text" class="Num form-control" autocomplete="off">
 
                                                     <span  class="input-group-text" >${Last_Str+":"}</span>
-                                                    <input   id="${'Last'+page+index}" type="text" class="Last form-control">
+                                                    <input   id="${'Last'+page+index}" type="text" class="Last form-control" autocomplete="off">
 
                                                 </div>
 
                                                <div  class="input-group mb-3">
                                                     <span class="input-group-text" >其他說明截斷字元:</span>
-                                                    <input id="${'Dir_s'+page+index}" type="text" class="form-control"  readonly>
+                                                    <input id="${'Dir_s'+page+index}" type="text" class="form-control"  disabled>
                                                     <button  class="Obtn btn btn-secondary" type="button">其他</button>
                                                </div>
 
@@ -220,6 +222,7 @@ $Account="00FUZZY";
                 $("#SubmitBtn").prop('disabled',true);
                 $("#SerchBtn").prop('disabled',true);
                 $("#DELBtn").prop('disabled',true);
+                $(".Parametertable").children().prop('disabled',true);
             })();
 
             /****************************************Click Event***************************************************/
@@ -246,6 +249,7 @@ $Account="00FUZZY";
                 if ($(this).attr('class')==='OrderConfirmBtn btn btn-primary'){
                     let Order_Obj=OrderList.get(Page)[$(this).val()];
                     ThisPageJson.get(Page).push(Order_Obj);
+                    ThisPageJson.set(Page,ThisPageJson.get(Page));
                     ItemAction.appendItem(Page,Order_Obj);
 
                     $("#Order_Modal").modal('hide');
@@ -307,29 +311,34 @@ $Account="00FUZZY";
                         if($("input[name="+'IOCK_'+Page+index+"]:checked").val()){
                             val=$("input[name="+'IOCK_'+Page+index+"]:checked").val();
                             obj[index].IOWAY= val.substring(index.length+1,val.length);
+                        }else {
+                            obj[index].IOWAY=" ";
                         }
 
 
-                        if ($("input[name="+'COLORCK_'+Page+index+"]:checked").val()){
-                            val= $("input[name="+'COLORCK_'+Page+index+"]:checked").val();
+                        if ($("input[name="+'COLOR_CK_'+Page+index+"]:checked").val()){
+                            val= $("input[name="+'COLOR_CK_'+Page+index+"]:checked").val();
                             obj[index].COLOR= val.substring(index.length+1,val.length);
+                        }else {
+                            obj[index].COLOR=" ";
                         }
+
+                        ThisPageJson.set(Page,obj);
                         $("#Dir_s"+Page+index).val(MM);
                         $("#OtherModal").modal('hide');
                         break;
                     case "O_CancelBtn":
-                    /*    let C_index= $("#OMindex").val();
-                        let C_obj=ThisPageJson.get(Page);
+                       let C_index= $("#OMindex").val();
 
 
                         $("input[name="+'IOCK_'+Page+C_index+"]").prop('checked',false);
-                        $("input[name="+'COLORCK_'+Page+C_index+"]").prop('checked',false);
+                        $("input[name="+'COLOR_CK_'+Page+C_index+"]").prop('checked',false);
                         $("#O_"+Page+C_index).val("");
-                        C_obj[C_index].IOWAY="";
-                        C_obj[C_index].COLOR="";
-*/
+
                         break;
                     case "SubmitBtn":
+                        let json_str=JSON.stringify(ThisPageJson.get(Page));
+                        DB_WSST(Page,sTraID, json_str);
 
                         DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
                         break;
@@ -358,16 +367,14 @@ $Account="00FUZZY";
                 let Page=$(this).attr('id');
                 let sTraID=$("#sTraID").val();
                 let S_Confirm=$("#SearchConfirm").val();
+                const Page_Arr=['A','B','C','D','E','F','G','H'];
+                let WSST_arr=Page_Arr.filter(value => value!==Page);
 
                 if ($("#item"+Page).children().length===0 && S_Confirm==="N"){
                     GetPageJson(Page,sTraID);
                 }
 
-
-                for (let e of ThisPageJson.entries()){
-                    console.log(e[0],e[1]);
-                  DB_WSST(e[0],sTraID,JSON.stringify(e[1]));
-                }
+                WSST_arr.map(value =>ThisPageJson.get(value)!==undefined?DB_WSST(value,sTraID,JSON.stringify(ThisPageJson.get(value))):'');
 
                 if (Page==="H" )
                 {
@@ -403,11 +410,9 @@ $Account="00FUZZY";
                         CidIo="I";
                     }else if (Page==="H"){
                         CidIo="R";
-
                     }
                     else if (Page==="F"){
                         CidIo="S";
-
                     }
                     else {
                         CidIo="O";
@@ -425,8 +430,11 @@ $Account="00FUZZY";
 
                     obj[index].MM_IO=$("#Dir_s"+Page+index).val();
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
+                    ThisPageJson.set(Page,obj);
+
+                 console.log(ThisPageJson.get(Page));
                 }
-                console.log( obj);
+
             });
 
             /***************************************RadioBtn Change Event******************************************/
@@ -458,13 +466,11 @@ $Account="00FUZZY";
                         $("#"+index+Page+id).prop('checked',true);
                     }
 
-                    if (ck_Class==="COLORCK_"+Page+index){
-                        $(".COLORCK_"+Page+index).prop('checked',false);
+                    if (ck_Class==="COLOR_CK_"+Page+index){
+                        $(".COLOR_CK_"+Page+index).prop('checked',false);
                         $("#"+index+Page+id).prop('checked',true);
                     }
                 }
-
-
 
             });
 
@@ -475,7 +481,6 @@ $Account="00FUZZY";
                     .done(function(data) {
                         $("#wrapper").hide();
                         let obj=JSON.parse(AESDeCode(data));
-                        console.log(obj);
                         $("#sSave").val(obj.sSave);
                         $("#sTraID").val(obj.sTraID);
                         $("#SRANK").val(obj.JID_NSRANK);
@@ -506,7 +511,6 @@ $Account="00FUZZY";
             $.ajax("/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA&sTraID="+sTraID+"&sPg="+Page))
                     .done(function (data) {
                         let obj=JSON.parse(AESDeCode(data));
-                        console.log(obj);
                         ThisPageJson.set(Page,obj);
                         CreatDefaultElement.MainItem(obj,Page);
                     }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
@@ -519,10 +523,9 @@ $Account="00FUZZY";
                 });
 
             }
-
             function DB_WSST(Page,sTraID,json){
-
                 let obj=JSON.parse(json);
+
                 $.each(obj,function (index,val) {
                     if ((val.M_Nam).indexOf('&')>0){
                         val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
@@ -532,11 +535,12 @@ $Account="00FUZZY";
                 });
 
                 let SavaJson=JSON.stringify(obj);
+
                 $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson))
                     .done(function (data) {
 
                         let json=JSON.parse(AESDeCode(data));
-                        console.log(json);
+                        console.log(Page,json);
                     }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -548,28 +552,44 @@ $Account="00FUZZY";
 
             }
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
-                let json_str=JSON.stringify(ThisPageJson.get(Page));
-                DB_WSST(Page,sTraID,json_str);
-               $.ajax('/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+$("#FSEQ").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr))
-                    .done(function (data) {
+
+           /*   let Input=$('input[type=text]:enabled').not('#sDate,#sTime');
+              let Qty_Input=Input.filter(value=>value%2==0);
+              console.log(Qty_Input);*/
+               /* if (Qty_Input.val()==="")
+                {
+                    alert('請確認是否有填值');
+                    return false;
+                }*/
+
+
+
+
+                    $.ajax({
+                    url:'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+$("#FSEQ").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr),
+                    dataType:'text',
+                    beforeSend :function(xmlHttp){
+                        xmlHttp.setRequestHeader("If-Modified-Since","0");
+                        xmlHttp.setRequestHeader("Cache-Control","no-cache");
+                    },
+                    success:function (data) {
                         let result= JSON.parse(AESDeCode(data));
-                          $("#loading").hide();
-                          $("#wrapper").hide();
                         if(result.response==='success'){
                             alert("儲存成功");
-                            location.reload();
+                            window.location.replace(window.location.href);
                         }else {
                             alert("儲存失敗重新檢查格式:"+result.message);
                         }
-                    }).
-                fail(function (XMLHttpResponse,textStatus,errorThrown) {
-                    console.log(
-                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                        "3 返回失敗,textStatus:"+textStatus+
-                        "4 返回失敗,errorThrown:"+errorThrown
-                    );
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
+                    }
                 });
+
             }
             function DB_DEL(sTraID,sUr) {
                 $.ajax("/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'IOA'+"&sTraID="+sTraID+"&sPg="+""+"&sCidFlag=D"+"&sUr="+sUr))
@@ -630,7 +650,7 @@ $Account="00FUZZY";
              let obj=JSON.parse(AESDeCode(AESobj));
              let IdPt=obj.IdPt;
              let InIdPt=obj.INPt;
-             console.log(obj);
+
 
             if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val())
              {
@@ -710,7 +730,7 @@ $Account="00FUZZY";
                                    <div id="${'M_'+Page+index}" class="M_Omodal row">
 
                                         <div class="col-12">
-                                              <input type="text" class="form-control" value="${Name}" readonly>
+                                              <input type="text" class="form-control" value="${Name}" disabled>
                                         </div>
 
                                         <div id="${'IOType'+Page + index}" class="col-12" >
@@ -744,7 +764,7 @@ $Account="00FUZZY";
                                $("#IOType" + Page + index).append(
                                    `
                               <label style="font-size: 1.5rem;">
-                                   <input id="${index + Page + value.JID_KEY}" class="${'IOCK_' + Page + index}" type="radio" name="${'IOCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
+                                   <input type="radio" id="${index + Page + value.JID_KEY}" class="${'IOCK_' + Page + index}"  name="${'IOCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
                                    ${value.NM_ITEM}
                               </label>
                             `
@@ -762,7 +782,7 @@ $Account="00FUZZY";
                                $("#Color" + Page + index).append(
                                    `
                                   <label style="font-size: 1.5rem;">
-                                      <input id="${index + Page + value.JID_KEY}"  class="${'COLORCK_' + Page + index}"  type="radio"  name="${'COLORCK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
+                                      <input type="radio" id="${index + Page + value.JID_KEY}"  class="${'COLOR_CK_' + Page + index}"    name="${'COLOR_CK_' + Page + index}"  value="${index + Page +value.JID_KEY}">
                                        ${value.NM_ITEM}
                                  </label>
                                   `
@@ -861,7 +881,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-      /*  display: none;*/
+        /*display: none;*/
         background-color: #00FF00;
     }
     .Dir_s{
@@ -950,7 +970,7 @@ $Account="00FUZZY";
         </span>
     <!----------------------------------------------------------Patient Name-------------------------------------------------------------------------->
         <div>
-            <input id="DataTxt" value="" class="form-control" type="text" readonly="readonly">
+            <input id="DataTxt" value="" class="form-control" type="text" disabled>
         </div>
     <!----------------------------------------------------------Time-------------------------------------------------------------------------->
         <div class="Otimer" >
@@ -1035,8 +1055,9 @@ $Account="00FUZZY";
 
                     </div>
                     <div class="modal-footer">
+                        <button id="O_CancelBtn" type="button" class="btn btn-danger">清除</button>
                         <button id="O_ConfirmBtn" type="button" class="btn btn-primary">確認</button>
-                        <button id="O_CancelBtn" type="button" class="btn btn-secondary" data-dismiss="modal">放棄回上一頁</button>
+                        <button  type="button" class="btn btn-secondary" data-dismiss="modal">放棄回上一頁</button>
                     </div>
                 </div>
             </div>
