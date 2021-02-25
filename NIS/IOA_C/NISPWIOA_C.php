@@ -4,21 +4,19 @@ $str=$_GET['str'];
 $replaceSpace=str_replace(' ','+',$str);
 $EXPLODE_data=explode('&',AESDeCode($replaceSpace));
 
+
 $IdPt_STR=$EXPLODE_data[0];
 $IdInPt_STR=$EXPLODE_data[1];
-
 $sUr_STR=$EXPLODE_data[2];
 $nM_STR=$EXPLODE_data[3];
 
 $IdPt_value=explode('=',$IdPt_STR);
 $IdInPt_value=explode('=',$IdInPt_STR);
-
 $sUr_value=explode('=',$sUr_STR);
 $nM_value=explode('=',$nM_STR);
 
 $IdPt=$IdPt_value[1];
 $IdInPt=$IdInPt_value[1];
-
 /*$sUr=$sUr_value[1];*/
 $nM_P=$nM_value[1];
 $sUr='00FUZZY';
@@ -204,7 +202,7 @@ $sUr='00FUZZY';
             $.ajax("/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=IOA_C&sTraID="+sTraID+"&sPg="+Page))
                 .done(function (data) {
                     let obj=JSON.parse(AESDeCode(data));
-
+                    console.log(obj);
                     //Print RadioButton Time
                     if (Page==="A"){
                         CreatTable.TIME(obj);
@@ -228,8 +226,10 @@ $sUr='00FUZZY';
 
 
                         CreatEle(obj,Time,sDt,AllTime);
-                        delete obj.TmSTtoE;
-                        delete obj.SB;
+                       // delete obj.TmSTtoE;
+
+                       // delete obj.SB;
+
 
                     }
                 }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
@@ -247,7 +247,6 @@ $sUr='00FUZZY';
             let sTraID=obj.sTraID;
             let AllTime={'Start':'24小時','End':'','IO':'I'};
             let Time=new Map();
-            console.log(Data_Json);
 
             Time.set('Time',Data_Json.TmSTtoE);
             delete Data_Json.TmSTtoE;
@@ -282,7 +281,6 @@ $sUr='00FUZZY';
 
         function CreatEle(obj,Time,sDt,AllTime) {
            const arr=['D','N','M','I'];
-            let QT_Sum=[[],[],[]];//總量
 
             for (let index of arr){
                 $(".tb1"+index).remove();
@@ -312,12 +310,11 @@ $sUr='00FUZZY';
                     `
                 <tr class="${'tb1'+IO_id}">
                         <td>${Ts+Te}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-
-                        <td></td>
+                        <td id="${IO_id+'_IA'}"></td>
+                        <td id="${IO_id+'_IB'}"></td>
+                        <td id="${IO_id+'_IC'}"></td>
+                        <td id="${IO_id+'_ID'}"></td>
+                        <td id="${IO_id+'_IE'}"></td>
                     </tr>
                 `
                 );
@@ -326,14 +323,13 @@ $sUr='00FUZZY';
                     `
                 <tr class="${'tb2'+IO_id}">
                         <td>${Ts+Te}</td>
-                        <td></td>
-
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td id="${IO_id+'_OA'}"></td>
+                        <td id="${IO_id+'_OB'}"></td>
+                        <td id="${IO_id+'_OC'}"></td>
+                        <td id="${IO_id+'_OD'}"></td>
+                        <td id="${IO_id+'_OG'}"></td>
+                        <td id="${IO_id+'_OE'}"></td>
+                        <td id="${IO_id+'_OF'}"></td>
                     </tr>
                 `
                 );
@@ -343,9 +339,9 @@ $sUr='00FUZZY';
                     `
                 <tr class="${'IO_Sum_tb'+IO_id}">
                         <td>${Ts+Te}</td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
+                        <td id="${IO_id+'_I'}"></td>
+                        <td id="${IO_id+'_O'}"></td>
+                        <td id="${IO_id+'_OI'}"></td>
                         <td></td>
                     </tr>
                 `
@@ -365,56 +361,106 @@ $sUr='00FUZZY';
                 keys.push(i);
             }
 
+
             keys.sort();
+
 
             for (let index of keys){
                 objs[index]=obj[index];
 
             }
 
-            /*********************************************/
+            let QT_Sum_Arr=[];
+            let D_I=[];
+            let D_O=[];
+            let M_I=[];
+            let M_O=[];
+            let N_I=[];
+            let N_O=[];
             for (let index in objs){
 
                 let arr=obj[index];
-                let DSum_QTY=0;
 
-                let NSum_QTY=0;
+                let  D_QTY=arr.filter(value=>value.CID_EXCUTE==="D" )
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0);
 
-                let MSum_QTY=0;
 
-                $.each(arr,function (i,val) {
-                    let QTY=isNaN(parseInt(val.QUANTITY))?val.ST_LOSS:val.QUANTITY;
-                    let CID_EXC=val.CID_EXCUTE;//早D,晚N,夜M
-                    let IO=val.CID_IO;
+                let  N_QTY=arr.filter(value=>value.CID_EXCUTE==="N" )
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0);
 
-                    if (QTY === 'NaN'  || QTY === null){
-                        QTY=0;
-                    }
 
-                    if (CID_EXC==="D"){
-                        DSum_QTY+=parseInt(QTY);
+                let  M_QTY=arr.filter(value=>value.CID_EXCUTE==="M" )
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0);
 
-                    }else  if(CID_EXC==="N"){
-                        NSum_QTY+=parseInt(QTY);
 
-                    }else if (CID_EXC==="M"){
-                        MSum_QTY+=parseInt(QTY);
+                D_I.push(arr.filter(value=>value.CID_EXCUTE==="D" && value.CID_IO==="I")
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0));
 
-                    }
-                });
+                D_O.push(arr.filter(value=>value.CID_EXCUTE==="D" && value.CID_IO==="O")
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0));
 
-                QT_Sum[0].push(DSum_QTY);
-                QT_Sum[1].push(NSum_QTY);
-                QT_Sum[2].push(MSum_QTY);
+                M_I.push(arr.filter(value=>value.CID_EXCUTE==="M" && value.CID_IO==="I")
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0));
+
+                M_O.push(arr.filter(value=>value.CID_EXCUTE==="M" && value.CID_IO==="O")
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0));
+
+
+                N_I.push(arr.filter(value=>value.CID_EXCUTE==="N" && value.CID_IO==="I")
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0));
+
+                N_O.push(arr.filter(value=>value.CID_EXCUTE==="N" && value.CID_IO==="O")
+                    .map(value=>isNaN(parseInt(value.QUANTITY))?value.ST_LOSS:value.QUANTITY)
+                    .reduce((acc, cur)=>parseInt(acc)+parseInt(cur),0));
+
+
+                $("#"+"D_"+index).text(D_QTY);
+                $("#"+"N_"+index).text(N_QTY);
+                $("#"+"M_"+index).text(M_QTY);
+
+                QT_Sum_Arr.push(D_QTY,N_QTY,M_QTY);
+
             }
 
-            QT_Sum.forEach((value, index) =>InsertTdValue(value,index));
-            InsertSumTdValue(QT_Sum,obj);
+            let D_I_SumQty=D_I.reduce((acc, cur)=>parseInt(acc)+parseInt(cur));
+            let D_O_SumQty=D_O.reduce((acc, cur)=>parseInt(acc)+parseInt(cur));
+            let M_I_SumQty=M_I.reduce((acc, cur)=>parseInt(acc)+parseInt(cur));
+            let M_O_SumQty=M_O.reduce((acc, cur)=>parseInt(acc)+parseInt(cur));
+            let N_I_SumQty=N_I.reduce((acc, cur)=>parseInt(acc)+parseInt(cur));
+            let N_O_SumQty=N_O.reduce((acc, cur)=>parseInt(acc)+parseInt(cur));
 
+
+
+
+            $("#D_I").text(D_I.reduce((acc, cur)=>parseInt(acc)+parseInt(cur)));
+            $("#D_O").text(D_O.reduce((acc, cur)=>parseInt(acc)+parseInt(cur)));
+            $("#M_I").text(M_I.reduce((acc, cur)=>parseInt(acc)+parseInt(cur)));
+            $("#M_O").text(M_O.reduce((acc, cur)=>parseInt(acc)+parseInt(cur)));
+            $("#N_I").text(N_I.reduce((acc, cur)=>parseInt(acc)+parseInt(cur)));
+            $("#N_O").text(N_O.reduce((acc, cur)=>parseInt(acc)+parseInt(cur)));
+
+
+
+            $("#D_OI").text(D_O_SumQty-D_I_SumQty);
+            $("#M_OI").text(M_O_SumQty-M_I_SumQty);
+            $("#N_OI").text(N_O_SumQty-N_I_SumQty);
+
+            InsertSumTdValue(QT_Sum_Arr,obj);
             OCAppend(obj.OC,Time);
             DeTailAppend(obj);
 
-            $("td").each(function () {
+
+
+
+           $("td").each(function () {
                 if ($(this).text()==="0" || $(this).text()==="NaN")
                 {
                     $(this).text(" ");
@@ -423,7 +469,7 @@ $sUr='00FUZZY';
 
         }
         
-
+        //引流頁面
         function OCAppend(arr,Time){
             $.each(Time.get('Time'),function (index,val) {
                 let Ts=val.Start;
@@ -450,8 +496,31 @@ $sUr='00FUZZY';
 
             });
 
-            InsertOC_TdValue(arr);
+            //填入引流值
+            $.each(arr,function (index,val) {
+                let IO=val.CID_EXCUTE;
+
+
+                $('.OC'+index).find('td:eq(0)').text(val.NM_PHARMACY);
+                if (IO==="D"){
+                    $('.OC'+index).find('td:eq(1)').text(val.QUANTITY);
+                }else if (IO==="N"){
+                    $('.OC'+index).find('td:eq(2)').text(val.QUANTITY);
+                }else if(IO==="M"){
+                    $('.OC'+index).find('td:eq(3)').text(val.QUANTITY);
+                }
+                let D=isNaN(parseInt($('.OC'+index).find('td:eq(1)').text()))?0:parseInt($('.OC'+index).find('td:eq(1)').text());
+                let N=isNaN(parseInt($('.OC'+index).find('td:eq(2)').text()))?0:parseInt($('.OC'+index).find('td:eq(2)').text());
+                let M=isNaN(parseInt($('.OC'+index).find('td:eq(3)').text()))?0:parseInt($('.OC'+index).find('td:eq(3)').text());
+
+
+                $('.OC'+index+' td:nth-child(5)').text(D+N+M);
+            });
+
         }
+
+
+        //總量頁面細節
         function DeTailAppend(obj) {
             let DateTimeK=[];
 
@@ -489,6 +558,8 @@ $sUr='00FUZZY';
         /**
          * @return {string}
          */
+
+        //取時間相同的值
         function GetSameTimeData(obj,sDT) {
 
             let A_Map=new Map();
@@ -553,62 +624,8 @@ $sUr='00FUZZY';
             return str.join('、');
         }
 
-
-        function InsertTdValue(arr,index) {
-
-            let I=arr.slice(0,4).concat(Array.of(arr.slice(4,6).reduce((acc,cur)=>acc+cur)));//合併IF,IE
-
-            let O=arr.slice(6,13);
-            let I_Sum=I.reduce((acc,cur)=>acc+cur);
-            let O_Sum=O.reduce((acc,cur)=>acc+cur);
-
-            let IO_Tag='';
-            if (index===0){
-                IO_Tag='D';
-            }else if (index===1){
-                IO_Tag='N';
-            }else {
-                IO_Tag='M';
-            }
-
-            I.forEach((value,N_index)=>$('.tb1'+IO_Tag).find('td:eq('+(N_index+1)+')').text(value.toString()));
-            O.forEach((value,N_index)=>$('.tb2'+IO_Tag).find('td:eq('+(N_index+1)+')').text(value.toString()));
-
-            $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(1)+')').text(I_Sum);
-            $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(2)+')').text(O_Sum);
-            $(".IO_Sum_tb"+IO_Tag).find('td:eq('+(3)+')').text(O_Sum-I_Sum);
-
-        }
-        function InsertOC_TdValue(arr){
-
-            $.each(arr,function (index,val) {
-                let IO=val.CID_EXCUTE;
-
-
-                $('.OC'+index).find('td:eq(0)').text(val.NM_PHARMACY);
-                if (IO==="D"){
-                    $('.OC'+index).find('td:eq(1)').text(val.QUANTITY);
-                }else if (IO==="N"){
-                    $('.OC'+index).find('td:eq(2)').text(val.QUANTITY);
-                }else if(IO==="M"){
-                    $('.OC'+index).find('td:eq(3)').text(val.QUANTITY);
-                }
-                let D=isNaN(parseInt($('.OC'+index).find('td:eq(1)').text()))?0:parseInt($('.OC'+index).find('td:eq(1)').text());
-                let N=isNaN(parseInt($('.OC'+index).find('td:eq(2)').text()))?0:parseInt($('.OC'+index).find('td:eq(2)').text());
-                let M=isNaN(parseInt($('.OC'+index).find('td:eq(3)').text()))?0:parseInt($('.OC'+index).find('td:eq(3)').text());
-
-
-                $('.OC'+index+' td:nth-child(5)').text(D+N+M);
-            });
-
-
-
-
-
-        }
+        //填入總量頁面值
         function InsertSumTdValue(arr,obj) {
-
-
 
             //輸入
             for (let i=1;i<=6;i++){
@@ -637,9 +654,6 @@ $sUr='00FUZZY';
 
                 $(".IO_Sum_tbI").find('td:eq('+i+')').text(D+N+M);
             }
-
-
-
 
             //有LOSS值
             let count=0;
@@ -695,7 +709,7 @@ $sUr='00FUZZY';
         }
 
 
-    });
+});
 </script>
 <style>
     .container{
