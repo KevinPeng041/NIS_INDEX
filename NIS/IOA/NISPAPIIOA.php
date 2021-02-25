@@ -167,10 +167,10 @@ function GetIOAPageJson($conn,$sPg,$sTraID){
 function PosIOASave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
 
     $DateTime = date("YmdHis");
-    $STR = substr($DateTime, 0, 4);
-    $STR1 = substr($DateTime, -10, 10);
-    $str = (int)$STR - 1911;
-    $NowDT= (string)$str .(string)$STR1;
+    $Y_VID = substr($DateTime, 0, 4);
+    $Date = substr($DateTime, -10, 10);
+    $Y_TW = (int)$Y_VID - 1911;
+    $NowDT= (string)$Y_TW .(string)$Date;
 
     $sTm=str_pad($sTm,6,"0",STR_PAD_RIGHT);
 
@@ -191,10 +191,13 @@ function PosIOASave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
             ID_BED,JID_NSRANK,FORMSEQANCE_WT
             FROM HIS803.NISWSTP 
              WHERE ID_TABFORM = 'IOA'
-            AND ID_TRANSACTION='$sTraID'
+            AND ID_TRANSACTION=:sTraID
            ";
 
+
+
     $Ssql_stid=oci_parse($conn,$Ssql);
+    oci_bind_by_name($Ssql_stid,":sTraID",$sTraID);
     oci_execute($Ssql_stid);
     $DATA=[];
     $IdinPt='';
@@ -281,8 +284,8 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
         $ID_COMFIRM=$row[5];
     }
 
-    $TRANSA=str_pad($ID_TRANSA,8,0,STR_PAD_LEFT);
-    $sTraID=$ID_TRANSB.'ILSGA'.$TRANSA;
+
+    $sTraID=$ID_TRANSB.'ILSGA'.str_pad($ID_TRANSA,8,0,STR_PAD_LEFT);
 
      $DM_PR=$sDt.substr($sTm,0,2);
 
@@ -290,7 +293,7 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
             QA.ST_LOSS,QA.JID_COLOR,QA.JID_IOWAY,QA.IS_SUMARY,
             QA.CID_CLASS,QA.JID_KEY,
            CASE  QA.NM_ITEM
-           WHEN ' ' THEN (SELECT NM_ITEM  FROM NSCLSI where jid_key=QA.JID_IOTYPE)
+           WHEN ' ' THEN (SELECT NM_ITEM  FROM NSCLSI WHERE jid_key=QA.JID_IOTYPE)
            ELSE  QA.NM_ITEM END NM_ITEM,
             QA.MM_IO,
              CASE DB_UP
@@ -304,9 +307,9 @@ function GetIOAJson($conn,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
             AND QA.UR_PROCESS='$sUr'
              AND SI.CID_CLASS = 'IOTP' AND IS_ACTIVE = 'Y'
              AND            
-              ( ( SI.CID_CLASS='IOTP' AND SI.ST_TEXT1='S' AND SI.ST_TEXT1=QA.CID_IO  AND(QA.JID_IOTYPE=SI.JID_KEY OR QA.JID_IOTYPE=' ') ) 
+              ( ( SI.ST_TEXT1='S' AND SI.ST_TEXT1=QA.CID_IO  AND(QA.JID_IOTYPE=SI.JID_KEY OR QA.JID_IOTYPE=' ') ) 
               OR
-              ( SI.CID_CLASS='IOTP' AND SI.ST_TEXT1 <>'S' AND QA.JID_IOTYPE=SI.JID_KEY))
+              ( SI.ST_TEXT1 <>'S' AND QA.JID_IOTYPE=SI.JID_KEY))
             AND QA.DM_CANCD=' '
          ";
 
@@ -538,28 +541,41 @@ function PosIOACancel($conn,$sFm,$sTraID,$sUr){
     $json_reponce=json_encode(array("message"=>"success","result"=>"true"));
     return $json_reponce;
 }
-function GetIOACheck($Arr){
+function GetIOACheck($Arr)
+{
+    $count = 0;
+    $length = count($Arr);
+    for ($i=0;$i<$length;$i++){
+        $OBJ=$Arr[$i];
+        $OBJ_length=count($OBJ);
 
+        for ($j=0;$j<$OBJ_length;$j++){
+            $Quantity=$OBJ[$j]->{'QUNTY'};
+            if ($Quantity!==""){
+                $count++;
+            }
+        }
 
+    }
 
-
-
+    return $count>0?true:false;
 }
-
 function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FormSeq_WT,$NowDT,$UR_PROCESS){
 
    $Arr_Decode= array_map(function ($value){
-       $obj=json_decode($value);
 
-       return  array_filter($obj,function ($Key){
-        return $Key->{'QUNTY'}!="" ;
-       });
-
+         return $obj=json_decode($value);
 
     },$arr);
 
+
     $ASCii_Num=65; //ASCii A
     $length=count($Arr_Decode);
+
+   if (!GetIOACheck($Arr_Decode)){
+       $response=json_encode(array("response" => "Error","message" =>"請確認是否有填值"),JSON_UNESCAPED_UNICODE);
+       return  $response;
+   }
 
 
     for ($i=0;$i<$length;$i++){
@@ -567,52 +583,62 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
         $OBJ=$Arr_Decode[$i];
         $OBJ_length=count($OBJ);
 
-        for ($j=0;$j<$OBJ_length;$j++){
-            $M_Nam=$OBJ[$j]->{'M_Nam'}==""?" ":$OBJ[$j]->{'M_Nam'};
-            $JID_KEY=$OBJ[$j]->{'JID_KEY'}==""?" ":$OBJ[$j]->{'JID_KEY'};
-            $CID_CLASS=$OBJ[$j]->{'CID_CLASS'}==""?" ":$OBJ[$j]->{'CID_CLASS'};
-            $Cid_io=$OBJ[$j]->{'CID_IO'};
-            $IoType=$OBJ[$j]->{'IO_TYPE'}==""?" ":$OBJ[$j]->{'IO_TYPE'};
-            $Quantity=$OBJ[$j]->{'QUNTY'}==""?" ":$OBJ[$j]->{'QUNTY'};
-            $Loss=$OBJ[$j]->{'LOSS'}==""?" ":$OBJ[$j]->{'LOSS'};
-            $Color=$OBJ[$j]->{'COLOR'}==""?" ":$OBJ[$j]->{'COLOR'};
-            $IoWay=$OBJ[$j]->{'IOWAY'}==""?" ":$OBJ[$j]->{'IOWAY'};
-            $MM_IO=$OBJ[$j]->{'MM_IO'}==""?" ":$OBJ[$j]->{'MM_IO'};
-            $Is_Sum=$OBJ[$j]->{'IS_SUM'}==""?" ":$OBJ[$j]->{'IS_SUM'};
-            $DataSeq=$OBJ[$j]->{'DATASEQ'};
+             for ($j=0;$j<$OBJ_length;$j++){
 
-            if (trim($Loss)!=="" && trim($Quantity)==="")
-            {
-                $Quantity="-1";
-            }
-            $In_Sql="INSERT INTO  NSIOQA(DATESEQANCE,FORMSEQANCE,ID_PATIENT,ID_INPATIENT,NO_OPDSEQ,DT_EXCUTE,TM_EXCUTE,
-                                                                   CID_IO,JID_IOTYPE,DB_QUANTITY,ST_LOSS,DB_CALORIE,DB_REMAIN,JID_COLOR,
-                                                                   JID_IOWAY,TM_START,TM_END,IS_SUMARY,CID_CLASS,JID_KEY,NM_ITEM,ST_KEYSYSTEM,
-                                                                   MM_IO,ID_BED,JID_NSRANK,FORMSEQANCE_WT,FORMSEQANCE_FL,DM_PROCESS,
-                                                                   UR_PROCESS,DM_CANCD,UR_CANCD,ID_FROMSYS)
-                                                        VALUES(NIS_DATETIMESEQ,'$FrmSeq','$IdPt','$IdinPt','0','$sDt','$sTm',
-                                                                   '$Cid_io','$IoType','$Quantity','$Loss','-1','-1','$Color',
-                                                                   '$IoWay',' ',' ','$Is_Sum','$CID_CLASS','$JID_KEY','$M_Nam',' ',
-                                                                   '$MM_IO','$ID_BED','$JID_NSRANK','$FormSeq_WT','$FrmSeq','$NowDT',
-                                                                   '$UR_PROCESS',' ',' ','$ID_FROMSYS')";
+                 $M_Nam=$OBJ[$j]->{'M_Nam'}==""?" ":$OBJ[$j]->{'M_Nam'};
+                 $JID_KEY=$OBJ[$j]->{'JID_KEY'}==""?" ":$OBJ[$j]->{'JID_KEY'};
+                 $CID_CLASS=$OBJ[$j]->{'CID_CLASS'}==""?" ":$OBJ[$j]->{'CID_CLASS'};
+                 $Cid_io=$OBJ[$j]->{'CID_IO'};
+                 $IoType=$OBJ[$j]->{'IO_TYPE'}==""?" ":$OBJ[$j]->{'IO_TYPE'};
+                 $Quantity=$OBJ[$j]->{'QUNTY'}==""?" ":$OBJ[$j]->{'QUNTY'};
+                 $Loss=$OBJ[$j]->{'LOSS'}==""?" ":$OBJ[$j]->{'LOSS'};
+                 $Color=$OBJ[$j]->{'COLOR'}==""?" ":$OBJ[$j]->{'COLOR'};
+                 $IoWay=$OBJ[$j]->{'IOWAY'}==""?" ":$OBJ[$j]->{'IOWAY'};
+                 $MM_IO=$OBJ[$j]->{'MM_IO'}==""?" ":$OBJ[$j]->{'MM_IO'};
+                 $Is_Sum=$OBJ[$j]->{'IS_SUM'}==""?" ":$OBJ[$j]->{'IS_SUM'};
+                 $DataSeq=$OBJ[$j]->{'DATASEQ'};
 
-            $IN_Stid=oci_parse($conn,$In_Sql);
-            if (!$IN_Stid){
-                $e=oci_error($conn);
-                return json_encode(array("response" => "Error","message" => $e['message']),JSON_UNESCAPED_UNICODE);
-                break;
-            }
-            $Execute= oci_execute($IN_Stid,OCI_NO_AUTO_COMMIT);
-            if (!$Execute){
-                $e=oci_error($IN_Stid);
-                return json_encode(array("response" => "Error","message" => $e['message']),JSON_UNESCAPED_UNICODE);
-                break;
-            }
+
+                 if (trim($Loss)!=="" && trim($Quantity)==="")
+                 {
+                     $Quantity="-1";
+                 }
+                 if ($Quantity!==" "){
+                     $In_Sql="INSERT INTO  NSIOQA(DATESEQANCE,FORMSEQANCE,ID_PATIENT,ID_INPATIENT,NO_OPDSEQ,DT_EXCUTE,TM_EXCUTE,
+                                                                        CID_IO,JID_IOTYPE,DB_QUANTITY,ST_LOSS,DB_CALORIE,DB_REMAIN,JID_COLOR,
+                                                                        JID_IOWAY,TM_START,TM_END,IS_SUMARY,CID_CLASS,JID_KEY,NM_ITEM,ST_KEYSYSTEM,
+                                                                        MM_IO,ID_BED,JID_NSRANK,FORMSEQANCE_WT,FORMSEQANCE_FL,DM_PROCESS,
+                                                                        UR_PROCESS,DM_CANCD,UR_CANCD,ID_FROMSYS)
+                                                             VALUES(NIS_DATETIMESEQ,'$FrmSeq','$IdPt','$IdinPt','0','$sDt','$sTm',
+                                                                        '$Cid_io','$IoType','$Quantity','$Loss','-1','-1','$Color',
+                                                                        '$IoWay',' ',' ','$Is_Sum','$CID_CLASS','$JID_KEY','$M_Nam',' ',
+                                                                        '$MM_IO','$ID_BED','$JID_NSRANK','$FormSeq_WT','$FrmSeq','$NowDT',
+                                                                        '$UR_PROCESS',' ',' ','$ID_FROMSYS')";
+
+                  /*   $myfile=fopen("NISWSTP_log.txt","w+")or die("Unable to open file!");
+                     $txt="TP_SQL:".$In_Sql;
+                     fwrite($myfile,$txt.PHP_EOL);
+                     fclose($myfile);*/
+
+
+                     $IN_Stid=oci_parse($conn,$In_Sql);
+                     if (!$IN_Stid){
+                         $e=oci_error($conn);
+                         return json_encode(array("response" => "Error","message" => $e['message']),JSON_UNESCAPED_UNICODE);
+                         break;
+                     }
+                     $Execute= oci_execute($IN_Stid,OCI_NO_AUTO_COMMIT);
+                     if (!$Execute){
+                         $e=oci_error($IN_Stid);
+                         return json_encode(array("response" => "Error","message" => $e['message']),JSON_UNESCAPED_UNICODE);
+                         break;
+                     }
+                 }
+
         }
         $ASCii_Num++;
 
     }
-
 
     oci_commit($conn);
     $response=json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
