@@ -66,7 +66,7 @@ function GetIOACPageJson($conn,$sPg,$sTraID){
     }
     return $DATA;
 }
-function PosIOACalssSave($conn,$sTraID,$sUr){
+function PosIOAClassSave($conn,$sTraID,$sUr){
     date_default_timezone_set('Asia/Taipei');
 
     $Ssql="SELECT ID_INPATIENT,ID_PATIENT,ST_DATAC,ID_BED,JID_NSRANK,FORMSEQANCE_WT
@@ -134,7 +134,7 @@ function PosIOACalssSave($conn,$sTraID,$sUr){
 
 
 }
-function PosIOACalssCancel($conn,$sFm,$sTraID,$sUr){
+function PosIOAClassCancel($conn,$sFm,$sTraID,$sUr){
     $DateTime = date("YmdHis");
     $STR = substr($DateTime, 0, 4);
     $STR1 = substr($DateTime, -10, 10);
@@ -277,6 +277,8 @@ function GetConFirmUser($conn,$IdPt,$InPt,$DT){
     while (oci_fetch_array($stid)){
         array_push($CID_E,oci_result($stid,"CID_SPECIAL"));
     }
+    array_push($CID_E,"I");
+
     $reArr=[];
     foreach ($CID_E as $value){
         $Sql="SELECT  (SELECT NM_USER FROM HIS803.NSUSER WHERE ID_USER=UR_PROCESS )NM_ITEM 
@@ -360,7 +362,7 @@ function Get_IOAC_DATA($conn,$Idpt,$INPt,$sDt){
             AND TM_EXCUTE <( CASE ST_TEXT2 WHEN '000000' THEN '235959' ELSE LPAD(TO_CHAR(TO_NUMBER(ST_TEXT2)-1),6,'0') END )
             ORDER BY DT_EXCUTE, TM_EXCUTE, CID_IO, P0.ID_ITEM";
 
-
+    //echo $S_Sql;
 
     $S_stid=oci_parse($conn,$S_Sql);
     oci_execute($S_stid);
@@ -396,8 +398,6 @@ function Get_IOAC_DATA($conn,$Idpt,$INPt,$sDt){
         );
 
     }
-
-
     return json_encode(ArrayGrouping($conn,$arr,$TmSTtoE,GetConFirmUser($conn,$Idpt,$INPt,$sDt)),JSON_UNESCAPED_UNICODE);
 }
 
@@ -415,7 +415,9 @@ function ArrayGrouping($conn,$arr1,$TmSTtoE,$ComUser){
         $ID=oci_result($stid,"ID_ITEM");
         $arr[$ID]=[];
     }
-    for ($i=0;$i<count($arr1);$i++)
+    $length=count($arr1);
+
+    for ($i=0;$i<$length;$i++)
     {
         foreach ($arr as $key => $value){
             if ($key===$arr1[$i]['ID_ITEM']){
