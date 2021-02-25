@@ -213,7 +213,6 @@ $Account="00FUZZY";
                 }
             };
 
-
             (function () {
                 CreatDefaultElement.TimeRadio();
                 $("#loading").hide();
@@ -235,8 +234,6 @@ $Account="00FUZZY";
                 let sDt=$("#sDate").val();
                 let IdPt=$("#DA_idpt").val(),InPt=$("#DA_idinpt").val(),PName=$("#DataTxt").val();
 
-
-
                 //other btn
                 if ($(this).attr('class')==='Obtn btn btn-secondary'){
                     let FatherEle=$(this).parent().parent();
@@ -247,12 +244,14 @@ $Account="00FUZZY";
 
                 //Add item btn
                 if ($(this).attr('class')==='OrderConfirmBtn btn btn-primary'){
-                    let Order_Obj=OrderList.get(Page)[$(this).val()];
+                    let index=parseInt($(this).val());
+                    let Order_Obj=OrderList.get(Page)[index];
                     ThisPageJson.get(Page).push(Order_Obj);
-                    ThisPageJson.set(Page,ThisPageJson.get(Page));
                     ItemAction.appendItem(Page,Order_Obj);
 
+                    ThisPageJson.set(Page,ThisPageJson.get(Page));
                     $("#Order_Modal").modal('hide');
+
                 }
 
                 switch (Btn) {
@@ -297,7 +296,6 @@ $Account="00FUZZY";
                                 `
                             );
                         });
-
                         $("#Order_Modal").modal('show');
                         break;
                     case "O_ConfirmBtn":
@@ -306,7 +304,6 @@ $Account="00FUZZY";
                         let obj=ThisPageJson.get(Page);
                         let val='';
 
-                        obj[index].MM_IO=MM;
 
                         if($("input[name="+'IOCK_'+Page+index+"]:checked").val()){
                             val=$("input[name="+'IOCK_'+Page+index+"]:checked").val();
@@ -315,13 +312,14 @@ $Account="00FUZZY";
                             obj[index].IOWAY=" ";
                         }
 
-
                         if ($("input[name="+'COLOR_CK_'+Page+index+"]:checked").val()){
                             val= $("input[name="+'COLOR_CK_'+Page+index+"]:checked").val();
                             obj[index].COLOR= val.substring(index.length+1,val.length);
                         }else {
                             obj[index].COLOR=" ";
                         }
+
+                        obj[index].MM_IO=MM;
 
                         ThisPageJson.set(Page,obj);
                         $("#Dir_s"+Page+index).val(MM);
@@ -337,25 +335,39 @@ $Account="00FUZZY";
 
                         break;
                     case "SubmitBtn":
-                        let json_str=JSON.stringify(ThisPageJson.get(Page));
-                        DB_WSST(Page,sTraID, json_str);
 
-                        DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
+                        if (($("#sDate").val()).trim()==="" || ($("#sTime").val()).trim()==="")
+                        {
+                            alert('請填寫時間日期');
+                            return;
+                        }
+
+                        let json_str=JSON.stringify(ThisPageJson.get(Page));
+                        $("#wrapper").show();
+                        DB_WSST(Page,sTraID,json_str);
+
+                        setTimeout(function () {
+                            DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
+                        },500);
+
+
                         break;
                     case "DELBtn":
                         DB_DEL(sTraID,'<?php echo $Account?>');
                         break;
                     case "ReSetBtn":
                         $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
-                        $(".PageBtn").prop('disabled',true);
+                        $("#SerchBtn,#SubmitBtn,#DELBtn,.PageBtn").prop('disabled',true);
+
                         $("input[type=text]:not(.Parametertable>input)").val("");
                         $("input[type=radio]").prop("checked",false);
                         $("#ISTM").show();
                         $(".ItemBtn,.PItem").hide();
-
+                        $("#FSEQ").val("");
                         break;
                     case "ThirdClassBtn":
-                        window.open("../IOA_C/NISPWIOA_C.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+"&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
+                        window.open("../IOA_C/NISPWIOA_C.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+
+                            "&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
                             "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no');
                         break;
                     default:
@@ -401,9 +413,19 @@ $Account="00FUZZY";
                 let Page=$('#PageVal').val();
                 let Id=$(this).attr('id');
                 let index=Id.split('')[Id.length-1];
+                let Txt=$(this).val();
 
                 let CidIo="";
                 let obj=ThisPageJson.get(Page);
+                let myReg =  new RegExp("^[0-9]*$");
+
+
+               if (myReg.test(Txt)!==true){
+                    alert('請輸入數字');
+                    $(this).val('');
+                    $(this).focus();
+                    return;
+                }
 
                 if (Id !=="sDate" && Id!=="sTime"){
                     if(Page==="A" || Page==="B" || Page==="C" || Page==="D"){
@@ -431,8 +453,6 @@ $Account="00FUZZY";
                     obj[index].MM_IO=$("#Dir_s"+Page+index).val();
                     obj[index].M_Nam=$("#M_Nam"+Page+index).val();
                     ThisPageJson.set(Page,obj);
-
-                 console.log(ThisPageJson.get(Page));
                 }
 
             });
@@ -477,6 +497,7 @@ $Account="00FUZZY";
 
             function GetINIJson(idPt,INPt,sUr){
                 $("#wrapper").show();
+                $("#loading").show();
                 $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=IOA&idPt='+idPt+'&INPt='+INPt+"&sUr="+sUr))
                     .done(function(data) {
                         $("#wrapper").hide();
@@ -496,7 +517,7 @@ $Account="00FUZZY";
                         $.each(obj.P_H,function (index,value) {
                             ItemAction.appendItem('H',value);
                         });
-
+                        $("#loading").hide();
                     })
                     .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -553,32 +574,17 @@ $Account="00FUZZY";
             }
             function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
 
-           /*   let Input=$('input[type=text]:enabled').not('#sDate,#sTime');
-              let Qty_Input=Input.filter(value=>value%2==0);
-              console.log(Qty_Input);*/
-               /* if (Qty_Input.val()==="")
-                {
-                    alert('請確認是否有填值');
-                    return false;
-                }*/
-
-
-
-
                     $.ajax({
                     url:'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+$("#FSEQ").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr),
                     dataType:'text',
-                    beforeSend :function(xmlHttp){
-                        xmlHttp.setRequestHeader("If-Modified-Since","0");
-                        xmlHttp.setRequestHeader("Cache-Control","no-cache");
-                    },
                     success:function (data) {
                         let result= JSON.parse(AESDeCode(data));
                         if(result.response==='success'){
                             alert("儲存成功");
                             window.location.replace(window.location.href);
                         }else {
-                            alert("儲存失敗重新檢查格式:"+result.message);
+                            alert("儲存失敗,錯誤訊息:"+result.message);
+                            $("#wrapper").hide();
                         }
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
                         console.log(
@@ -642,7 +648,8 @@ $Account="00FUZZY";
                 $(".ItemBtn").hide();
                 $("#SerchBtn").prop('disabled',false);
                 $("#SearchConfirm").val('N');
-
+                $("#FSEQ").val("");
+                $("#ISTM").show();
             }
             function Serchcallback(AESobj){
 
@@ -651,10 +658,9 @@ $Account="00FUZZY";
              let IdPt=obj.IdPt;
              let InIdPt=obj.INPt;
 
-
             if (IdPt!==$("#DA_idpt").val() || InIdPt!==$("#DA_idinpt").val())
              {
-                    alert("病人資訊以異動,請重新操作");
+                    alert("病人資訊已異動,請重新操作");
                     return ;
              }
 
@@ -881,7 +887,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-        /*display: none;*/
+        display: none;
         background-color: #00FF00;
     }
     .Dir_s{
@@ -916,8 +922,8 @@ $Account="00FUZZY";
     }
     #wrapper{
         position: absolute;
-        width: 100%;
-        height: 100%;
+        width: 200%;
+        height: 200%;
         background-color: black;
         opacity: 0.5;
         z-index: 9998;
@@ -1097,7 +1103,7 @@ $Account="00FUZZY";
         </div>
     </div>
     <!----------------------------------------------------------Order Modal-------------------------------------------------------------------------------->
-    <div class="modal fade" id="Order_Modal" tabindex="-1" role="dialog"  aria-hidden="true" data-backdrop="static">
+      <div class="modal fade" id="Order_Modal" tabindex="-1" role="dialog"  aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog  modal-dialog-scrollable modal-dialog-centered " role="document">
             <div class="modal-content">
                 <div class="modal-header">
