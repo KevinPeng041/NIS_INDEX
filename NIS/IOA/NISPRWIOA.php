@@ -344,13 +344,13 @@ $Account="00FUZZY";
 
                         let json_str=JSON.stringify(ThisPageJson.get(Page));
                         $("#wrapper").show();
-                        DB_WSST(Page,sTraID,json_str);
+                        DB_WSST(Page,sTraID,json_str,'true');
 
-                        setTimeout(function () {
-                            DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
-                        },500);
+                       /* setTimeout(function () {
 
+                        },500);*/
 
+                        DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
                         break;
                     case "DELBtn":
                         DB_DEL(sTraID,'<?php echo $Account?>');
@@ -366,6 +366,12 @@ $Account="00FUZZY";
                         $("#FSEQ").val("");
                         break;
                     case "ThirdClassBtn":
+
+                        if ($("#DataTxt").val()===""){
+                            alert('請先選擇責任床位');
+                            return;
+                        }
+
                         window.open("../IOA_C/NISPWIOA_C.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+
                             "&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
                             "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no');
@@ -386,7 +392,7 @@ $Account="00FUZZY";
                     GetPageJson(Page,sTraID);
                 }
 
-                WSST_arr.map(value =>ThisPageJson.get(value)!==undefined?DB_WSST(value,sTraID,JSON.stringify(ThisPageJson.get(value))):'');
+                WSST_arr.map(value =>ThisPageJson.get(value)!==undefined?DB_WSST(value,sTraID,JSON.stringify(ThisPageJson.get(value)),'false'):'');
 
                 if (Page==="H" )
                 {
@@ -417,10 +423,10 @@ $Account="00FUZZY";
 
                 let CidIo="";
                 let obj=ThisPageJson.get(Page);
-                let myReg =  new RegExp("^[0-9]*$");
+                let myReg =  new RegExp("^[1-9][0-9]*([\\.][0-9]{1,2})?$");
 
 
-               if (myReg.test(Txt)!==true){
+               if (myReg.test(Txt)!==true && Txt.trim()!==""){
                     alert('請輸入數字');
                     $(this).val('');
                     $(this).focus();
@@ -544,7 +550,7 @@ $Account="00FUZZY";
                 });
 
             }
-            function DB_WSST(Page,sTraID,json){
+            function DB_WSST(Page,sTraID,json,InSertDB){
                 let obj=JSON.parse(json);
 
                 $.each(obj,function (index,val) {
@@ -557,11 +563,13 @@ $Account="00FUZZY";
 
                 let SavaJson=JSON.stringify(obj);
 
-                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson))
+                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson+'&Indb='+InSertDB))
                     .done(function (data) {
 
+
                         let json=JSON.parse(AESDeCode(data));
-                        console.log(Page,json);
+
+                       console.log(Page,json);
                     }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -887,7 +895,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-        display: none;
+       /* display: none;*/
         background-color: #00FF00;
     }
     .Dir_s{
