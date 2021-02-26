@@ -32,26 +32,30 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
         }
 
     oci_free_statement($IT_stid);
+        
+        
+    /******************Get Page Orader***********************************************/    
+    $DATAA=GetOrderData($conn,'A',$INPt,$date,$ST_DATAA);//靜脈
+    $DATAC=GetOrderData($conn,'C',$INPt,$date,$ST_DATAC);//輸血
+    $DATAD=GetOrderData($conn,'D',$INPt,$date,$ST_DATAD);//TPN
+    $DATAG=GetOrderData($conn,'G',$INPt,$date,$ST_DATAG);//引流
 
-    $DATAA=GetOrderData($conn,'A',$INPt,$date,$ST_DATAA);
-    $DATAC=GetOrderData($conn,'C',$INPt,$date,$ST_DATAC);
-    $DATAD=GetOrderData($conn,'D',$INPt,$date,$ST_DATAD);
-    $DATAG=GetOrderData($conn,'G',$INPt,$date,$ST_DATAG);
+    $DATAB=GetOrderData($conn,'B',$date,$INPt,json_decode($ST_DATAB));//飲食
+    $DATAE=GetOrderData($conn,'E',$date,$INPt,json_decode($ST_DATAE));//輸出
+    $DATAF=GetOrderData($conn,'F',$date,$INPt,json_decode($ST_DATAF));//大便
+    $DATAH=GetOrderData($conn,'H',$date,$INPt,json_decode($ST_DATAH));//IPR
+    /********************************************************************************/
+    
+    
 
-    $DATAB=GetOrderData($conn,'B',$date,$INPt,json_decode($ST_DATAB));
-    $DATAE=GetOrderData($conn,'E',$date,$INPt,json_decode($ST_DATAE));
-    $DATAF=GetOrderData($conn,'F',$date,$INPt,json_decode($ST_DATAF));
-    $DATAH=GetOrderData($conn,'H',$date,$INPt,json_decode($ST_DATAH));
-
-
-     $PAGEA=json_encode(ObjectMap($conn,json_decode($DATAA)->{'DATA'}),JSON_UNESCAPED_UNICODE);
-     $PAGEB=json_encode(ObjectMap($conn,json_decode($DATAB)->{'DATA'}),JSON_UNESCAPED_UNICODE);
-     $PAGEC=json_encode(ObjectMap($conn,json_decode($DATAC)->{'DATA'}),JSON_UNESCAPED_UNICODE);
-     $PAGED=json_encode( ObjectMap($conn,json_decode($DATAD)->{'DATA'}),JSON_UNESCAPED_UNICODE);
-     $PAGEE=json_encode( ObjectMap($conn,json_decode($DATAE)->{'DATA'}),JSON_UNESCAPED_UNICODE);
-     $PAGEF=json_encode( ObjectMap($conn,json_decode($DATAF)->{'DATA'}),JSON_UNESCAPED_UNICODE);
-     $PAGEG=json_encode( ObjectMap($conn,json_decode($DATAG)->{'DATA'}),JSON_UNESCAPED_UNICODE);
-     $PAGEH=json_encode( ObjectMap($conn,json_decode($DATAH)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGEA=json_encode(Append_O_Data($conn,json_decode($DATAA)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGEB=json_encode(Append_O_Data($conn,json_decode($DATAB)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGEC=json_encode(Append_O_Data($conn,json_decode($DATAC)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGED=json_encode( Append_O_Data($conn,json_decode($DATAD)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGEE=json_encode( Append_O_Data($conn,json_decode($DATAE)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGEF=json_encode( Append_O_Data($conn,json_decode($DATAF)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGEG=json_encode( Append_O_Data($conn,json_decode($DATAG)->{'DATA'}),JSON_UNESCAPED_UNICODE);
+     $PAGEH=json_encode( Append_O_Data($conn,json_decode($DATAH)->{'DATA'}),JSON_UNESCAPED_UNICODE);
 
 
     $TP_SQL="INSERT INTO HIS803.NISWSTP(
@@ -123,20 +127,20 @@ function GetIOAIniJson($conn,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr,$JID_
 
 
         $Orader_json=array(
-               "A"=>ObjectMap($conn, json_decode($DATAA)->{'ORDER'}),
-               "B"=>ObjectMap($conn, json_decode($DATAB)->{'ORDER'}),
-               "C"=>ObjectMap($conn, json_decode($DATAC)->{'ORDER'}),
-               "D"=>ObjectMap($conn, json_decode($DATAD)->{'ORDER'}),
-               "E"=>ObjectMap($conn, json_decode($DATAE)->{'ORDER'}),
-               "F"=>ObjectMap($conn, json_decode($DATAF)->{'ORDER'}),
-               "G"=>ObjectMap($conn, json_decode($DATAG)->{'ORDER'})
+               "A"=>Append_O_Data($conn, json_decode($DATAA)->{'ORDER'}),
+               "B"=>Append_O_Data($conn, json_decode($DATAB)->{'ORDER'}),
+               "C"=>Append_O_Data($conn, json_decode($DATAC)->{'ORDER'}),
+               "D"=>Append_O_Data($conn, json_decode($DATAD)->{'ORDER'}),
+               "E"=>Append_O_Data($conn, json_decode($DATAE)->{'ORDER'}),
+               "F"=>Append_O_Data($conn, json_decode($DATAF)->{'ORDER'}),
+               "G"=>Append_O_Data($conn, json_decode($DATAG)->{'ORDER'})
                );
 
     oci_free_statement($TP_Stid);
     oci_commit($conn);
 
     $JsonBack=array('sTraID' => $sTraID, 'sSave' => $sSave,'FORMSEQANCE_WT'=>$FORMSEQANCE_WT,
-                "JID_NSRANK"=>$JID_NSRANK,"ORDER"=>$Orader_json,"P_H"=>ObjectMap($conn, json_decode($DATAH)->{'DATA'})
+                "JID_NSRANK"=>$JID_NSRANK,"ORDER"=>$Orader_json,"P_H"=>Append_O_Data($conn, json_decode($DATAH)->{'DATA'})
             );
     return json_encode($JsonBack,JSON_UNESCAPED_UNICODE);
 
@@ -545,23 +549,39 @@ function GetIOACheck($Arr)
 {
     $count = 0;
     $length = count($Arr);
+    $Error_Str="";
     for ($i=0;$i<$length;$i++){
         $OBJ=$Arr[$i];
         $OBJ_length=count($OBJ);
+
+
+        if ($i==7){
+           $Page_H_obj= count(array_filter($OBJ,function ($value){
+                return $value->{'QUNTY'};
+            }));
+            $Error_Str= $Page_H_obj==1?'請確認 Irrigation In/Out 請確認是否只填一項':'';
+            if ($Error_Str!=='')
+                break;
+        }
 
         for ($j=0;$j<$OBJ_length;$j++){
             $Quantity=$OBJ[$j]->{'QUNTY'};
             if ($Quantity!==""){
                 $count++;
             }
+
         }
 
     }
 
-    return $count>0?true:false;
+    if ($count==0){
+        $Error_Str="請確認是否有填值";
+    }
+
+
+    return $Error_Str;
 }
 function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FormSeq_WT,$NowDT,$UR_PROCESS){
-
    $Arr_Decode= array_map(function ($value){
 
          return $obj=json_decode($value);
@@ -572,8 +592,11 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
     $ASCii_Num=65; //ASCii A
     $length=count($Arr_Decode);
 
-   if (!GetIOACheck($Arr_Decode)){
-       $response=json_encode(array("response" => "Error","message" =>"請確認是否有填值"),JSON_UNESCAPED_UNICODE);
+
+    $CheckResult=GetIOACheck($Arr_Decode);
+
+   if (trim($CheckResult)!==""){
+       $response=json_encode(array("response" => "Error","message" =>$CheckResult),JSON_UNESCAPED_UNICODE);
        return  $response;
    }
 
@@ -614,11 +637,6 @@ function InsertDB($conn,$arr,$FrmSeq,$IdPt,$IdinPt,$sDt,$sTm,$ID_BED,$JID_NSRANK
                                                                         '$IoWay',' ',' ','$Is_Sum','$CID_CLASS','$JID_KEY','$M_Nam',' ',
                                                                         '$MM_IO','$ID_BED','$JID_NSRANK','$FormSeq_WT','$FrmSeq','$NowDT',
                                                                         '$UR_PROCESS',' ',' ','$ID_FROMSYS')";
-
-                  /*   $myfile=fopen("NISWSTP_log.txt","w+")or die("Unable to open file!");
-                     $txt="TP_SQL:".$In_Sql;
-                     fwrite($myfile,$txt.PHP_EOL);
-                     fclose($myfile);*/
 
 
                      $IN_Stid=oci_parse($conn,$In_Sql);
@@ -694,7 +712,7 @@ function GetFrmSeq($conn,$Tag){
     return $Tag.$PAD_NO_TABFORM;
 }
 
-function ObjectMap($conn,$arr){
+function Append_O_Data($conn,$arr){
 
     $len= count($arr);
 
