@@ -114,9 +114,8 @@ function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
 
     $Ssql="SELECT ID_PATIENT,ID_INPATIENT,ST_DATAA,DT_EXCUTE,TM_EXCUTE,ID_BED,JID_NSRANK,FORMSEQANCE_WT from HIS803.NISWSTP
         WHERE ID_TABFORM = 'CNCD'  AND ID_TRANSACTION = '$sTraID'";
-
     $stid=oci_parse($conn,$Ssql);
-    oci_execute($stid);
+    oci_execute($stid,OCI_NO_AUTO_COMMIT);
     $IDPT='';
     $IDINPT='';
     $ST_DATAA='';
@@ -135,17 +134,55 @@ function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
         $JID_NSRANK=oci_result($stid,"JID_NSRANK");
         $FORMSEQANCE_WT=oci_result($stid,"FORMSEQANCE_WT");
     }
-    $response='';
-
+    $Response=[];
 
     if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
+
         if($ST_DATAA){
-            $A=json_decode($ST_DATAA);
+            $ST_DATAA_JSON=json_decode($ST_DATAA);
             if(GetCNCDCheck($ST_DATAA)=="false"){
                 return    $response=json_encode(array("response" => "false","message" =>"存檔錯誤訊息:檢驗項目尚未勾選"),JSON_UNESCAPED_UNICODE);
 
             }
-            for ($i=0;$i<count($A);$i++)
+
+
+            $Execute_result=array_map(function ($value) use ($DateTime_NOW, $FORMSEQANCE_WT, $JID_NSRANK, $ID_BED, $IDINPT, $IDPT, $conn, $sDt, $sUr, $LBT_TIME, $LBT_DATE, $sTm) {
+
+                $LBT_LOOKDT=$value->{"LOOKDT"};
+                $LBT_MEDNO=$value->{"MEDNO"};
+                $LBT_SEQ=$value->{"IDINPT"};
+                $LBT_DIACODE=$value->{"DIACODE"};
+                $LBT_WORKNO=$value->{"WORKNO"};
+                $LBT_MACHINENO=$value->{"MACHINENO"};
+                $OrDerKey=$value->{"ORDERKEY"};
+
+                $INSERT_SQL="INSERT INTO TOPLBT(LBT_DATETIMESEQ,LBT_LOOKDT,LBT_MEDNO,LBT_SEQ,LBT_DIACODE,LBT_WORKNO,
+                                LBT_MACHINENO,LBT_TYPE,LBT_EXECDATE,LBT_EXECTIME,LBT_PROCDATE,LBT_PROCTIME,LBT_PRCOPID,
+                                LBT_CANDATE,LBT_CANTIME,LBT_CANOPID) 
+                                VALUES(his803.NIS_DATETIMESEQ,'$LBT_LOOKDT','$LBT_MEDNO','$LBT_SEQ','$LBT_DIACODE','$LBT_WORKNO'
+                                ,'$LBT_MACHINENO','A','$sDt','$sTm','$LBT_DATE','$LBT_TIME','$sUr'
+                                ,' ',' ',' ')";
+                $SAVE_NSMARS=PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$OrDerKey,$LBT_DIACODE,$sDt,$sTm,$ID_BED,$JID_NSRANK,$FORMSEQANCE_WT,$DateTime_NOW,$sUr);
+
+               if ($SAVE_NSMARS!==""){
+                    return $SAVE_NSMARS;
+                }
+
+                $stid=oci_parse($conn,$INSERT_SQL);
+                if (!$stid){
+                    return oci_error($conn)['message'];
+                }
+                $Aex=oci_execute($stid,OCI_NO_AUTO_COMMIT);
+                if(!$Aex)
+                {
+                    return oci_error($stid)['message'];
+                }
+
+                return true;
+            },$ST_DATAA_JSON);
+
+            array_push($Response,join(" ",$Execute_result));
+           /* for ($i=0;$i<count($A);$i++)
             {
                 $LBT_LOOKDT=$A[$i]->{"LOOKDT"};
                 $LBT_MEDNO=$A[$i]->{"MEDNO"};
@@ -169,32 +206,25 @@ function PosCNCDSave($conn,$sTraID,$sDt,$sTm,$sUr){
 
                 $stid=oci_parse($conn,$INSERT_SQL);
                 if (!$stid){
-                    $e=oci_error($conn);
-                    $response=json_encode(array("response" => "false","message" =>"檢體存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-                    return $response;
+                    return oci_error($conn)['message'];
                 }
                 $Aex=oci_execute($stid,OCI_NO_AUTO_COMMIT);
                 if(!$Aex)
                 {
-                    oci_rollback($conn);
-                    $e=oci_error($stid);
-                    $response=json_encode(array("response" => "false","message" =>"檢體存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-                    return $response;
+                    return oci_error($stid)['message'];
                 }
-                else{
-                    $r=oci_commit($conn);
-                    if(!$r){
-                        $e=oci_error($conn);
-                        $response=json_encode(array("response" => "false","message" =>"檢體存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-                        return $response;
-                    }
-                    $response=json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
-
-                }
-            }
+            }*/
         }
     }
-    return $response;
+    $Has_ErrorMsg=array_filter($Response,function ($value){
+        return strrpos($value,"ORA",0) !==false;
+    });
+
+    $result=count($Has_ErrorMsg)>0?'false':'true';
+    $Msg= str_replace('true','',join(" ",$Has_ErrorMsg));
+
+    return    json_encode(array("result"=>$result,"message"=>$Msg),JSON_UNESCAPED_UNICODE);
+
 
 }
 function GetCNCDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
@@ -433,24 +463,17 @@ function PosCNCDSaveNSMARS($conn,$IDPT,$IDINPT,$ORDERKEY,$ID_ORDER,$DT_NOW,$TM_N
         (his803.NIS_DATETIMESEQ,'$IDPT','$IDINPT',0,'EM','$ORKEY','$DT_NOW',
         '$TM_NOW','$ID_ORDER',' ',' ','$DT_NOW','$TM_NOW',' ','$BED','$JID',
         '$FSEQ',' ','$PROCESS','$sUr',' ',' ',' ','RWD')";
-    $responce=true;
+    $msg="";
     $stid=oci_parse($conn,$sql);
     if (!$stid){
-        $e=oci_error($conn);
-        echo $e['message'];
-        return false;
+        $msg= oci_error($conn)['message'];
     }
 
     $result=oci_execute($stid,OCI_NO_AUTO_COMMIT);
     if(!$result){
-        oci_rollback($conn);
-        $result=oci_error($stid);
-        echo $result['message'];
-        return false;
+        $msg=  oci_error($stid)['message'];
     }
-    oci_commit($conn);
-    return $responce;
-
+    return $msg;
 }
 function PosCNCDCancelNSMARS($conn,$IDPT,$sUr,$CAN_DATE,$DT_EXE,$TM_EXE,$PRCOPID)
 {
