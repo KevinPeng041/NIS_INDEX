@@ -15,6 +15,7 @@ function DefaultData(idPt,INPt,sUr) {
             if( $("#DATAList").children().length>0){
                 $("#DATAList").children().remove();
             }
+            console.log(objArr);
 
             $.each(objArr,function (index,val){
                 let ChecBoxkID=val.MEDNO+'@'+val.BARCODE;
@@ -101,28 +102,36 @@ function Serchcallback(AESobj){
     $("input[type=checkbox]").prop("disabled",true);
     $("button[type=submit]").prop("disabled",true);
 }
-function InsertWSST(sTraID,page,json) {
-    console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CNCD&sTraID='+sTraID+'&sPg='+page+'&sData='+json));
-    $.ajax({
-        'url':'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CNCD&sTraID='+sTraID+'&sPg='+page+'&sData='+json),
-        type:"POST",
-        dataType:"text",
-        success:function(data){
+
+
+function InsertWSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB) {
+    $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
+        'sFm=CNCD&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
+        '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
+        '&USER='+sUr+'&Indb='+InSertDB)
+    )
+        .done(function (data) {
             let json=JSON.parse(AESDeCode(data));
-            /*
-                                console.log(json.message);
-            */
-        },
-        error:function (XMLHttpResponse,textStatus,errorThrown) {
-            console.log(
-                "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                "3 返回失敗,textStatus:"+textStatus+
-                "4 返回失敗,errorThrown:"+errorThrown
-            );
-            return false;
-        }
+
+            if(InSertDB==="true" && json.result==="true"){
+                alert('存檔成功');
+                window.location.replace(window.location.href);
+            }
+            if(InSertDB==="true" && json.result!=="true"){
+                alert("儲存失敗,錯誤訊息:"+json.message);
+                $("#wrapper").hide();
+            }
+
+            console.log(Page,json);
+        }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+        console.log(
+            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+            "3 返回失敗,textStatus:"+textStatus+
+            "4 返回失敗,errorThrown:"+errorThrown
+        );
     });
+
 }
 function TimerDefault() {
     let TimeNow=new Date();
