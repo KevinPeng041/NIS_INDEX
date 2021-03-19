@@ -15,7 +15,7 @@ $passwd_value=explode('=',$passwd_STR);
 $user_value=explode('=',$user_STR);
 $From_value=explode('=',$From_STR);
 
-$OPID=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
+$Account=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
 $passwd=trim($passwd_value[1]);/*密碼*/
 $sUr=trim($user_value[1]);/*使用者*/
 $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
@@ -41,7 +41,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             //url帳號密碼驗證
             let From='<?php echo $From?>';
             if (From==="U"){
-                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $OPID?>','<?php echo $passwd?>')));
+                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
                 if(FromObj.reponse==="false"){
                     alert("帳號密碼錯誤,請關閉視窗重新確認");
                     return;
@@ -153,7 +153,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 break;
                             case "true":
                                 try {
-                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $OPID?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
+                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNBD&sIdUser=<?php echo $Account?>"),"領血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
 
                                 }catch (e) {
                                     console.log(e);
@@ -177,7 +177,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 y=window.open("/webservice/NISPWSLKQRY.php?str="+
                                     AESEnCode("sFm=CNBD&PageVal="+$('#BUT_NEEDUNIT').val()+"&DA_idpt="+
                                         ""+"&DA_idinpt="+""+
-                                        "&sUser="+"<?php echo  $OPID?>"+"&NM_PATIENT="+$('#DataTxt').val())
+                                        "&sUser="+"<?php echo  $Account?>"+"&NM_PATIENT="+$('#DataTxt').val())
                                     ,"CNBD",'width=750px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
@@ -186,9 +186,9 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         break;
                     case "Del":
                         let del_ip='/webservice/NISPWSDELILSG.php';
-                        console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
+                        console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $Account?>"));
                         $.ajax({
-                            url:del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
+                            url:del_ip+"?str="+AESEnCode("sFm="+'CNBD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $Account?>"),
                             type:'POST',
                             dataType:'text',
                             success:function (json) {
@@ -218,61 +218,62 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     case "Error_btn":
                         $('#Errormodal').modal('show');
                         break;
+                    case "SubmitBtn":
+                        let json=GetCheckVal();
+                        let sTraID=$('#sTraID').val();
+
+                        let sDt=$("#DateVal").val();
+                        let sTm=$("#TimeVal").val();
+
+
+                        $("#loading").show();
+                        $("#wrapper").show();
+
+                        DB_WSST('B',sTraID,JSON.stringify(json),sDt,sTm,'','','<?php echo $Account?>','true');
+
+                        break;
                 }
             });
-            $("#form1").submit(function () {
-                //$(window).off('beforeunload', reloadmsg);
-                let json=GetCheckVal();
 
-                $("#loading").show();
-                $("#wrapper").show();
+            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+                $.ajax('/webservice/NISPWSSETDATA.php?str='+
+                    AESEnCode(
+                        'sFm='+'CNBD'+
+                        '&sTraID='+sTraID+
+                        '&sPg='+Page+
+                        '&sData='+json+
+                        '&sDt='+sDt+
+                        '&sTm='+sTm+
+                        '&Fseq='+Freq+
+                        '&PASSWD='+Passed+
+                        '&USER='+sUr+
+                        '&Indb='+InSertDB
+                    )
 
-                console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+ AESEnCode('sFm=' + 'CNBD' +
-                    '&sTraID=' + $('#sTraID').val() +
-                    '&sPg=' + $("#PageVal").val() +
-                    '&sDt=' + $("#DateVal").val() +
-                    '&sTm=' + $("#TimeVal").val()+
-                    '&PASSWD='+""+
-                    '&USER='+"<?php echo $OPID?>"));
+                )
+                    .done(function (data) {
+                        let json=JSON.parse(AESDeCode(data));
 
-                $.ajax({
-                    url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNBD' +
-                        '&sTraID=' + $('#sTraID').val() +
-                        '&sPg=' + $("#PageVal").val() +
-                        '&sDt=' + $("#DateVal").val() +
-                        '&sTm=' + $("#TimeVal").val()+
-                        '&PASSWD='+""+
-                        '&USER=<?php echo $OPID?>')
-                    ,
-                    type: 'POST',
-                    beforeSend: InsertWSST($('#sTraID').val(), 'B', JSON.stringify(json)),
-                    dataType: 'text',
-                    success: function (data) {
-                        $("#loading").hide();
-                        $("#wrapper").hide();
-                        let str=AESDeCode(data);
-                        let dataObj=JSON.parse(str);
-                        let result = dataObj.response;
-                        let message = dataObj.message;
-                        if (result == "success") {
+                        if (InSertDB==="true" && json.result==="true"){
                             alert("儲存成功");
-                            window.location.reload(true);
-                        }else {
-                            alert(message);
+                            location.reload();
                         }
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                        return false;
-                    }
+                        if (InSertDB==="true" && json.result!=="true"){
+                            alert("儲存失敗,錯誤訊息:"+json.message);
+                        }
+                        console.log(json);
+                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
                 });
-                return false;
+            }
 
-            });
+
+
 
             function CheckUI(IdPt,ScanNum){
                 try {
@@ -302,26 +303,22 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
             }
             function TableList(BUT_NEEDUNIT) {
-                /*
-                            console.log("http://localhost"+'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT));
-                */
+              
                 $.ajax({
                     url:'/webservice/NISPWSGETPRE.PHP?str='+AESEnCode('sFm='+"CNBD"+'&sTraID='+''+'&sPg='+BUT_NEEDUNIT),
                     type:"POST",
                     dataType:"text",
                     success:function (data) {
-                        /* console.log(data);*/
                         let sTraID=$("#sTraID").val();
-                        InsertWSST(sTraID,'B',data);
+                       /* InsertWSST(sTraID,'B',data);*/
 
-                        let arr=JSON.parse(AESDeCode(data));
+                       let json_str=AESDeCode(data);
+
+
+
+                        let arr=JSON.parse(json_str);
                         if(arr.length==0){
-                          /*  $("#DATAList").append(
-                                "<tr class='list-item'>"+
-                                "<td>"+"查無資料"+"</td>"+
-                                "</tr>"
-
-                            );*/
+                         
                             $("#DATAList").append(
                                 `
                                 <tr class='list-item'>
@@ -329,10 +326,10 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 </tr>
                                 `
                             );
-
-
+                            
                             return false;
                         }
+                        DB_WSST('B',sTraID,json_str,'','','','','','false');
 
                         $.each(arr,function (index,val) {
                             /*checkbod id:病歷號+血袋號碼 value:領血請領單位+病歷號+血袋號碼*/
@@ -458,7 +455,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                 $("input[type=text]").prop("disabled",true);
                 $("input[type=checkbox]").prop("checked",true);
                 $("input[type=checkbox]").prop("disabled",true);
-                $("button[type=submit]").prop("disabled",true);
+                $("#SubmitBtn").prop("disabled",true);
                 $("#DELMENU").prop("disabled",false);
                 $('#DateVal').prop('readonly',true);
                 $('#TimeVal').prop('readonly',true);
@@ -488,9 +485,14 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                 $("#BUT_PROCTIME").val(BUT_PROCTIME);
                 $("#sSave").val(sSave);
                 $("#sTraID").val(sTraID);
-                InsertWSST(sTraID,'A',data);
+
+                DB_WSST('A',sTraID,str,'','','','','','false');
+
+              //  InsertWSST(sTraID,'A',data);
                 TableList(BUT_NEEDUNIT);
-                $("button[type=submit]").prop("disabled",false);
+
+                $("#SubmitBtn").prop("disabled",false);
+
                 $("#SerchBtn").prop("disabled",false);
                 $("#IdPt").prop("disabled",false);
                 $("#ErrBlood").children().remove();
@@ -642,7 +644,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
     <input id="BUT_PROCTIME" type="text" value="" placeholder="BUT_PROCTIME">
     <input id="sSave" type="text" value="" placeholder="sSave">
     <input id="sTraID" type="text" value="" placeholder="sTraID">
-    <input id="NURSOPID" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
+    <input id="NURSOPID" type="text" value="<?php echo $Account?>" placeholder="NURSOPID">
 </div>
 <div class="container">
     <h1>領用血簽收單作業</h1>
@@ -653,7 +655,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
              <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >領血單位</button><span style="margin-left: 1px"></span>
         </span>
         <span class="ListBtn float-left">
-            <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
+            <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" >查詢</button>
             <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal">作廢</button>
             <button type="reset" class="btn btn-primary btn-md" id="restBtn">清除</button>
