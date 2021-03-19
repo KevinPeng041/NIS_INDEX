@@ -344,13 +344,9 @@ $Account="00FUZZY";
 
                         let json_str=JSON.stringify(ThisPageJson.get(Page));
                         $("#wrapper").show();
-                        DB_WSST(Page,sTraID,json_str,'true');
 
-                       /* setTimeout(function () {
+                        DB_WSST(Page,sTraID,json_str,sDt,sTM,'',$("#FSEQ").val(),'<?php echo $Account?>','true');
 
-                        },500);*/
-
-                        DB_SAVE(Page,sTraID,sDt,sTM,'','<?php echo $Account?>');
                         break;
                     case "DELBtn":
                         DB_DEL(sTraID,'<?php echo $Account?>');
@@ -372,7 +368,7 @@ $Account="00FUZZY";
                             return;
                         }
 
-                        window.open("../IOA_C/NISPWIOA_C.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+
+                        window.open("../IOAC/NISPWIOAC.php?str="+AESEnCode("DA_idpt="+IdPt+"&DA_idinpt="+InPt+
                             "&sUser="+"<?php echo $Account?>"+"&nM_P="+$('#DataTxt').val()),
                             "三班時間",'width=850px,height=650px,scrollbars=yes,resizable=no');
                         break;
@@ -388,11 +384,15 @@ $Account="00FUZZY";
                 const Page_Arr=['A','B','C','D','E','F','G','H'];
                 let WSST_arr=Page_Arr.filter(value => value!==Page);
 
+
                 if ($("#item"+Page).children().length===0 && S_Confirm==="N"){
                     GetPageJson(Page,sTraID);
                 }
 
-                WSST_arr.map(value =>ThisPageJson.get(value)!==undefined?DB_WSST(value,sTraID,JSON.stringify(ThisPageJson.get(value)),'false'):'');
+
+
+                WSST_arr.map(value =>ThisPageJson.get(value)!==undefined? DB_WSST(value,sTraID,JSON.stringify(ThisPageJson.get(value)),'','','','','','false'):'');
+
 
                 if (Page==="H" )
                 {
@@ -550,7 +550,7 @@ $Account="00FUZZY";
                 });
 
             }
-            function DB_WSST(Page,sTraID,json,InSertDB){
+            function  DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
                 let obj=JSON.parse(json);
 
                 $.each(obj,function (index,val) {
@@ -561,15 +561,28 @@ $Account="00FUZZY";
                     }
                 });
 
+
                 let SavaJson=JSON.stringify(obj);
 
-                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson+'&Indb='+InSertDB))
+
+                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
+                    'sFm=IOA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson+
+                    '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
+                    '&USER='+sUr+'&Indb='+InSertDB)
+                )
                     .done(function (data) {
-
-
                         let json=JSON.parse(AESDeCode(data));
 
-                       console.log(Page,json);
+                        if(InSertDB==="true" && json.result==="true"){
+                            alert('存檔成功');
+                            window.location.replace(window.location.href);
+                        }
+                        if(InSertDB==="true" && json.result!=="true"){
+                            alert("儲存失敗,錯誤訊息:"+json.message);
+                            $("#wrapper").hide();
+                        }
+
+                        console.log(Page,json);
                     }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -577,31 +590,6 @@ $Account="00FUZZY";
                         "3 返回失敗,textStatus:"+textStatus+
                         "4 返回失敗,errorThrown:"+errorThrown
                     );
-                });
-
-            }
-            function DB_SAVE(Page,sTraID,sDt,sTm,Passwd,sUr) {
-
-                    $.ajax({
-                    url:'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'IOA'+'&sTraID='+sTraID+'&sPg='+$("#FSEQ").val()+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD='+Passwd+'&USER='+sUr),
-                    dataType:'text',
-                    success:function (data) {
-                        let result= JSON.parse(AESDeCode(data));
-                        if(result.response==='success'){
-                            alert("儲存成功");
-                            window.location.replace(window.location.href);
-                        }else {
-                            alert("儲存失敗,錯誤訊息:"+result.message);
-                            $("#wrapper").hide();
-                        }
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
                 });
 
             }
