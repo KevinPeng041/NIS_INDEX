@@ -236,8 +236,9 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         $("#INbldUI").hide();
                         let  CCKVal=GetCheckVal('C');
 
-                        InsertWSST($("#sTraID").val(),'A',JSON.stringify(GETNEWSTDATA()));
-                        InsertWSST($("#sTraID").val(),'C',JSON.stringify(CCKVal));
+                        DB_WSST("A",$("#sTraID").val(),JSON.stringify(GETNEWSTDATA()),'','','','','','false');
+                        DB_WSST("C",$("#sTraID").val(),JSON.stringify(CCKVal),'','','','','','false');
+
 
 
                         LoadPageData('CBLD',$('#sTraID').val(),'B');
@@ -260,8 +261,11 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         $("#INbldUI").show();
                         let  BCKVal=GetCheckVal('B');
 
-                        InsertWSST($("#sTraID").val(),'A',JSON.stringify(GETNEWSTDATA()));
-                        InsertWSST($("#sTraID").val(),'B',JSON.stringify(BCKVal));
+
+
+                        DB_WSST("A",$("#sTraID").val(),JSON.stringify(GETNEWSTDATA()),'','','','','','false');
+                        DB_WSST("B",$("#sTraID").val(),JSON.stringify(BCKVal),'','','','','','false');
+
                         LoadPageData('CBLD',$('#sTraID').val(),'C');
 
 
@@ -303,65 +307,67 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                             }
                         });
                         break;
+                    case "SubmitBtn":
+                        $(window).off('beforeunload');
+
+                        let  page=$('#PageVal').val();
+                        let  json=JSON.stringify(GetCheckVal(page));
+                        let sTraID= $('#sTraID').val();
+                        let sDt=$("#DateVal").val();
+                        let sTm=$("#TimeVal").val();
+                        let PASSWD=$("#"+page+"_CPWD").val();
+                        let USER=paddingLeft($("#"+page+"_CUR").val().toUpperCase(),7);
+                        $("#loading").show();
+                        $("#wrapper").show();
+
+                        DB_WSST(page,sTraID,json,sDt,sTm,PASSWD,'',USER,'true');
+                        break;
                 }
             });
 
             $('#PBList').on('change',CheckBOXChang);/*歷次發血選擇*/
-            $("#form1").submit(function () {
-                /*$(window).off('beforeunload', reloadmsg);*/
-                $(window).off('beforeunload');
-                let  json='';
-                let  page=$('#PageVal').val();
-                switch (page) {
-                    case 'B':
-                        json=GetCheckVal('B');
-                        break;
-                    case 'C':
-                        json=GetCheckVal('C');
-                        break;
-                }
-                $("#loading").show();
-                $("#wrapper").show();
-                /*  console.log(json)
-                console.log('http://localhost/webservice/NISPWSSAVEILSG.php?str='+ AESEnCode('sFm=' + 'CBLD' +
-                    '&sTraID=' + $('#sTraID').val() +
-                    '&sPg=' + $("#PageVal").val() +
-                    '&sDt=' + $("#DateVal").val() +
-                    '&sTm=' + $("#TimeVal").val()+
-                    '&PASSWD='+$("#"+page+"_CPWD").val()+
-                    '&USER='+paddingLeft($("#"+page+"_CUR").val().toUpperCase(),7))
-                );;*/
-                $.ajax({
-                    url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CBLD' +
-                        '&sTraID=' + $('#sTraID').val() +
-                        '&sPg=' + $("#PageVal").val() +
-                        '&sDt=' + $("#DateVal").val() +
-                        '&sTm=' + $("#TimeVal").val()+
-                        '&PASSWD='+$("#"+page+"_CPWD").val()+
-                        '&USER='+paddingLeft($("#"+page+"_CUR").val().toUpperCase(),7))
-                    ,
-                    type: 'POST',
-                    beforeSend: InsertWSST($('#sTraID').val(), $("#PageVal").val(), JSON.stringify(json)),
-                    dataType: 'text',
-                    success: function (data) {
-                        $("#loading").hide();
-                        $("#wrapper").hide();
-                        let  str=AESDeCode(data);
-                        let  dataObj=JSON.parse(str);
-                       // console.log(dataObj);
-                        let  result = dataObj.response;
-                        let  message = dataObj.message;
-                        if (result == "success") {
-                            alert("儲存成功");
-                            window.location.reload(true);
-                        } else {
-                            errorModal(message);
-                        }
-                    }
-                });
-                return false;
 
-            });
+            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+                $.ajax('/webservice/NISPWSSETDATA.php?str='+
+                    AESEnCode(
+                        'sFm='+'CBLD'+
+                        '&sTraID='+sTraID+
+                        '&sPg='+Page+
+                        '&sData='+json+
+                        '&sDt='+sDt+
+                        '&sTm='+sTm+
+                        '&Fseq='+Freq+
+                        '&PASSWD='+Passed+
+                        '&USER='+sUr+
+                        '&Indb='+InSertDB
+                    )
+
+                )
+                    .done(function (data) {
+                        let json=JSON.parse(AESDeCode(data));
+
+                        if (InSertDB==="true" && json.result==="true"){
+                            alert("儲存成功");
+                            location.reload();
+                        }
+                        if (InSertDB==="true" && json.result!=="true"){
+
+                            alert("儲存失敗,錯誤訊息:"+json.message);
+                            $("#loading").hide();
+                            $("#wrapper").hide();
+                        }
+                        console.log(json);
+                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
+                });
+            }
+
+
 
             function NumBind(page){
                 let Cval2= $('#Num'+page).val();
@@ -691,30 +697,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
                 return newST_DATAA;
             }
-            function InsertWSST(sTraID,page,json) {
-                /*
-                       console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CBLD&sTraID='+sTraID+'&sPg='+page+'&sData='+json));
-                */
-                $.ajax({
-                    'url':'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CBLD&sTraID='+sTraID+'&sPg='+page+'&sData='+json),
-                    type:"POST",
-                    dataType:"text",
-                    success:function(data){
-                        let  json=JSON.parse(AESDeCode(data));
-                        //console.log(json.message);
-                    },
-                    error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                        return false;
-                    }
 
-                });
-            }
             function Serchcallback(AESobj){
                 let  str1=AESDeCode(AESobj);
                 let  page=$("#PageVal").val();
@@ -923,7 +906,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
         </span>
 
         <span class="float-left">
-            <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
+            <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" >查詢</button>
             <button type="button" id="DELMENU" class="btn btn-primary btn-md"   data-toggle="modal" data-target="#DELModal">作廢</button>
             <button type="reset" id="cleanval" class="btn btn-primary btn-md" >清除</button>
