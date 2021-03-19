@@ -159,6 +159,18 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     case "Error_btn":
                         errorModal("",false);
                         break;
+                    case "SubmitBtn":
+
+                        $("#loading").show();
+                        $("#wrapper").show();
+                        let json=GetCheckVal();
+                        let sTraID=$('#sTraID').val();
+                        let sDt=$("#DateVal").val();
+                        let sTm=$("#TimeVal").val();
+
+                        InsertWSST('A',sTraID,json,sDt,sTm,'','','<?php echo $OPID?>','true');
+                        console.log(json);
+                        break;
                 }
             });
             $(document).on("keydown","input",function (e) {
@@ -208,55 +220,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     alert("格式錯誤")
                 }
             });
-            $("#form1").submit(function () {
-                //$(window).off('beforeunload', reloadmsg);
-                $("#loading").show();
-                $("#wrapper").show();
-                let json=GetCheckVal();
-                console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
-                    '&sTraID=' + $('#sTraID').val() +
-                    '&sPg=' +"" +
-                    '&sDt=' + $("#DateVal").val() +
-                    '&sTm=' + $("#TimeVal").val()+
-                    '&PASSWD='+""+
-                    '&USER=<?php echo $OPID?>'));
-                $.ajax({
-                    url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNCD' +
-                        '&sTraID=' + $('#sTraID').val() +
-                        '&sPg=' +"" +
-                        '&sDt=' + $("#DateVal").val() +
-                        '&sTm=' + $("#TimeVal").val()+
-                        '&PASSWD='+""+
-                        '&USER=<?php echo $OPID?>')
-                    ,
-                    type: 'POST',
-                    beforeSend: InsertWSST($('#sTraID').val(), 'A', JSON.stringify(json)),
-                    dataType: 'text',
-                    success: function (data) {
-                        $("#loading").hide();
-                        $("#wrapper").hide();
-                        let str=AESDeCode(data);
-                        let dataObj=JSON.parse(str);
-                        let result = dataObj.response;
-                        let message =dataObj.message;
-                        if (result == "success") {
-                            alert("儲存成功");
-                            window.location.reload(true);
-                        }else {
-                            alert(message);
-                        }
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
-                });
-                return false;
 
-            });
             function CheckUIisset(IdPt,NumidStr){
                     let CheckBoxId=$("#"+ paddingLeft(IdPt,8)+"\\@"+NumidStr);
                     if(CheckBoxId.length>0){
@@ -399,7 +363,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
     <h1>檢驗採檢辨識作業</h1>
     <form id="form1" >
         <div class="ListBtn">
-            <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" disabled>儲存</button>
+            <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" disabled>儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" disabled>查詢</button>
             <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal" disabled>作廢</button>
             <button type="button" id="ReStart" class="btn btn-primary btn-md" >清除</button>
