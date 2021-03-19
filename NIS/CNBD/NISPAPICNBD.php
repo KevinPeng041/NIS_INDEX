@@ -67,7 +67,7 @@ function PosCNBDSave($conn,$sTraID,$sDt,$sTm,$sUr){
     $Ssql="SELECT ST_DATAB,DT_EXCUTE,TM_EXCUTE from HIS803.NISWSTP
         WHERE ID_TABFORM = 'CNBD'  AND ID_TRANSACTION = '$sTraID'";
     $stid=oci_parse($conn,$Ssql);
-    oci_execute($stid);
+    oci_execute($stid,OCI_NO_AUTO_COMMIT);
 
     $ST_DATAB='';
     $DT_EXCUTE='';
@@ -77,16 +77,52 @@ function PosCNBDSave($conn,$sTraID,$sDt,$sTm,$sUr){
         $DT_EXCUTE=oci_result($stid,"DT_EXCUTE");
         $TM_EXCUTE=oci_result($stid,"TM_EXCUTE");
     }
-    $response='';
+    $Response=[];
    if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
        if($ST_DATAB){
-           $B=json_decode($ST_DATAB);
-           if(GetCNBDCheck($ST_DATAB)=="false"){
+           $ST_DATAB_JSON=json_decode($ST_DATAB);
+          /* if(GetCNBDCheck($ST_DATAB_JSON)=="false"){
                return    $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
-           }
+           }*/
 
 
-           for ($i=0;$i<count($B);$i++){
+
+           $Execute_result=array_map(function ($value) use ($conn, $sUr, $sTm, $sDt) {
+               $BSK_BAGENO=$value->{"BSK_BAGENO"};
+               $BSK_MEDNO=$value->{"BSK_MEDNO"};
+               $BUT_NEEDUNIT=$value->{"BUT_NEEDUNIT"};
+
+               $UPDATESQL="UPDATE TBOSTK  SET 
+                            BSK_NURSDATE=:sDt,BSK_NURSTIME=:sTm,
+                            BSK_NURSOPID=:sUr,BSK_BARSIGN='Y' WHERE
+                            BSK_MEDNO=:BSK_MEDNO
+                            AND BSK_NEEDUNIT=:BUT_NEEDUNIT
+                            AND BSK_BAGENO=:BSK_BAGENO
+                            AND  BSK_CANCD='N' 
+                            AND BSK_OUTDATE <>' ' AND BSK_NURSDATE=' '";
+
+                 $stid= oci_parse($conn,$UPDATESQL);
+                 if(!$stid){
+                     return oci_error($conn)['message'];
+                 }
+                 oci_bind_by_name($stid,':sDt',$sDt);
+                 oci_bind_by_name($stid,':sTm',$sTm);
+                 oci_bind_by_name($stid,':sUr',$sUr);
+                 oci_bind_by_name($stid,':BSK_MEDNO',$BSK_MEDNO);
+                 oci_bind_by_name($stid,':BUT_NEEDUNIT',$BUT_NEEDUNIT);
+                 oci_bind_by_name($stid,':BSK_BAGENO',$BSK_BAGENO);
+
+               $Execute= oci_execute($stid,OCI_NO_AUTO_COMMIT);
+
+               if (!$Execute){
+                   return oci_error($stid)['message'];
+               }
+               return 'true';
+
+           },$ST_DATAB_JSON);
+
+           array_push($Response,join("",$Execute_result));
+          /* for ($i=0;$i<count($B);$i++){
                $BSK_BAGENO=$B[$i]->{"BSK_BAGENO"};
                $BSK_MEDNO=$B[$i]->{"BSK_MEDNO"};
                $BUT_NEEDUNIT=$B[$i]->{"BUT_NEEDUNIT"};
@@ -124,10 +160,20 @@ function PosCNBDSave($conn,$sTraID,$sDt,$sTm,$sUr){
 
                }
 
-           }
+           }*/
        }
    }
-    return   $response;
+
+
+    $Has_ErrorMsg=array_filter($Response,function ($value){
+        return strrpos($value,"ORA",0) !==false;
+    });
+
+    $result=count($Has_ErrorMsg)>0?'false':'true';
+    $Msg= str_replace('true','',join(" ",$Has_ErrorMsg));
+
+
+    return   json_encode(array("result"=>$result,"message"=>$Msg),JSON_UNESCAPED_UNICODE);
 }
 function GetCNBDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
     //產生已儲存之紀錄資料
