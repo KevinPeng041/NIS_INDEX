@@ -14,7 +14,7 @@ $passwd_value=explode('=',$passwd_STR);
 $user_value=explode('=',$user_STR);
 $From_value=explode('=',$From_STR);
 
-$OPID=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
+$Account=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
 $passwd=trim($passwd_value[1]);/*密碼*/
 $sUr=trim($user_value[1]);/*使用者*/
 $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
@@ -41,7 +41,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             //url帳號密碼驗證
             let From='<?php echo $From?>';
             if (From==="U"){
-                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $OPID?>','<?php echo $passwd?>')));
+                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
                 if(FromObj.reponse==="false"){
                     alert("帳號密碼錯誤,請關閉視窗重新確認");
                     return;
@@ -98,7 +98,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 break;
                             case "true":
                                 try {
-                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNAD&sIdUser=<?php echo $OPID?>"),"輸血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
+                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNAD&sIdUser=<?php echo $Account?>"),"輸血單位",'width=850px,height=650px,scrollbars=yes,resizable=no');
 
                                 }catch (e) {
                                     errorModal(e);
@@ -116,7 +116,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 y=window.open("/webservice/NISPWSLKQRY.php?str="+
                                     AESEnCode("sFm=CNAD&PageVal="+""+"&DA_idpt="+
                                         $('#DA_IdPt').val()+"&DA_idinpt="+""+
-                                        "&sUser="+"<?php echo $OPID?>"+"&NM_PATIENT="+"")
+                                        "&sUser="+"<?php echo $Account?>"+"&NM_PATIENT="+"")
                                     ,"CNAD",'width=750px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
@@ -137,9 +137,9 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         break;
                     case "Del":
                         let del_ip='/webservice/NISPWSDELILSG.php';
-                        console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
+                        console.log('http://localhost'+del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $Account?>"));
                         $.ajax({
-                            url:del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
+                            url:del_ip+"?str="+AESEnCode("sFm="+'CNAD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $Account?>"),
                             type:'POST',
                             dataType:'text',
                             success:function (json) {
@@ -167,6 +167,20 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     case "Error_btn":
                         $('#Errormodal').modal('show');
                         break;
+                    case "SubmitBtn":
+                      let sTraID=$('#sTraID').val();
+                      let sDt=$("#DateVal").val();
+                      let sTm=$("#TimeVal").val();
+                      let json=GetCheckVal();
+
+
+                        $("#loading").show();
+                        $("#wrapper").show();
+
+                        DB_WSST("B",sTraID,JSON.stringify(json),sDt,sTm,'','','<?php echo $Account?>','true');
+                        break;
+
+
                 }
             });
 
@@ -212,55 +226,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             });
 
 
-            $("#form1").submit(function () {
-                //$(window).off('beforeunload', reloadmsg);
-                let json=GetCheckVal();
-                console.log("http://localhost"+'/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNAD' +
-                    '&sTraID=' + $('#sTraID').val() +
-                    '&sPg=' +"" +
-                    '&sDt=' + $("#DateVal").val() +
-                    '&sTm=' + $("#TimeVal").val()+
-                    '&PASSWD='+""+
-                    '&USER=<?php echo $OPID?>'));
-                $.ajax({
-                    url: '/webservice/NISPWSSAVEILSG.php?str=' + AESEnCode('sFm=' + 'CNAD' +
-                        '&sTraID=' + $('#sTraID').val() +
-                        '&sPg=' +"" +
-                        '&sDt=' + $("#DateVal").val() +
-                        '&sTm=' + $("#TimeVal").val()+
-                        '&PASSWD='+""+
-                        '&USER=<?php echo $OPID?>')
-                    ,
-                    type: 'POST',
-                    beforeSend: InsertWSST($('#sTraID').val(), 'B', JSON.stringify(json)),
-                    dataType: 'text',
-                    success: function (data) {
-                        $("#loading").hide();
-                        $("#wrapper").hide();
 
-                        let str=AESDeCode(data);
-                        console.log(str);
-                        let dataObj=JSON.parse(str);
-                        let result = dataObj.response;
-                        let message = dataObj.message;
-                        if (result == "success") {
-                            alert("儲存成功");
-                            window.location.reload(true);
-                        }else {
-                            alert(message);
-                        }
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        console.log(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
-                });
-                return false;
-
-            });
             function CheckUI(IdPt,ScanNum){
                 try {
                     ScanTime++;
@@ -291,9 +257,9 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                 $("#loading").show();
                 $("#wrapper").show();
                 $("#DATAList").children().remove();
-                console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=<?php echo $OPID?>'));
+                console.log("http://localhost"+"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=<?php echo $Account?>'));
                 $.ajax({
-                    url:"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=<?php echo $OPID?>'),
+                    url:"/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=CNAD&idPt='+"00055664"+'&INPt='+"970000884"+'&sUr=<?php echo $Account?>'),
                     type:"POST",
                     dataType: 'text',
                     success:function (data) {
@@ -328,23 +294,6 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 `
                             );
 
-
-
-
-
-
-                       /*     $("#DATAList").append
-                            (
-                                "<tr class='list-item'>"+
-                                "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' value='"+BCK_DATMSEQ+"@"+BSK_TRANSRECNO+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"'>"+"</td>"+
-                                "<td >"+BSK_TRANSRECNO+"</td>"+
-                                "<td>"+BSK_MEDNO+"</td>"+
-                                "<td>"+MH_NAME+"</td>"+
-                                "<td>"+BKD_EGCODE+"</td>"+
-                                "<td>"+BSK_BAGENO+"</td>"+
-                                "</tr>"
-                            );
-*/
                         });
 
                         TimerDefault();
@@ -468,7 +417,11 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     dataType:"text",
                     success:function (data) {
                         let arr=JSON.parse(AESDeCode(data));
-                        InsertWSST(sTraID,'B',AESDeCode(data));
+
+                        DB_WSST("B",sTraID,AESDeCode(data),'','','','','','false');
+
+
+                       // InsertWSST(sTraID,'B',AESDeCode(data));
                         console.log(arr);
                         if(arr.length==0){
                             $("#DATAList").append(
@@ -503,16 +456,6 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
                             );
 
-                        /*    $("#DATAList").append(
-                                "<tr class='list-item'>"+
-                                "<td>"+"<input type='checkbox'  name='BDckbox' class='form-check-input' id='"+BSK_MEDNO+'@'+BSK_BAGENO+"' value='"+BCK_DATMSEQ+"@"+BSK_TRANSRECNO+"@"+BSK_MEDNO+"@"+BSK_BAGENO+"'>"+"</td>"+
-                                "<td>"+BSK_TRANSRECNO+"</td>"+
-                                "<td>"+BSK_MEDNO+"</td>"+
-                                "<td>"+MH_NAME+"</td>"+
-                                "<td>"+BKD_EGCODE+"</td>"+
-                                "<td>"+BSK_BAGENO+"</td>"+
-                                "</tr>"
-                            );*/
 
                         });
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
@@ -525,6 +468,48 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     }
                 });
             }
+
+
+            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+                $.ajax('/webservice/NISPWSSETDATA.php?str='+
+                    AESEnCode(
+                        'sFm='+'CNAD'+
+                        '&sTraID='+sTraID+
+                        '&sPg='+Page+
+                        '&sData='+json+
+                        '&sDt='+sDt+
+                        '&sTm='+sTm+
+                        '&Fseq='+Freq+
+                        '&PASSWD='+Passed+
+                        '&USER='+sUr+
+                        '&Indb='+InSertDB
+                    )
+
+                )
+                    .done(function (data) {
+                        let json=JSON.parse(AESDeCode(data));
+
+                        if (InSertDB==="true" && json.result==="true"){
+                            alert("儲存成功");
+                            location.reload();
+                        }
+                        if (InSertDB==="true" && json.result!=="true"){
+
+                            alert("儲存失敗,錯誤訊息:"+json.message);
+                            $("#loading").hide();
+                            $("#wrapper").hide();
+                        }
+                        console.log(json);
+                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
+                });
+            }
+
             function InsertWSST(sTraID,page,json) {
 
                 console.log("http://localhost"+'/webservice/NISPWSSETDATA.php?str='+AESEnCode('sFm=CNAD&sTraID='+sTraID+'&sPg='+page+'&sData='+json));
@@ -625,14 +610,14 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
     <input id="sSave" type="text" value="" placeholder="sSave" >
     <input id="sTraID" type="text" value="" placeholder="sTraID">
     <input id="DA_IdPt" type="text" value="" placeholder="DA_IdPt">
-    <input id="NURSOPID" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
+    <input id="NURSOPID" type="text" value="<?php echo $Account?>" placeholder="NURSOPID">
 </div>
 
 <div class="container">
     <h1>發血覆核作業</h1>
     <form id="form1">
         <div class="ListBtn">
-            <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
+            <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md">查詢</button>
             <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal" disabled>作廢</button>
             <button type="button" id="ReStart" class="btn btn-primary btn-md" >重整</button>
