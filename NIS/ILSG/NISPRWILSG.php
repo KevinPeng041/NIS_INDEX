@@ -210,6 +210,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         }
                         /*if val=1 執行快存WSST*/
                         if($("#clickTime").val()=='1'){
+
                             UPDATEDATA('B',JSON.stringify(Get_ISLNjson(data)));
                             UPDATEDATA('C',JSON.stringify(Get_Forbidjson()));
                         }
@@ -809,6 +810,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             /*部位序號(圖)*/
             function NISPWSCILREG(TransKEY,Part) {
                 $("td").css({'backgroundColor':'white','color':'black'});
+
                 $.each(FORBIDArrary,function (index,val) {
                    for (let i=1;i<=8;i++) {
                        $("#"+val.REGION+i).css({'backgroundColor':'red','color':'white'});
@@ -918,6 +920,55 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     }
                 });
             }
+
+            function  DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+                let obj=JSON.parse(json);
+
+                $.each(obj,function (index,val) {
+                    if ((val.M_Nam).indexOf('&')>0){
+                        val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
+                            return  value.match(/&/)!==null?value.replace(/&/g,'＆'):value;
+                        }).join(""));
+                    }
+                });
+
+
+                let SavaJson=JSON.stringify(obj);
+
+
+                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
+                    'sFm=ILSGA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson+
+                    '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
+                    '&USER='+sUr+'&Indb='+InSertDB)
+                )
+                    .done(function (data) {
+                        let json=JSON.parse(AESDeCode(data));
+
+                        if(InSertDB==="true" && json.result==="true"){
+                            alert('存檔成功');
+                            window.location.replace(window.location.href);
+                        }
+                        if(InSertDB==="true" && json.result!=="true"){
+                            alert("儲存失敗,錯誤訊息:"+json.message);
+                            $("#wrapper").hide();
+                        }
+
+                        console.log(Page,json);
+                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                    console.log(
+                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                        "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                        "3 返回失敗,textStatus:"+textStatus+
+                        "4 返回失敗,errorThrown:"+errorThrown
+                    );
+                });
+
+            }
+
+
+
+
+
             function DELILSG() {
                 let del_ip='/webservice/NISPWSDELILSG.php';
                // console.log("http://localhost"+del_ip+"?str="+AESEnCode("sFm="+'ILSGA'+"&sTraID="+$('#transKEY').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#sUser").val()));
@@ -1052,11 +1103,11 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 $("#SERCH_Click").val("1");
                 $('#timer').prop('readonly',false);
                 $('#timetxt').prop('readonly',false);
-                $("#Part").prop('disabled',true);
                 $("#Serch").prop('disabled',false);
 
                 $("input[type=checkbox]:not(#ITNO_btn)").prop('checked',false);
                 $("input[type=checkbox]").prop('disabled',false);
+
                 $("input[type=radio]").prop('disabled',false);
                 $("input[type=radio]").prop('checked',false);
 
@@ -1500,7 +1551,8 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
         <!--胰島素-->
         <div id="isuling">
             <div style="background-color: brown;color:white;font-size: 4vmin;border-radius:3px;">
-                <label style="display: none;"> <input type="radio" value="1" id="ITNO_btn" name="ITNO"  checked>施打</label>
+                <label style="display: none;">
+                    <input type="radio" value="1" id="ITNO_btn" name="ITNO"  checked>施打</label>
 
                 <label >上次施打位置:<input type="text"  value="" id="LastPart" readonly="readonly"></label>
             </div>
