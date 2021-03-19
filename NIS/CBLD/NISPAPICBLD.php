@@ -167,7 +167,7 @@ function PosCBLDSave($conn,$sTraID,$sPg,$sDt,$sTm){
         WHERE ID_TABFORM = 'CBLD'  AND ID_TRANSACTION = '$sTraID'";
 
     $stid=oci_parse($conn,$Ssql);
-    oci_execute($stid);
+    oci_execute($stid,OCI_NO_AUTO_COMMIT);
     $ID_PATIENT='';
     $DT_EXCUTE='';
     $TM_EXCUTE='';
@@ -183,128 +183,90 @@ function PosCBLDSave($conn,$sTraID,$sPg,$sDt,$sTm){
         $TM_EXCUTE=oci_result($stid,"TM_EXCUTE");
         $UR_PROCESS=oci_result($stid,"UR_PROCESS");
     }
-    $response='';
-    $UPDATESQL="UPDATE TBOBCK SET ";
+    $Response=[];
+
     if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
-        switch ($sPg){
-            case 'A':
-                $A=json_decode($ST_DATAA);
-                break;
-            case 'B':
-                if($ST_DATAB){
 
-                    $B=json_decode($ST_DATAB);
-                    if(GetCBLDCheck($ST_DATAB)=="false"){
-                        return   $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
-                    }
-                    for ($i=0;$i<count($B);$i++){
-                        $B_ID=$B[$i]->{"B_ID"};
-                        $B_NUM=$B[$i]->{"B_NUM"};
-                        $B_TP=$B[$i]->{"B_TP"};
-                        $B_UR=$B[$i]->{"B_UR"};
-                        $B_CUR=$B[$i]->{"B_CUR"};
-                        $B_DTSEQ=$B[$i]->{"B_DTSEQ"};
-                        $B_BKD=$B[$i]->{"B_BKD"};
-                        $B_INDNO=$B[$i]->{"B_INDNO"};
-                        if(!empty($B_ID) && $B_ID !=""){
-                            $str=" BCK_GETDATE="."'$sDt'".
-                                " ,BCK_GETTIME="."'$sTm'".
-                                " ,BCK_GETOPID="."'$B_UR'".
-                                " ,BCK_GETCKOPID="."'$B_CUR'".
-                                " ,BCK_GETFROM="."'WEB'".
-                                " where BCK_DATMSEQ="."'$B_DTSEQ'".
-                                " and bck_indentno ="."'$B_INDNO'".
-                                " and bck_bageno ="."'$B_ID'".
-                                " and bck_medno="."'$ID_PATIENT'";
+       $json= json_decode(${"ST_DATA".$sPg});
 
-                            $Bsql=$UPDATESQL.$str;
+      /*  if(GetCBLDCheck($json)=="false"){
+            return   $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
+        }*/
 
-                            $Bstid=oci_parse($conn,$Bsql);
-                            if (!$Bstid){
-                                $e=oci_error($conn);
-                                return $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-                            }
-                            $Bex=oci_execute($Bstid,OCI_NO_AUTO_COMMIT);
-                            if(!$Bex)
-                            {
-                                oci_rollback($conn);
-                                $e=oci_error($Bstid);
-                                return $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-                            }
-                            else{
-                                $r=oci_commit($conn);
-                                if(!$r){
-                                    $e=oci_error($conn);
-                                    return $response=json_encode(array("response" => "false","message" =>"領血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
+        $Execute_result=array_map(function ($value) use ($conn, $sPg,$sDt,$sTm,$ID_PATIENT) {
 
-                                }
-                                $response=json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
+            $ID=$value->{$sPg."_ID"};
+            $NUM=$value->{$sPg."_NUM"};
+            $TP=$value->{$sPg."_TP"};
+            $UR=$value->{$sPg."_UR"};
+            $CUR=$value->{$sPg."_CUR"};
+            $DTSEQ=$value->{$sPg."_DTSEQ"};
+            $BKD=$value->{$sPg."_BKD"};
+            $INDNO=$value->{$sPg."_INDNO"};
 
-                            }
-                        }
-                    }
+            if(!empty($ID) && $ID !=""){
+
+
+                $UP_Query_Start="UPDATE TBOBCK SET ";
+                if ($sPg=="B"){
+                    $Query_str="BCK_GETDATE=:sDt,
+                                BCK_GETTIME=:sTm,
+                                BCK_GETOPID=:UR,
+                                BCK_GETCKOPID=:CUR,
+                                BCK_GETFROM='WEB'
+                                ";
                 }
-                break;
-            case 'C':
-                if($ST_DATAC){
-                    $C=json_decode($ST_DATAC);
-                    if(GetCBLDCheck($ST_DATAC)=="false"){
-                        return   $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
-                    }
-                    for ($i=0;$i<count($C);$i++){
-                        $C_ID=$C[$i]->{"C_ID"};
-                        $C_NUM=$C[$i]->{"C_NUM"};
-                        $C_TP=$C[$i]->{"C_TP"};
-                        $C_UR=$C[$i]->{"C_UR"};
-                        $C_CUR=$C[$i]->{"C_CUR"};
-                        $C_DTSEQ=$C[$i]->{"C_DTSEQ"};
-                        $C_BKD=$C[$i]->{"C_BKD"};
-                        $C_INDNO=$C[$i]->{"C_INDNO"};
-                        if(!empty($C_ID) && $C_ID !=""){
-
-
-                            $str=" BCK_TRADATE="."'$sDt'".
-                                " ,BCK_TRATIME="."'$sTm'".
-                                " ,BCK_TRAOPID ="."'$C_UR'".
-                                " ,BCK_TRACKOPID="."'$C_CUR'".
-                                " ,BCK_TRAFROM="."'WEB'".
-                                " where BCK_DATMSEQ="."'$C_DTSEQ'".
-                                " and bck_indentno ="."'$C_INDNO'".
-                                " and bck_bageno ="."'$C_ID'".
-                                " and bck_medno="."'$ID_PATIENT'";
-
-
-
-                            $Csql=$UPDATESQL.$str;
-                            $Cstid=oci_parse($conn,$Csql);
-                            if (!$Cstid){
-                                $e=oci_error($conn);
-                                return $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-                            }
-                            $Cex=oci_execute($Cstid,OCI_NO_AUTO_COMMIT);
-                            if(!$Cex)
-                            {
-                                oci_rollback($conn);
-                                $e=oci_error($Cstid);
-                                return  $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-
-                            }
-                            else{
-                                $r=oci_commit($conn);
-                                if(!$r){
-                                    $e=oci_error($conn);
-                                    return  $response=json_encode(array("response" => "false","message" =>"輸血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
-                                }
-                                $response=json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
-                            }
-                        }
-                    }
+                else {
+                    $Query_str="BCK_TRADATE=:sDt,
+                                BCK_TRATIME=:sTm,
+                                BCK_TRAOPID=:UR,
+                                BCK_TRACKOPID=:CUR,
+                                BCK_TRAFROM='WEB'
+                                ";
                 }
-                break;
-        }
+
+                $Query=$UP_Query_Start.$Query_str."WHERE
+                        BCK_DATMSEQ=:DATMSEQ,
+                        AND BCK_INDENTNO =:INDENTNO,
+                         AND BCK_BAGENO =:BAGENO,
+                          AND BCK_MEDNO =:MEDNO";
+
+                echo $Query;
+
+                $stid=oci_parse($conn,$Query);
+                if (!$stid){
+                    return oci_error($conn)['message'];
+                }
+                oci_bind_by_name($stid,':sDt',$sDt);
+                oci_bind_by_name($stid,':sTm',$sTm);
+                oci_bind_by_name($stid,':UR',$UR);
+                oci_bind_by_name($stid,':CUR',$CUR);
+                oci_bind_by_name($stid,':DATMSEQ',$DTSEQ);
+                oci_bind_by_name($stid,':INDENTNO',$INDNO);
+                oci_bind_by_name($stid,':BAGENO',$ID);
+                oci_bind_by_name($stid,':MEDNO',$ID_PATIENT);
+
+
+
+                $Execute= oci_execute($stid,OCI_NO_AUTO_COMMIT);
+                if (!$Execute){
+                    return oci_error($stid)['message'];
+                }
+            }
+            return 'true';
+        },$json);
+        array_push($Response,join("",$Execute_result));
 
     }
-    return   $response;
+
+    $Has_ErrorMsg=array_filter($Response,function ($value){
+        return strrpos($value,"ORA",0) !==false;
+    });
+
+    $result=count($Has_ErrorMsg)>0?'false':'true';
+    $Msg= str_replace('true','',join(" ",$Has_ErrorMsg));
+
+    return   json_encode(array("result"=>$result,"message"=>$Msg),JSON_UNESCAPED_UNICODE);
 }
 
 function GetCBLDJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
