@@ -5,7 +5,7 @@ function  GetCNADPatient($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FOR
       $SQL="SELECT  BSK_ALLOWDATE, BSK_ALLOWTIME,MH_MEDNO,MH_NAME ,BSK_INDENTNO , BSK_TRANSRECNO
          FROM TBOSTK, TREMED
         WHERE BSK_CANCD = 'N' AND BSK_OUT = 'Y' AND BSK_ALLOWDATE <> ' '  AND BSK_INDENTNO <> ' '
-        AND BSK_MEDNO = MH_MEDNO AND BSK_ALLOWDATE BETWEEN '1090411' AND '1090414'
+        AND BSK_MEDNO = MH_MEDNO AND BSK_ALLOWDATE BETWEEN '1090411' AND '1100311'
           GROUP BY BSK_ALLOWDATE, BSK_ALLOWTIME,MH_MEDNO,MH_NAME,BSK_INDENTNO, BSK_TRANSRECNO";
     $stid=oci_parse($conn,$SQL);
     oci_execute($stid);
@@ -44,7 +44,7 @@ function GetCNADIniJson ($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FOR
 //Default TableList 取表單預設 for NISPRWCNAD
     $SQL="SELECT BCK_DATMSEQ,BSK_BAGENO,BSK_MEDNO,MH_NAME,BKD_EGCODE,BSK_TRANSRECNO
             FROM TBOSTK,TBOKID,TREMED,TBOBCK
-            WHERE BSK_ALLOWDATE BETWEEN '1081126' AND '1090414'
+            WHERE BSK_ALLOWDATE BETWEEN '1090411' AND '1100311'
              AND TBOSTK.BSK_MEDNO=TREMED.MH_MEDNO
              AND BSK_BLDKIND=BKD_BLDKIND
              AND BSK_BAGENO=BCK_BAGENO
@@ -132,7 +132,7 @@ function PosCNADSave($conn,$sTraID,$sDt,$sTm,$sUr){
         WHERE ID_TABFORM = 'CNAD'  AND ID_TRANSACTION = '$sTraID'";
 
     $stid=oci_parse($conn,$Ssql);
-    oci_execute($stid);
+    oci_execute($stid,OCI_NO_AUTO_COMMIT);
     $ST_DATAB='';
     $DT_EXCUTE='';
     $TM_EXCUTE='';
@@ -141,27 +141,66 @@ function PosCNADSave($conn,$sTraID,$sDt,$sTm,$sUr){
         $DT_EXCUTE=oci_result($stid,"DT_EXCUTE");
         $TM_EXCUTE=oci_result($stid,"TM_EXCUTE");
     }
-    $response='';
+    $Response=[];
     if(trim($DT_EXCUTE)=="" && trim($TM_EXCUTE)==""){
         if($ST_DATAB){
-            $B=json_decode($ST_DATAB);
+            $ST_DATAB_json=json_decode($ST_DATAB);
 
-            if(GetCNADCheck($ST_DATAB)=="false"){
+         /*   if(GetCNADCheck($ST_DATAB)=="false"){
                 return    $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:血袋尚未勾選"),JSON_UNESCAPED_UNICODE);
 
-            }
+            }*/
+            $Execute_result=array_map(function ($value) use ($sUr, $sTm, $sDt, $conn) {
+                $BSK_TRANSRECNO=$value->{"BSK_TRANSRECNO"};
+                $BCK_DATMSEQ=$value->{"BCK_DATMSEQ"};
+                $BSK_MEDNO=$value->{"BSK_MEDNO"};
+                $BSK_BAGENO=$value->{"BSK_BAGENO"};
 
-            for ($i=0;$i<count($B);$i++)
+
+                $UPDATESQL="UPDATE  TBOBCK SET   
+                            BCK_OUTDATE=:sDt,
+                            BCK_OUTTIME=:sTm,
+                            BCK_OUTOPID=:sUr 
+                            WHERE BCK_DATMSEQ=:BCK_DATMSEQ
+                             AND BCK_MEDNO=:BSK_MEDNO 
+                             AND BCK_BAGENO=:BSK_BAGENO
+                             ";
+                $stid=oci_parse($conn,$UPDATESQL);
+
+                if (!$stid){
+                    return oci_error($conn)['message'];
+                }
+                oci_bind_by_name($stid,':sDt',$sDt);
+                oci_bind_by_name($stid,':sTm',$sTm);
+                oci_bind_by_name($stid,':sUr',$sUr);
+                oci_bind_by_name($stid,':BCK_DATMSEQ',$BCK_DATMSEQ);
+                oci_bind_by_name($stid,':BSK_MEDNO',$BSK_MEDNO);
+                oci_bind_by_name($stid,':BSK_BAGENO',$BSK_BAGENO);
+
+                $Execute= oci_execute($stid,OCI_NO_AUTO_COMMIT);
+                if (!$Execute){
+                    return oci_error($stid)['message'];
+                }
+                return 'true';
+            },$ST_DATAB_json);
+
+
+            array_push($Response,join("",$Execute_result));
+          /*  for ($i=0;$i<count($B);$i++)
             {
                 $BSK_TRANSRECNO=$B[$i]->{"BSK_TRANSRECNO"};
                 $BCK_DATMSEQ=$B[$i]->{"BCK_DATMSEQ"};
                 $BSK_MEDNO=$B[$i]->{"BSK_MEDNO"};
                 $BSK_BAGENO=$B[$i]->{"BSK_BAGENO"};
 
-                $UPDATESQL="UPDATE  TBOBCK SET   BCK_OUTDATE='$sDt',BCK_OUTTIME='$sTm',BCK_OUTOPID='$sUr' 
-                            WHERE BCK_DATMSEQ='$BCK_DATMSEQ' AND BCK_MEDNO='$BSK_MEDNO' AND BCK_BAGENO='$BSK_BAGENO'";
+                $UPDATESQL="UPDATE  TBOBCK SET   
+                            BCK_OUTDATE='$sDt',BCK_OUTTIME='$sTm',BCK_OUTOPID='$sUr' 
+                            WHERE BCK_DATMSEQ='$BCK_DATMSEQ'
+                             AND BCK_MEDNO='$BSK_MEDNO' 
+                             AND BCK_BAGENO='$BSK_BAGENO'";
 
                 $stid=oci_parse($conn,$UPDATESQL);
+
                 if (!$stid){
                     $e=oci_error($conn);
                     $response=json_encode(array("response" => "false","message" =>"發血存檔錯誤訊息:".$e['message']),JSON_UNESCAPED_UNICODE);
@@ -185,10 +224,17 @@ function PosCNADSave($conn,$sTraID,$sDt,$sTm,$sUr){
                     $response=json_encode(array("response" => "success","message" =>"this is the success message"),JSON_UNESCAPED_UNICODE);
 
                 }
-            }
+            }*/
         }
     }
-    return $response;
+    $Has_ErrorMsg=array_filter($Response,function ($value){
+        return strrpos($value,"ORA",0) !==false;
+    });
+    $result=count($Has_ErrorMsg)>0?'false':'true';
+    $Msg= str_replace('true','',join(" ",$Has_ErrorMsg));
+
+
+    return   json_encode(array("result"=>$result,"message"=>$Msg),JSON_UNESCAPED_UNICODE);
 }
 function GetCNADJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sDFL){
     //產生已儲存之紀錄資料
