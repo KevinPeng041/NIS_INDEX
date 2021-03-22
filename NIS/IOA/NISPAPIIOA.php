@@ -668,7 +668,6 @@ function GetIOACheck($Arr)
 
     return $Error_Str;
 }
-
 function DB_UPDATE($conn,$sFm,$IdPt,$InPt,$DM_Cand,$UR_Cand){
 
     $UP_SQL=" UPDATE NSIOQA
@@ -720,7 +719,6 @@ function GetFrmSeq($conn,$Tag){
     oci_free_statement($Fsq_stid);
     return $Tag.$PAD_NO_TABFORM;
 }
-
 function Append_O_Data($conn,$arr){
 
     $len= count($arr);
@@ -732,7 +730,6 @@ function Append_O_Data($conn,$arr){
     }
     return $arr;
 }
-
 function Get_Color($conn,$Io_Type){
     $Sql="SELECT SI2.JID_KEY,SI2.NM_ITEM
                 FROM
@@ -752,7 +749,6 @@ function Get_Color($conn,$Io_Type){
     }
     return $Color;
 }
-
 function Get_MM($conn,$Io_Type){
     $Sql="SELECT SI2.JID_KEY,SI2.NM_ITEM from
               (SELECT * from NSCLSI  WHERE  CID_CLASS ='IOTP') SI1,
@@ -771,7 +767,6 @@ function Get_MM($conn,$Io_Type){
     }
     return $MM;
 }
-
 function Is_Sum($conn,$Io_Type){
     $Sql="SELECT ST_TEXT2 FROM NSCLSI  WHERE  CID_CLASS ='IOTP' AND JID_KEY=:IoType";
 
@@ -785,7 +780,6 @@ function Is_Sum($conn,$Io_Type){
     }
     return $Is_Sum;
 }
-
 /*Default*/
 function GetOrderData($conn,$Page,$INPt,$sDT,$DefaultArr){
     $SQL_Query="";
@@ -880,11 +874,11 @@ function GetOrderData($conn,$Page,$INPt,$sDT,$DefaultArr){
 
     return json_encode($Data,JSON_UNESCAPED_UNICODE);
 }
-
 function Big5toStr($str){
     //找出最後的 }] 計算總長度轉換文字
 
   return  substr(urldecode($str),0,(int)strripos(urldecode($str),"}]")+2);
 }
+/*小index*/
 
 /*********************************************************************************************************************/
