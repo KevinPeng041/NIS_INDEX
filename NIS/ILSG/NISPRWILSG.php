@@ -212,6 +212,14 @@ $Account="00FUZZY";
                         let passwd='<?php echo $passwd?>';
                         let freq=$("#FORMSEQANCE").val();
 
+                        let error_arr=Page_Arr.filter(value => value!=="D")
+                            .map(value => CheckQty(value))
+                            .filter(value => value!=="");
+
+                        if(error_arr.length>0){
+                            alert(error_arr.join(','));
+                            return  false;
+                        }
 
                         $("#wrapper").show();
                         DB_WSST(Page,sTraID,json_str,sDt,sTM,passwd,freq,'<?php echo $Account?>','true');
@@ -868,6 +876,53 @@ $Account="00FUZZY";
 
             }
 
+            function CheckQty(Page) {
+               let str="";
+               let arr=PageJson.get(Page);
+
+                if (Page==="A"){
+
+                    $.each(arr,function (index,val) {
+
+                       let A_QTY=(val.STVAL).trim()?(val.STVAL).trim():val.SPRESS;
+                       let A_IDGP=val.IDGP;
+
+                       if (A_QTY==="" && A_IDGP!==""){
+                           str="請檢查血糖值";
+                       }
+                       if (A_QTY!=="" && A_IDGP===""){
+                           str="請選擇飯前後";
+                       }
+                    });
+                }
+                else if(Page==="B"){
+                    $.each(arr,function (index,val) {
+                        let Med_Nm=(val.STM).trim();
+                        let Med_Qty=(val.SDOSE).trim();
+                        let Med_FQty=(val.USEF).trim();
+
+                        if(Med_Nm!=="" && (Med_Qty==="" || Med_FQty==="")){
+                            str="請檢查劑量或頻率";
+                        }
+
+                    });
+
+                }
+                else {
+                    $.each(arr,function (index,val) {
+                        let Part=val.REGION;
+                        let MMVAL=val.NO_MMVAL;
+
+                        if(Part.length>0 && MMVAL===""){
+                            str="請選擇禁打原因";
+                        }
+                        if(Part.length==0 && MMVAL!==""){
+                            str="請選擇禁打部位";
+                        }
+                    });
+                }
+                return str;
+            }
         });
 
     </script>
