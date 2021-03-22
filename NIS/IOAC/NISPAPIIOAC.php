@@ -355,11 +355,15 @@ function Get_IOAC_DATA($conn,$Idpt,$INPt,$sDt){
             (CONCAT(DT_EXCUTE, TM_EXCUTE) >= '$Dt_now' AND
                 CONCAT(DT_EXCUTE, TM_EXCUTE) <= '$Dt_next' ) AND
             IODT.CID_CLASS = 'IODT'  and DT_EXCUTE >='$sDt'
-            AND TM_EXCUTE >= IODT.ST_TEXT1 
-            AND TM_EXCUTE <( CASE ST_TEXT2 WHEN '000000' THEN '235959' ELSE LPAD(TO_CHAR(TO_NUMBER(ST_TEXT2)-1),6,'0') END )
+            AND ((CID_SPECIAL IN ('N', 'D') AND TM_EXCUTE >= IODT.ST_TEXT1 AND TM_EXCUTE < IODT.ST_TEXT2)
+            OR(CID_SPECIAL = 'M' AND
+                (   (IODT.ST_TEXT1 = '000000' AND TM_EXCUTE >= IODT.ST_TEXT1 AND TM_EXCUTE <= IODT.ST_TEXT2 )
+                  OR
+                    (IODT.ST_TEXT1 <> '000000' AND ((TM_EXCUTE >= IODT.ST_TEXT1 AND TM_EXCUTE <= '235959') OR (TM_EXCUTE >= '000000' AND TM_EXCUTE < IODT.ST_TEXT2)) )
+                )
+              )
+          )
             ORDER BY DT_EXCUTE, TM_EXCUTE, CID_IO, P0.ID_ITEM";
-
-    //echo $S_Sql;
 
     $S_stid=oci_parse($conn,$S_Sql);
     oci_execute($S_stid);
