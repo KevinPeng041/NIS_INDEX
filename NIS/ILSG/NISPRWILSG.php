@@ -23,6 +23,8 @@ $passwd=trim($passwd_value[1]);/*密碼*/
 $sUr=trim($user_value[1]);/*使用者*/
 $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 $HOST_IP=$_SERVER['HTTP_HOST'];
+$Account="00FUZZY";
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,62 +42,13 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
     <script>
         $(document).ready(function () {
             (function () {
-                //url帳號密碼驗證
-                let From='<?php echo $From?>';
-                if (From==="U"){
-                    let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
-                    if(FromObj.reponse==="false"){
-                        alert("帳號密碼錯誤,請關閉視窗重新確認");
-                        return;
-                    }
-                }
-                else {
-                    let ckw=setInterval(()=>{ try {
-                        if(!window.opener) {
-                            alert("此帳號以被登出,請關閉視窗重新登入開啟");
-                            window.close();
-                        }
-                    }catch (e) {
-                        $("#wrapper").show();
-                        alert(e);
-                        window.close();
-                        clearInterval(ckw);
-                        return false;
-                    }
-                    },500);
-                }
-
-
-                $("#loading").hide();
-                $("#wrapper").hide();
-                $("#DELMENU").attr("disabled", true);
-                $("#ISSG").prop("disabled", true);
-                $("#ISLN").prop("disabled", true);
-                $("#Inhibit").prop("disabled", true);
-                $("#Part").prop("disabled", true);
-                NISPWSFMINI_Timer();
+                NISPWSFMINI_Timer('ILSGA','A');
+                $("button[name=PageBtn],button[name=FucBtn]:not(#sbed)").prop('disabled',true);
             })();
-
-            let transKey='';
-            let sSave='';
-            let FORMSEQANCE_WT='';
-            let JID_NSRANK='';
-            let sDt='';
-            let sTm='';
-            let  ISSG_jsonStr='';
-            let LSTPT='';
-            let FORBIDArrary='';
             let x;
             let y;
-            $(window).on('beforeunload', reloadmsg);
 
-            $(document).on("keydown","input",function (e) {
-                if(e.keyCode===13){
-                    e.preventDefault();//prevent enter to submit
-                    return false;
-                }
-            });
-
+            let PageJson=new Map();
             $(document).on('change','input[name=sRdoDateTime]',function () {
                 let TimeNow=new Date();
                 let yyyy=TimeNow.toLocaleDateString().slice(0,4);
@@ -107,219 +60,64 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
 
                 let timer=Timetxt.filter(function (value, index, array) { return  value!==":"});
                 let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
-
-                $("#IDTM").val($(this).attr('id'));
+                let time_ID=$(this).attr('id');
+                $("#IDTM").val(time_ID);
                 $("#timer").val(yyyy-1911+MM+dd);
                 $("#timetxt").val(timerVal);
 
-            });
+                let Page=$("#PageVal").val();
+                if (Page==="A"|| Page==="B"  ||  Page==="C"){
 
-            $('#STVALval').on("keydown",function(){
-                if($(this).val()){
-                    $("input[name='sPressure']").prop('checked',false);
-                    $("#sPress").val("");
-                }
-            });
+                  if (PageJson.has(Page)) {
 
-            $("input[name='sPressure']").change(function () {
-                $("#sPress").val($(this).val());
-                $("#STVALval").val("");
-            });
+                    let Page_obj=PageJson.get(Page);
+                     $.each(Page_obj,function (index,val) {
+                          val.IDTM=time_ID;
+                      });
 
-            $('button[name=ISLNch]').click(function () {
-                /*call ws for胰島素藥品*/
-                let val=$(this).val();
-                LoadInsertPage('PREB',);
-                $('#ckt').val(val);
-            });
+                      console.log(PageJson.get(Page));
+                  }
+               }
 
-            /*各頁面控制*/
-            $("button[name=click]").click(function(){
-                let ISLN_jsonStrtt=new Map();
-                let data = [];
-                let val=$(this).val();
-                let btnid=$(this).attr('id');
-                $("#PageVal").val(val);
-
-                ISLN_jsonStrtt.set('ISLN0',{
-                    'idFrm':$('#STDATB_idFrm').val(),
-                    'SFRMDTSEQ':'',
-                    'ITNO':$("input[name='ITNO']:checked").val(),
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=part]:checked").val(),
-                    'FORBID':'',
-                    'ID':$("#sID0").val(),
-                    'STM':$("#Isu_A").val(),
-                    'DBDOSE':'-1',
-                    'SDOSE':$("#dose0").val(),
-                    'USEF':$("#fUSEF_0").val(),
-                    'LSTPT':$('#LastPart').val()
-                });
-                ISLN_jsonStrtt.set('ISLN1',{
-                    'idFrm':$('#STDATB_idFrm').val(),
-                    'SFRMDTSEQ':'',
-                    'ITNO':$("input[name='ITNO']:checked").val(),
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=part]:checked").val(),
-                    'FORBID':'',
-                    'ID':$("#sID1").val(),
-                    'STM':$("#Isu_B").val(),
-                    'DBDOSE':'-1',
-                    'SDOSE':$("#dose1").val(),
-                    'USEF':$("#fUSEF_1").val(),
-                    'LSTPT':$('#LastPart').val()
-                });
-                ISLN_jsonStrtt.set('ISLN2',{
-                    'idFrm':$('#STDATB_idFrm').val(),
-                    'SFRMDTSEQ':'',
-                    'ITNO':$("input[name='ITNO']:checked").val(),
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=part]:checked").val(),
-                    'FORBID':'',
-                    'ID':$("#sID2").val(),
-                    'STM':$("#Isu_C").val(),
-                    'DBDOSE':'-1',
-                    'SDOSE':$("#dose2").val(),
-                    'USEF':$("#fUSEF_2").val(),
-                    'LSTPT':$('#LastPart').val()
-                });
-                ISLN_jsonStrtt.forEach((v, i)=> {
-                    data.push({
-                        "item": i,
-                        "obj": v
-                    });
-                });
-
-                    ISSG_jsonStr=[{
-                    'IDTM':$("#IDTM").val(),
-                    'IDGP':$("input[name=IDGP]:checked").val(),
-                    'STVAL':$("#STVALval").val(),
-                    'SPRESS':$("input[name='sPressure']:checked").val(),
-                    'MMVAL':$('#Textarea').val().match(/&/)!=null?$('#Textarea').val().replace(/&/g,'＆'):$('#Textarea').val()
-                }];
-
-
-
-                switch (val) {
-                    case 'A':
-                        $('#Serch').prop('disabled',false);
-                        if($("#clickTime").val()=='0'){
-                            DEaultINI();
-                            LoadInsertPage('DATAA');
-                            $("#clickTime").val(1);
-                        }
-                        /*if val=1 執行快存WSST*/
-                        if($("#clickTime").val()=='1'){
-
-                            UPDATEDATA('B',JSON.stringify(Get_ISLNjson(data)));
-                            UPDATEDATA('C',JSON.stringify(Get_Forbidjson()));
-                        }
-
-                        $("#BSData").show();
-                        $("#isuling").hide();
-                        $("#Imgisuling").hide();
-                        $("#NO_isuling").hide();
-                        $("#SubmitBtn").prop("disabled",false);
-
-                        $("#ISLN").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#Inhibit").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#Part").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        break;
-                    case 'B':
-                        if ($("#SERCH_Click").val()=='1'){
-                            $('#Serch').prop('disabled',false);
-                            $("#Part").prop('disabled',false);
-                            $("#Inhibit").prop('disabled',false);
-                        }else {
-                            $('#DELMENU').prop('disabled',false);
-                        }
-
-                        if($("#clickTime").val()=='0'){
-                            DEaultINI();
-                            $('#clickTime').val(1);
-
-                        }
-
-                        /*if val=1 執行快存WSST*/
-
-                        if($("#clickTime").val()=='1'){
-                            UPDATEDATA('A',JSON.stringify(ISSG_jsonStr));
-                            UPDATEDATA('C',JSON.stringify(Get_Forbidjson()));
-
-                        }
-
-                        $("#isuling").show();
-                        $("#BSData").hide();
-                        $("#Imgisuling").hide();
-                        $("#NO_isuling").hide();
-                        $("#SubmitBtn").prop("disabled",false);
-
-                        $("#ISSG").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#Inhibit").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#Part").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        break;
-                    case 'C':
-                        if ($("#SERCH_Click").val()=='1'){
-                            $("#Part").prop('disabled',false);
-                            $('#Serch').prop('disabled',false);
-                        }
-                        if($("#clickTime").val()=='0'){
-                            DEaultINI();
-                            $('#clickTime').val(1);
-                        }
-                        /*if val=1 執行快存WSST*/
-                        if($("#clickTime").val()=='1'){
-                            UPDATEDATA('A',JSON.stringify(ISSG_jsonStr));
-                            UPDATEDATA('B',JSON.stringify(Get_ISLNjson(data)));
-
-                        }
-                        $("#NO_isuling").show();
-                        $("#isuling").hide();
-                        $("#BSData").hide();
-                        $("#Imgisuling").hide();
-                        $("#SubmitBtn").prop("disabled",false);
-
-                        $("#ISSG").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#ISLN").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#Part").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        break;
-                    case 'D':
-
-                        if($("#clickTime").val()=='0'){
-                            DEaultINI();
-                            $('#clickTime').val(1);
-                        }
-                        let Part=$("input[name=part]:checked").val();
-                        let TraKey=$("#transKEY").val();
-
-                        NISPWSCILREG(TraKey,Part);
-                        $("#SubmitBtn").prop("disabled",true);
-                        $("#Imgisuling").show();
-                        $("#isuling").hide();
-                        $("#BSData").hide();
-                        $("#NO_isuling").hide();
-                        $('#DELMENU').prop('disabled',true);
-                        $('#Serch').prop('disabled',true);
-                        $("#ISSG").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#ISLN").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        $("#Inhibit").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                        break;
-                    default:
-                        break;
-                }
-                $("#"+btnid).css({ 'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
 
             });
-
             $(document).on("click","button",function (e) {
                 e.preventDefault();//prevent enter to submit
                 let BtnID=$(this).attr("id");
+                let sTraID=$("#sTraID").val();
+                let Page=$("#PageVal").val();
+                let ClassName=$(this).attr('class');
+                let sDt=$("#timer").val(),sTM=$("#timetxt").val();
+                let IdPt=$('#DA_idpt').val(),IdInPt=$('#DA_idinpt').val();
+                const Page_Arr=['A','B','C','D'];
+                if (ClassName==="FUQEN btn btn-primary btn-lg"){
+                    let B_JSON=PageJson.get('B');
+                    let F_index= $("#F_INDEX").val();
+                    let Frequency=$(this).val();
+                    $("#fUSEF_"+F_index).val(Frequency);
+                    $('#FuModal').modal('hide');
+
+                    B_JSON[F_index].USEF=Frequency;
+                }else if (ClassName==="MED btn btn-primary btn-lg"){
+                   let B_JSON=PageJson.get('B');
+                   let Btn_NUM=$("#B_INDEX").val();
+                   let Meditem_Num=$(this).val();
+
+                   let MedNM=$("#MED_NM_"+Meditem_Num).text();
+                   let MedID=$("#DIA"+Meditem_Num).val();
+
+                   $('#Isu_'+Btn_NUM).val(MedNM);
+
+                   B_JSON[Btn_NUM].STM=MedNM;
+                   B_JSON[Btn_NUM].ID=MedID;
+                   B_JSON[Btn_NUM].IDTM=$("#IDTM").val();
+                }
+
                 switch (BtnID) {
                     case "sbed":
                         switch (checkBEDwindow()) {
                             case "false":
-                                errorModal("責任床位視窗已開啟");
-                                return false;
+                                alert("責任床位視窗已開啟");
                                 break;
                             case "true":
                                 x=window.open("/webservice/NISPWSLKCBD.php?str="+AESEnCode("sFm=ILSGA&sIdUser=<?php echo $Account?>"),"責任床位(血)",'width=850px,height=650px,scrollbars=yes,resizable=no');
@@ -331,323 +129,448 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
 
                         if(($("#DataTxt").val()).trim()=='')
                         {
-                            errorModal("請選擇須查詢的病人");
+                            alert("請選擇須查詢的病人");
                             return false;
                         }
                         switch (checkSerchwindow()) {
                             case "false":
-                                errorModal("查詢視窗已開啟");
+                                alert("查詢視窗已開啟");
                                 return false;
                                 break;
                             case "true":
                                 y=window.open("/webservice/NISPWSLKQRY.php?str="+
-                                    AESEnCode("sFm=ILSGA&PageVal="+$("#PageVal").val()+"&DA_idpt="+
-                                        $('#DA_idpt').val()+"&DA_idinpt="+$('#DA_idinpt').val()+
-                                        "&sUser="+$('#sUser').val()+"&NM_PATIENT="+$('#DataTxt').val())
+                                    AESEnCode("sFm=ILSGA&PageVal="+Page+"&DA_idpt="+
+                                        IdPt+"&DA_idinpt="+IdInPt+
+                                        "&sUser="+"<?php echo $Account?>"+"&NM_PATIENT="+$('#DataTxt').val())
                                     ,"ILSGA",'width=750px,height=650px,scrollbars=yes,resizable=no');
+
                                 break;
                         }
 
                         y.Serchcallback=Serchcallback;
                         break;
                     case "Del":
-                        DELILSG();
+                        DELILSG(sTraID,Page,'<?php echo $Account?>');
                         break;
                     case "ReSet":
-                        Reset(1);
-                        break;
-                    case "FuClear1":
-                        clearvalue(0);
-                        break;
-                    case "FuClear2":
-                        clearvalue(1);
-                        break;
-                    case "FuClear3":
-                        clearvalue(2);
-                        break;
-                    case "FuConfirm":
-                        PersonFuval();
-                        break;
-                    case "ErorFocus":
-                        focustext($("#ERRORVAL").val());
-                        break;
-                    case "SubmitBtn":
-                        $(window).off('beforeunload', reloadmsg);
-                        let timeRadioButton=$("input[name=sRdoDateTime]:checked").val();
-                        let CID_MEAL=$("input[name=IDGP]:checked").val();
-                        let Dateinput=$("#timer").val();
-                        let TIMER=$("#timetxt").val();
-                        let trsKey=$('#transKEY').val();
-                        let Page=$('#PageVal').val();
-                        let json='';
-                        sDt=($('#timer').val()).toString();
-                        sTm=$('#timetxt').val()+"00";
-
-                        let  ISSN_jsonStr3=[{
-                            'idFrm':$('#STDATB_idFrm').val(),
-                            'SFRMDTSEQ':'',
-                            'ITNO':$("input[name='ITNO']:checked").val(),
-                            'IDTM':$("#IDTM").val(),
-                            'IDGP':$("input[name=part]:checked").val(),
-                            'FORBID':'',
-                            'ID':$("#sID0").val(),
-                            'STM':$("#Isu_A").val(),
-                            'DBDOSE':'-1',
-                            'SDOSE':$("#dose0").val(),
-                            'USEF':$("#fUSEF_0").val(),
-                            'LSTPT':$('#LastPart').val()
-                        },{
-                            'idFrm':$('#STDATB_idFrm').val(),
-                            'SFRMDTSEQ':'',
-                            'ITNO':$("input[name='ITNO']:checked").val(),
-                            'IDTM':$("#IDTM").val(),
-                            'IDGP':$("input[name=part]:checked").val(),
-                            'FORBID':'',
-                            'ID':$("#sID1").val(),
-                            'STM':$("#Isu_B").val(),
-                            'DBDOSE':'-1',
-                            'SDOSE':$("#dose1").val(),
-                            'USEF':$("#fUSEF_1").val(),
-                            'LSTPT':$('#LastPart').val()
-                        },{
-                            'idFrm':$('#STDATB_idFrm').val(),
-                            'SFRMDTSEQ':'',
-                            'ITNO':$("input[name='ITNO']:checked").val(),
-                            'IDTM':$("#IDTM").val(),
-                            'IDGP':$("input[name=part]:checked").val(),
-                            'FORBID':'',
-                            'ID':$("#sID2").val(),
-                            'STM':$("#Isu_C").val(),
-                            'DBDOSE':'-1',
-                            'SDOSE':$("#dose2").val(),
-                            'USEF':$("#fUSEF_2").val(),
-                            'LSTPT':$('#LastPart').val()
-                        }];
 
 
-                        ISSG_jsonStr = [{
-                            'IDTM': $("#IDTM").val(),
-                            'IDGP': $("input[name=IDGP]:checked").val(),
-                            'STVAL': $("#STVALval").val(),
-                            'SPRESS': $("input[name='sPressure']:checked").val(),
-                            'MMVAL': $('#Textarea').val().match(/&/)!=null?$('#Textarea').val().replace(/&/g,'＆'):$('#Textarea').val()
-                        }];
-
-                        if ($("#sSave").val()==='N'){
-                            errorModal("此病人權限無法存檔");
-                            return false;
-                        }
+                        //頁面按鈕顏色重製
+                        $("button[name=PageBtn]").css({'background-color' : '', 'opacity' : '','color':'white' });
 
 
-                        if($('#DataTxt').val()=='' ||$('#DataTxt').val()==null　){
+                        $("input[type=text]:not(#B_INDEX,#sUser)").val("");
+                        $("#Text_A").val("");
+                        //頁面隱藏
+                        Page_Arr.forEach((value)=>$("#P_"+value).hide());
 
-                            errorModal("請先選擇責任床位");
-                            return false;
-                        }
-                        //時間防呆
-                        if(Dateinput.trim() ==null ||Dateinput.trim() =='' || TIMER.trim() ==null || TIMER.trim() =='' ||timeRadioButton==''||timeRadioButton==null){
-                            errorModal("日期時間不得為空");
-                            return false;
-                        }
-                        if((Dateinput.trim()).length <7){
-                            errorModal("請輸入正確長度的日期格式");
-                            return false;
-                        }
-                        if((TIMER.trim()).length <4){
-                            errorModal("請輸入正確長度的時間格式");
-                            return false;
-                        }
-                        //頁面防呆
-                        switch (Page) {
-                            case "A":
-                                if(timeRadioButton != '臨時'){
-                                    if(CID_MEAL =='' || CID_MEAL == null || CID_MEAL =='undefined'){
-                                        errorModal("飯前飯後未選擇");
-                                        return false;
-                                    }
-                                }
-                                if ($("input[name=IDGP]").is(":checked")===false){
-                                    errorModal("請選擇飯前或飯後施打");
-                                    return false;
-                                }
-                                if($("#STVALval").val()=='' && $("#sPress").val()=='' )
-                                {
-                                    errorModal("請檢查血糖值");
-                                    $("#ERRORVAL").val(3);
-                                    focustext(3);
-                                    return false;
-                                }
-                                if($("#STVALval").val()>500){
-                                    errorModal("血糖值異常請重新檢查");
-                                    $("#ERRORVAL").val(3);
-                                    focustext(3);
-                                    return false;
-                                }
-                                json=ISSG_jsonStr;
+                        //Radio,Checkbox 重製
+                        $("input[type=radio],input[type=checkbox]").prop({'disabled':false,"checked":false});
+                        $("button[name=FucBtn]:not(#sbed),button[name=PageBtn]").prop({'disabled':true});
+                        PageJson.forEach(function (value, key) {
+                            if (key==="A"){
+                                $.each(value,function (index,val) {
+                                    val.IDGP="";
+                                    val.IDTM="";
+                                    val.MMVAL="";
+                                    val.SFRMSEQ="";
+                                    val.SPRESS="";
+                                    val.STVAL="";
+                                });
+                            }
+                           else if (key==="B"){
+                                $.each(value,function (index,val) {
+                                    val.ID="";
+                                    val.IDTM="";
+                                    val.ITNO="";
+                                    val.SDOSE="";
+                                    val.SFRMDTSEQ="";
+                                    val.STM="";
+                                    val.USEF="";
+                                });
 
-                                break;
-                            case "B":
-                                if($("#Isu_A").val()=='') {
-                                    errorModal("第一筆藥名不得為空");
-                                    return false;
-                                }
-                                if($("#Isu_A").val()=='' && $("#Isu_B").val()!='') {
-                                    errorModal("請先選擇第一筆");
-                                    return false;
-                                }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' &&  $("#Isu_C").val()!='' ) {
-
-                                    errorModal("請先選擇第二筆");
-                                    return false;
-                                }
-                                if($("#Isu_A").val()!='' && $("#dose0").val()=='') {
-
-                                    errorModal("第一筆施打劑量不得為空");
-                                    $("#ERRORVAL").val(4);
-                                    focustext(4);
-                                    return false;
-                                }
-                                if($("#Isu_A").val()!='' && $("#fUSEF_0").val()==''){
-
-                                    errorModal("第一筆頻率不得為空");
-                                    $("#ERRORVAL").val(5);
-                                    focustext(5);
-                                    return false;
-                                }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#dose1").val()=='') {
-
-                                    errorModal("第二筆施打劑量不得為空");
-                                    $("#ERRORVAL").val(6);
-                                    focustext(6);
-                                    return false;
-                                }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#fUSEF_1").val()=='') {
-
-                                    errorModal("第二筆頻率不得為空");
-                                    $("#ERRORVAL").val(7);
-                                    focustext(7);
-                                    return false;
-                                }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#Isu_C").val()!='' && $("#dose2").val()=='') {
-                                    errorModal("第三筆施打劑量不得為空");
-                                    $("#ERRORVAL").val(8);
-                                    focustext(8);
-                                    return false;
-                                }
-                                if($("#Isu_A").val()!='' && $("#Isu_B").val()!='' && $("#Isu_C").val()!='' && $("#fUSEF_2").val()=='') {
-                                    errorModal("第三筆頻率不得為空");
-                                    $("#ERRORVAL").val(9);
-                                    focustext(9);
-                                    return false;
-                                }
-                                if ($("#dose0").val() != '') {
-                                    if (ValidateNumber($("#dose0").val()) === false) {
-                                        errorModal("第一筆劑量請輸入數字");
-                                        $("#ERRORVAL").val(4);
-                                        focustext(4);
-                                        return false;
-                                    }
-                                }
-                                if ($("#dose1").val() != '') {
-                                    if (ValidateNumber($("#dose1").val()) === false) {
-                                        errorModal("第二筆劑量請輸入數字");
-                                        $("#ERRORVAL").val(6);
-                                        focustext(6);
-                                        return false;
-                                    }
-                                }
-                                if ($("#dose2").val() != '') {
-                                    if (ValidateNumber($("#dose2").val()) === false) {
-                                        errorModal("第三筆劑量請輸入數字");
-                                        $("#ERRORVAL").val(8);
-                                        focustext(8);
-                                        return false;
-                                    }
-                                }
-                                json=JSON.stringify(Get_ISLNjson(ISSN_jsonStr3));
-                                break;
-                            case "C":
-                                if( $("input[name='forbid']").is(":checked")===true && $("input[name=NO_MMVAL]").is(":checked")===false){
-                                    errorModal("請選擇禁打原因");
-                                    return false;
-                                }
-                                if( $("input[name='forbid']").is(":checked")===false && $("input[name=NO_MMVAL]").is(":checked")===true){
-                                    errorModal("請選擇禁打部位");
-                                    return false;
-                                }
-                                if( $("input[name='forbid']").is(":checked")===false && $("input[name=NO_MMVAL]").is(":checked")===false){
-                                    errorModal("請選擇禁打部位和原因");
-                                    return false;
-                                }
-                                json=Get_Forbidjson();
-                                break;
-                        }
-
-                        $("#loading").show();
-                        $("#wrapper").show();
-                        $.ajax({
-                            url:'/webservice/NISPWSSAVEILSG.php?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+Page+'&sDt='+sDt+'&sTm='+sTm+'&PASSWD=<?php echo $passwd?>'+'&USER=<?php echo $sUr?>'),
-                            type:'POST',
-                            beforeSend: UPDATEDATA(Page, JSON.stringify(json)),
-                            dataType:'text',
-                            success:function (json) {
-                                let data= JSON.parse(AESDeCode(json));
-                                $("#loading").hide();
-                                $("#wrapper").hide();
-                                if(data.response=='success'){
-                                    alert("儲存成功");
-                                    window.location.reload(true);
-                                }else {
-                                    errorModal("儲存失敗重新檢查格式:"+data.message);
-                                }
-                            },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                                $("#loading").hide();
-                                $("#wrapper").hide();
-                                errorModal(
-                                    "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                                    "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                                    "3 返回失敗,textStatus:"+textStatus+
-                                    "4 返回失敗,errorThrown:"+errorThrown
-                                );
+                            }else if (key==="C"){
+                                $.each(value,function (index,val) {
+                                    val.REGION.length=0;
+                                    val.NO_MMVAL="";
+                                });
                             }
                         });
-                        return false;
+
+                        break;
+                    case "FuConfirm":
+                        let UserConfirm_Val=$("#Fuval").val();
+                        let F_INDEX=$("#F_INDEX").val();
+                        let B_JSON=PageJson.get('B');
+
+                        $("#fUSEF_"+F_INDEX).val(UserConfirm_Val);
+                        B_JSON[F_INDEX].USEF=UserConfirm_Val;
+                        break;
+                    case "SubmitBtn":
+
+                        let json_str=JSON.stringify(PageJson.get(Page));
+                        let passwd='<?php echo $passwd?>';
+                        let freq=$("#FORMSEQANCE").val();
+
+
+                        $("#wrapper").show();
+                        DB_WSST(Page,sTraID,json_str,sDt,sTM,passwd,freq,'<?php echo $Account?>','true');
                         break;
                     default:
                         break;
                 }
             });
 
+            $("button[name='PageBtn']").click(function () {
+                let Page=$(this).val();
+                let sTraID=$("#sTraID").val();
+                const Page_Arr=['A','B','C','D'];
+
+
+                $.each(Page_Arr,function (index,val) {
+                    $("#P_"+val).hide();
+                    $("#PBTN_"+val).css({ 'background-color' : '', 'opacity' : '' ,'color':''});
+                });
+
+                if (!PageJson.has(Page)){
+                    //取一次頁面JSON
+                     GetPageJson(Page,sTraID);
+                }
+
+
+
+                let WSST_arr=Page_Arr.filter(value => value!==Page);
+                WSST_arr.forEach(function (value) {
+                    if(PageJson.has(value) && value !=="D"){
+                        DB_WSST(value,sTraID,JSON.stringify(PageJson.get(value)),'','','','','','false');
+                    }
+                });
+
+
+                if (Page==="B"){
+                    $("#PBTN_C,#PBTN_D").prop('disabled',false);
+                }else  if (Page==="D")
+               {
+                    let B_Part=$("input[name=part]:checked").val();
+                    let Forbid_part=PageJson.get('CP');
+                    let Last_Part=PageJson.get('L_PT');
+                    NISPWSCILREG(sTraID,B_Part,Forbid_part,Last_Part);
+                }
+
+                $("#Part").prop('disabled',false);
+                $("#P_"+Page).show();
+                $("#PageVal").val(Page);
+                $(this).css({ 'background-color' : '#EEEE00', 'opacity' : '' ,'color':'black'});
+            });
+
+
+            /*************************Page A Event *********************************************/
+            $("input[name=IDGP]").on('change',function () {
+                let A_JSON=PageJson.get('A')[0];
+                A_JSON.IDGP=$(this).val();
+            });
+
+            $('#STVALval').on("change",function(){
+                let A_JSON=PageJson.get('A')[0];
+                $("input[name='sPressure']").prop('checked',false);
+                A_JSON.STVAL=$(this).val();
+                if ($(this).val()!==""){
+                    A_JSON.SPRESS="";
+                }
+
+                A_JSON.IDTM=$("#IDTM").val();
+                console.log(A_JSON);
+            });
+
+            $("input[name='sPressure']").change(function () {
+                let A_JSON=PageJson.get('A')[0];
+
+                $("#STVALval").val("");
+                A_JSON.SPRESS=$(this).val();
+                A_JSON.STVAL="";
+                A_JSON.IDTM=$("#IDTM").val();
+                console.log(A_JSON);
+            });
+
+            $("#Text_A").on("change",function () {
+                let A_JSON=PageJson.get('A')[0];
+                A_JSON.MMVAL=$(this).val().match(/&/) != null ? $(this).val().replace(/&/g, '＆') : $(this).val();
+            });
+
+
+            /*************************Page B Event********************************************/
+
+            $("input[name=part]").on('change',function (e) {
+                let A_JSON=PageJson.get('B');
+
+                $.each(A_JSON,function (index,val) {
+                    val.IDGP=$(e.target).val();
+                });
+            });
+
+            $('button[name=ISLNch]').click(function () {
+                /*胰島素藥品*/
+                let index=$(this).val();
+                $("#B_INDEX").val(index);
+            });
+
+            $("input[name=QTY]").on('change',function () {
+                let index=$(this).attr('id').substr(-1,1);
+                let QTY=$(this).val();
+                PageJson.get('B')[index].SDOSE=QTY;
+                PageJson.get('B')[index].IDTM=$("#IDTM").val();
+                console.log(PageJson.get('B'));
+            });
+
+            $("button[name=ClearInput]").click(function () {
+               let index=$(this).attr('id').substr(-1,1);
+               let JSON_B=PageJson.get('B')[index];
+                $("#Isu_"+index).val("");
+                $("#QTY_"+index).val("");
+                $("#fUSEF_"+index).val("");
+
+                JSON_B.STM="";     //藥名
+                JSON_B.ID="";      //藥名ID
+                JSON_B.SDOSE="";   //劑量
+                JSON_B.USEF="";    //頻率
+
+                console.log(PageJson.get('B'));
+            });
+
             $(".FuQuenCy").on("focus",function () {
                 let TxtID=$(this).attr("id");
                 let index=TxtID.split("");
-                fumadol();
-                $('#funum').val(index[6]);
-                $('#fut').val(index[6]);
+                $('#FuModal').modal('show');
+                $("#Fuval").val("");
+                $("#F_INDEX").val(index[6]);
+
+            });
+            /*************************Page C Event********************************************/
+
+            $("input[type=checkbox]").on("change",function () {
+
+                let REGION_Arr=PageJson.get('C')[0].REGION;
+                let REGION_Part=$(this).val();
+                if ($(this).prop('checked')){
+
+                   if (REGION_Arr.indexOf(REGION_Part)<0)
+                   {
+                       REGION_Arr.push(REGION_Part);
+                   }
+
+                }else {
+                    REGION_Arr.forEach(function (value, index,array) {
+                       if (value===REGION_Part){
+                           array.splice(index,1);
+                       }
+                    });
+                }
             });
 
-            function Get_ISLNjson(arr){
-                let length=0;
-                let re=[];
-                if($("#Isu_A").val()!='' && $("#Isu_B").val()=='' && $("#Isu_C").val()==''){
-                    length=0;
-                }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''&& $("#Isu_C").val()==''){
-                    length=1;
+            $(document).on('change','input[name=NO_MMVAL]',function () {
+                PageJson.get('C')[0].NO_MMVAL=$(this).val();
+                PageJson.get('C')[0].IDTM=$("#IDTM").val();
+            });
 
-                }else if($("#Isu_A").val()!='' &&　$("#Isu_B").val()!=''　&&　$("#Isu_C").val()!=''){
-                    length=2;
-                }
 
-                for (let i=0;i<=length;i++){
-                    if (arr[i].obj===undefined){
-                        re.push(arr[i]);
-                    }else {
-                        re.push(arr[i].obj);
+
+
+            /***************************Function***************************************************/
+
+            function NISPWSFMINI_Timer(sFm,Page) {
+                $.ajax({
+                    url:"/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm="+sFm+"&sPg="+Page),
+                    type:"POST",
+                    dataType:"text",
+                    success:function(data){
+                        let obj=JSON.parse(AESDeCode(data));
+                        let arr=JSON.parse(obj.ST_PREA);
+
+                        $.each(arr,function (index,item) {
+                            $("#ISTM").append(
+                                `
+                                <label style='font-size: 4.5vmin'>
+                                    <input type='radio' name='sRdoDateTime' id='${item.T_ID}' value='${item.name}' style='width: 6vmin;height: 6vmin' >${item.name}
+                                </label>
+                                `
+                            )
+                        });
+                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
+                        console.log(
+                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                            "3 返回失敗,textStatus:"+textStatus+
+                            "4 返回失敗,errorThrown:"+errorThrown
+                        );
                     }
-                }
-                return re;
+                });
             }
+            function bedcallback(data){
+                let str=AESDeCode(data);
+                let datastr=JSON.parse(JSON.stringify(str).replace(/\u0000/g, '').replace(/\\u0000/g, ""));
+                let dataObj=JSON.parse(datastr);
+               if(dataObj){
 
+                   const Page_Arr=['A','B','C','D'];
+
+                    //頁面隱藏
+                   Page_Arr.forEach((value)=>$("#P_"+value).hide());
+
+                   //頁面按鈕顏色重製
+                   $("button[name=PageBtn]").css({'background-color' : '', 'opacity' : '','color':'white' });
+
+                   //Radio,Checkbox 重製
+                   $("input[type=radio],input[type=checkbox]").prop({'disabled':false,"checked":false});
+                   $("input[type=text]:not(#B_INDEX,#F_INDEX,#sUser)").val("");
+                   $("#Text_A").val("");
+                   $("button[name=FucBtn]").prop('disabled',false);
+
+                    $("#DataTxt").val(dataObj[0].DataTxt);
+                    $("#DA_idpt").val(dataObj[0].IDPT);
+                    $("#DA_idinpt").val(dataObj[0].IDINPT);
+                    $("#DA_sBed").val(dataObj[0].SBED);
+
+                    DeFaultINI(dataObj[0].IDPT,dataObj[0].IDINPT);
+                    PageJson.clear();
+                    $("button[name=PageBtn]:not(#PBTN_C,#PBTN_D)").prop('disabled',false);
+                    $("#timer").prop("readOnly",false);
+                    $("#timetxt").prop("readOnly",false);
+                    $("#PageVal").val('A'); //頁面預設第一頁
+                }
+            }
+            function Serchcallback(AESdata){
+                let page=$("#PageVal").val();
+                let Json_obj=JSON.parse(AESDeCode(AESdata));
+                console.log(Json_obj);
+
+                $("#timer,#timetxt").prop('readonly',true);
+                $("#input[name=sRdoDateTime]").prop('disabled',true);
+
+                let sTraID=Json_obj.ID_TRANSACTION;
+                let IdPt=Json_obj.ID_PATIENT;
+                let IdInPt=Json_obj.ID_INPATIENT;
+                let sDt=Json_obj.DT_EXCUTE;
+                let sTm=Json_obj.TM_EXCUTE;
+                let Data=Json_obj.DATA;
+
+                if(IdPt!=$("#DA_idpt").val())
+                {
+                   alert("病人資訊已異動,請先重新操作一次");
+                    return false;
+                }
+
+
+                $("#DA_idpt").val(IdPt);
+                $("#DA_idinpt").val(IdInPt);
+                $("#sTraID").val(sTraID);
+                $("#timer").val(sDt);
+                $("#timetxt").val(sTm);
+
+                switch (page) {
+                    case "A":
+                        //IDGP: "A"
+                        //IDTM: "ISTM00000005"
+                        //MMVAL: " "
+                        //SFRMSEQ: "ISSG0900009592"
+                        //SPRESS: "LO"
+                        //STVAL: " "
+                        //idFrm: "ISSG"
+
+
+                        $("#PBTN_B,#PBTN_C,#PBTN_D").prop('disabled',true);
+                        $.each(Data,function (index,val) {
+                            let Befor_or_After=val.IDGP;
+                            let TimeRadioBtn_ID=val.IDTM;
+                            let A_SPRESS=(val.SPRESS).trim();
+                            let A_Qty=(val.STVAL).trim();
+                            let A_MMVAL=val.MMVAL;
+                            let FORMSEQANCE=val.SFRMSEQ;
+
+                            $("#IDGP_"+Befor_or_After).prop('checked',true);
+                            $("#"+TimeRadioBtn_ID).prop('checked',true);
+                            $("#IDTM").val(TimeRadioBtn_ID);
+                            $("#FORMSEQANCE").val(FORMSEQANCE);
+                            $("#Text_A").val(A_MMVAL);
+
+                            if (A_SPRESS!==""){
+                                $("#P_"+A_SPRESS).prop('checked',true);
+                            }else {
+                                $("#STVALval").val(A_Qty);
+                            }
+
+
+                        });
+                        break;
+                    case "B":
+                    //DBDOSE: "-1"
+                    //FORBID: ""
+                    //ID: "D5/NS"
+                    //IDGP: "C"
+                    //IDTM: "ISTM00000005"
+                    //ITNO: "1"
+                    //LSTPT: ""
+                    //SDOSE: "10"
+                    //SFRMDTSEQ: "1100318100100"
+                    //STM: "04Dextrose+NaCl0.33%500ml/bag"
+                    //USEF: "TID"
+                    //idFrm: "ISLN"
+
+
+
+                    $("#PBTN_A,#PBTN_C").prop('disabled',true);
+                    $("input[name=part]").prop({"checked":false,"disabled":true});
+                    let Has_Qty_obj=Data.filter((value)=>(value.SDOSE).trim()!=="");
+
+                    $.each(Has_Qty_obj,function (index,val) {
+                                let MED_NM=val.STM;
+                                let Frequency=val.USEF;
+                                let B_Qty=val.SDOSE;
+                                let FORMSEQANCE=val.SFRMSEQ;
+                                let TimeRadioBtn_ID=val.IDTM;
+                                let Part_IDGP=val.IDGP;
+
+                             $("#"+TimeRadioBtn_ID).prop('checked',true);
+                             $("#IDTM").val(TimeRadioBtn_ID);
+                             $("#FORMSEQANCE").val(FORMSEQANCE);
+                             $("#Isu_"+index).val(MED_NM);
+                             $("#QTY_"+index).val(B_Qty);
+                             $("#fUSEF_"+index).val(Frequency);
+                             $("#Part"+Part_IDGP).prop('checked',true);
+                             $("#LastPart").val('');
+                            });
+
+                        
+                    break;
+                    case "C":
+                    //DATA: Array(1)
+                    //0: {REGION: Array(2), NO_MMVAL: "ISLF00000002"}
+                    //DT_EXCUTE: "1100318"
+                    //ID_INPATIENT: "970000884"
+                    //ID_PATIENT: "00055664"
+                    //ID_TRANSACTION: "20210318142501658ILSGA01295365"
+                    //SFRMDTSEQ: "1100318115100"
+                    //TM_EXCUTE: "1151"
+
+
+
+                        $("#PBTN_B,#PBTN_A").prop('disabled',true);
+                        $("input[type=checkbox]").prop({'checked':false,"disabled":true});
+                        $.each(Data[0].REGION,function (index,val) {
+                            $("#No_"+val).prop({"checked":true});
+                        });
+
+                       $("#"+Data[0].NO_MMVAL).prop('checked',true);
+                        $("#"+Json_obj.IDTM).prop('checked',true);
+                        $("#FORMSEQANCE").val(Json_obj.SFRMDTSEQ);
+                        break;
+                }
+
+                PageJson.clear();
+                PageJson.set(page,Data);
+                $("#P_"+page).show();
+                $("input[name=sRdoDateTime]").prop('disabled',true);
+                $("#DELMENU").prop('disabled',false);
+            }
             function checkSerchwindow() {
                 if(!y){
                     return "true";
@@ -673,80 +596,25 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     }
                 }
             }
-            function DEaultINI(){
-                let ajaxdata_ip='/webservice/NISPWSTRAINI.php';
-                console.log("http://localhost"+ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'));
+            function DeFaultINI(idpt,Inidpt){
                 $.ajax({
-                    url:ajaxdata_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+$('#DA_idpt').val()+'&INPt='+$('#DA_idinpt').val()+'&sUr=<?php echo $Account?>'),
+                    url:'/webservice/NISPWSTRAINI.php'+'?str='+AESEnCode('sFm='+'ILSGA'+'&idPt='+idpt+'&INPt='+Inidpt+'&sUr=<?php echo $Account?>'),
                     type:"POST",
                     dataType:"text",
                     success:function (data) {
                         let json=JSON.parse(AESDeCode(data));
-                        transKey=json.sTraID;
-                        sSave=json.sSave;
-                        FORMSEQANCE_WT=json.FORMSEQANCE_WT;
-                        JID_NSRANK=json.JID_NSRANK;
-                       // console.log(json);
-                        let ST_DATAA=(JSON.parse(json.ST_DATAA))[0];
-                        let ST_DATAB=(JSON.parse(json.ST_DATAB))[0];
-                        let ST_DATAC=(JSON.parse(json.ST_DATAC))[0];
-                        let  fu_data=JSON.parse(json.ST_PREC);
-                        $("#STDATB_idFrm").val(ST_DATAB.idFrm);
-                        $("input[name='forbid']").prop('checked',false);
-                        $("input[name='forbid']").prop('disabled',false);
-                        FORBIDArrary=ST_DATAB.FORBID;
+                        console.log(json);
+                        let sTraID=json.sTraID;
+                        let Save=json.sSave;
+                        let FORMSEQANCE_WT=json.FORMSEQANCE_WT;
+                        let JID_NSRANK=json.JID_NSRANK;
 
-                        if(FORBIDArrary){
-                            $.each(FORBIDArrary,function (index) {
-                                $('#Part'+FORBIDArrary[index].REGION).prop('disabled',true);
-                                $('#No_'+FORBIDArrary[index].REGION).prop('disabled',true);
-                                $('#No_'+FORBIDArrary[index].REGION).prop('checked',true);
-                                (ST_DATAC.FORBID).push(FORBIDArrary[index].REGION);
-                            });
-                        }
-                        /*禁打原因*/
-                        Radioforbid(ST_DATAC.NO_MMVAL);
-
-                        /*上次施打部位*/
-                        LSTPT=ST_DATAB.LSTPT;
-                        if(LSTPT){
-                            $("#LastPart").val(LSTPT);
-                        }
-                        if(ST_DATAB.IDGP){
-                            $('#Part'+ST_DATAB.IDGP).prop('checked',true);
-                        }
-
-                        /*施打頻率UI*/
-                        $("#fu1").children().remove();
-                        $("#fu2").children().remove();
-                        $.each(fu_data,function (index) {
-                            let str1='';
-                            let str2='';
-
-                            if (index%2 !== 0){
-                                str1=fu_data[index].FUQUEN;
-                                $("#fu1").append(
-                                    `
-                                   <input type='button' onclick='fuval("${str1}")'  class="btn btn-primary btn-lg" value='${str1}' style="width:inherit ;">
-                                  `
-                                );
-                            }else {
-                                str2=fu_data[index].FUQUEN;
-                                $("#fu2").append(
-                                    `
-                                   <input type='button' onclick='fuval("${str2}")'  class="btn btn-primary btn-lg" value='${str2}' style="width:inherit ;">
-
-                                `
-                                );
-                            }
-                        });
-
-                        $("#transKEY").val(transKey);
-                        $("#sSave").val(sSave);
+                        $("#sTraID").val(sTraID);
+                        $("#sSave").val(Save);
                         $("#STDATA_JID_NSRANK").val(JID_NSRANK);
                         $("#STDATA_FORMWT").val(FORMSEQANCE_WT);
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
+                        console.log(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
                             "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
                             "3 返回失敗,textStatus:"+textStatus+
@@ -755,140 +623,123 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     }
                 });
             }
-
-            function Radioforbid(arr){
-                if($("#NOisuling_RE").children().length==0){
-                    $.each(arr,function (index,item) {
-                        $("#NOisuling_RE").append(
-                            `
-                            <label  style='font-size: 4.5vmin'><input type='radio' name='NO_MMVAL' id='${item.F_ID}' value='${item.F_ID}' style='width: 6vmin;height: 6vmin' >${item.name}</label>
-                            `
-                        );
-                    });
-                }
-            }
-
-
-            function Forbid_Dateback(idPt,DT,TM,NO_MMAL,sTraID) {
-                if(idPt!==$("#DA_idpt").val()){
-                    errorModal("病人資訊已異動,請先重新操作一次");
+            function GetPageJson(Page,sTraID) {
+                if (Page==="D"){
                     return false;
                 }
-                $("#NO_isuling").show();
-                $("#ISSG").prop('disabled',true);
-                $("#ISLN").prop('disabled',true);
-                $("#Part").prop('disabled',true);
-                $("#SubmitBtn").prop('disabled',true);
-
-                $("#DT_EXE").val(DT);
-                $("#timer").val(DT);
-                $("#TM_EXE").val(TM);
-                $("#timetxt").val(TM);
-                $("#transKEY").val(sTraID);
-                $("#"+NO_MMAL).prop('checked',true);
-                $("input[name=sRdoDateTime]").prop('disabled',true);
-                $("input[type=checkbox]").prop('disabled',true);
-
-            }
-            function Get_Forbidjson(){
-                let checkboxval=$("input[name='forbid']:checked").map(function() { return $(this).val(); }).get();
-                for(let i=0;i<FORBIDArrary.length;i++){
-                    /*移除禁打預設值*/
-                    delete checkboxval[i];
-                }
-                checkboxval=checkboxval.filter(function (e) {
-                    /*去除陣列移除後的空值*/
-                    return e;
-                });
-                let newobj={};
-                newobj.REGION=checkboxval.length===0?[]:checkboxval;
-                newobj.NO_MMVAL= $("input[name=NO_MMVAL]:checked").val()==="undefined"?"":$("input[name=NO_MMVAL]:checked").val();
-                let data=[];
-                data.push(newobj);
-                return data;
-            }
-            /*部位序號(圖)*/
-            function NISPWSCILREG(TransKEY,Part) {
-                $("td").css({'backgroundColor':'white','color':'black'});
-
-                $.each(FORBIDArrary,function (index,val) {
-                   for (let i=1;i<=8;i++) {
-                       $("#"+val.REGION+i).css({'backgroundColor':'red','color':'white'});
-                   }
-                });
-
-                if(LSTPT){
-                    $("#"+LSTPT).css({'backgroundColor':'blue','color':'white'});
-                }
-
-                //console.log("http://localhost"+"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+TransKEY+"&sRgn="+Part));
                 $.ajax({
-                    url:"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+TransKEY+"&sRgn="+Part),
+                    url:"/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=ILSGA&sTraID="+sTraID+"&sPg="+Page),
                     type:'POST',
-                    dataType:'text',
-                    success:function (json) {
-                        let data=JSON.parse(AESDeCode(json));
-                        let IDGP_num=$("input[name=part]:checked").val();
-
-                        $("#"+IDGP_num+data).css({'backgroundColor':'green','color':'white'});
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
-
-                });
-
-            }
-            /*讀取輸入作業頁面資料ws(藥名)*/
-            function LoadInsertPage(num) {
-                let LoadInsertPage_ip="/webservice/NISPWSGETPRE.php";
-                //console.log("http://localhost"+LoadInsertPage_ip+"?str="+AESEnCode("sFm=ILSGA&sTraID="+transKey+"&sPg="+num));
-                $.ajax({
-                    url:LoadInsertPage_ip+"?str="+AESEnCode("sFm=ILSGA&sTraID="+transKey+"&sPg="+num),
-                    type:'POST',
+                    async: false,
                     dataType:"text",
-                    success:function (json){
-                        if(json){
-                            let data=AESDeCode(json);
-                            if(num=='DATAA'){
-                               // console.log(data);
+                    success:function (data){
+
+
+                        let JSON_Data= JSON.parse(AESDeCode(data));
+                        let Json_obj=JSON.parse(JSON_Data.ST_DATA);
+
+
+                        if (!PageJson.has(Page)){
+                            PageJson.set(Page,Json_obj);//各頁面Json
+                        }
+
+                        console.log(JSON_Data);
+
+
+
+                        //page UI Append
+                         if (Page==="B"){
+
+
+                            let FUQEN_str=JSON_Data.ORDER;
+                            let Frequen_str=JSON.parse(FUQEN_str)[0].FUSEQ;
+                            let Frequen_arr=JSON.parse(Frequen_str);            //施打胰島素頻率
+
+
+                            let ISUL_str=JSON_Data.ORDER;
+                            let ISULING_str=JSON.parse(ISUL_str)[0].ISULING;
+                            let ISULING_arr=JSON.parse(ISULING_str);             //施打胰島素藥物
+
+                            let ForBid_Arr=Json_obj[0].FORBID;                 //禁打部位:Array
+
+                            if (!PageJson.has('BF')){
+                                /*施打頻率UI*/
+                                $("#fu1").children().remove();
+                                $("#fu2").children().remove();
+
+                                $.each(Frequen_arr,function (index,val) {
+                                    if (index%2 !== 0){
+                                        $("#fu1").append(
+                                            `
+                                              <button   class="FUQEN btn btn-primary btn-lg" value='${val.FUQUEN}' style="width:inherit;margin-top: 3px">${val.FUQUEN}</button>
+                                             `
+                                        );
+                                    }else {
+                                        $("#fu2").append(
+                                            `
+                                            <button    class="FUQEN btn btn-primary btn-lg" value='${val.FUQUEN}' style="width:inherit ;margin-top: 3px">${val.FUQUEN}</button>
+                                           `
+                                        );
+                                    }
+                                });
+
+
+                                PageJson.set('BF',Frequen_arr);
                             }
-                            if(num=='PREB'){
-                                let ISULING_OBJ=JSON.parse((JSON.parse(data))[0].ISULING);
-                                $.each(ISULING_OBJ,function (index,value) {
-                                    let JID_KEY = ISULING_OBJ[index].JID_KEY;
-                                    let DIA = ISULING_OBJ[index].DIA;
-                                    let STM =(ISULING_OBJ[index].STM).replace('§0§','');
-                                    let  DCSORT = ISULING_OBJ[index].DCSORT;
-                                    let QTY = ISULING_OBJ[index].QTY;
-                                    let USEF = ISULING_OBJ[index].USENO;
+                            if (!PageJson.has('BI')){
+                                /*藥物UI*/
+                                $.each(ISULING_arr,function (index,val) {
+                                    let JID_KEY = val.JID_KEY;
+                                    let DIA = val.DIA;
+                                    let STM =(val.STM).replace('§0§','');
+                                    let  DCSORT = val.DCSORT;
+                                    let QTY = val.QTY;
+                                    let USEF = val.USENO;
                                     let QTY_tt=QTY!=''?"劑量:":"";
                                     let USEF_tt=USEF!=''?"頻率:":"";
 
                                     $("#MedLi").append(
                                         `
                                     <li id='${"MEDli"+index}' style="list-style-type: none;font-size:3vmin">
-                                    <input type='button' value='選擇' id='${"Medbtn"+index}' onclick='MEDbtnID("${index}")'
-                                       class="btn btn-primary"  data-dismiss="modal"  aria-hidden="true" style='width: 60px;margin-left: -25px;margin-right: 5px;font-size: 2.7vmin;' >
-                                           ${STM}
+                                    <button type='button' class="MED btn btn-primary btn-lg" style="margin-left: -10px;margin-top: 5px" value="${index}"  data-dismiss="modal"  aria-hidden="true" >
+                                        ${"選擇"}
+                                    </button>
+                                    <label id='${"MED_NM_"+index}'> ${STM}</label>
                                     <li style='padding-left: 42px;font-size:2.5vmin'>${QTY_tt+QTY+USEF_tt+USEF}</li>
-                                        <input type='text' value='${DIA}'  id='${"DIA"+index}'   style="display: none">
-                                        <input type='text' value='${QTY}'  id='${"QTY"+index}'   style="display: none">
-                                        <input type='text' value='${USEF}' id='${"sUSEF"+index}' style="display: none">
+                                    <div style="display: none;">
+                                        <input type='text' value='${DIA}'  id='${"DIA"+index}' >
+                                        <input type='text' value='${QTY}'  id='${"QTY"+index}' >
+                                        <input type='text' value='${USEF}' id='${"sUSEF"+index}' >
+
+                                    </div>
+
                                     </li>
                                     `
                                     );
                                 });
+
+
+                                PageJson.set('BI',ISULING_arr);
                             }
+
+                            $("#LastPart").val(Json_obj[0].LSTPT);
+                            $("#Part"+ Json_obj[0].IDGP).prop('checked',true);
+
+
+                            $.each(ForBid_Arr,function (index,val) {
+                                $("#Part"+val.REGION).prop('disabled',true); //PAGE B
+                                $("#No_"+val.REGION).prop( {'disabled':true,'checked':true}); //PAGE C
+                            });
+                            PageJson.set('L_PT',Json_obj[0].LSTPT);
+                            PageJson.set('CP',ForBid_Arr);//禁打部位
                         }
-
+                         else if (Page==="C"){
+                          Append_RadioBtn_forbid(Json_obj[0].NO_MMVAL);
+                          PageJson.get('C')[0].NO_MMVAL="";
+                       }
 
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
+                        console.log(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
                             "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
                             "3 返回失敗,textStatus:"+textStatus+
@@ -896,48 +747,12 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                         );
                     }
                 });
-
+                 return true;
             }
-            function UPDATEDATA(spg,Json) {
-                let  trsKey=$('#transKEY').val();
-                let UPDATEDATA_ip="/webservice/NISPWSSETDATA.php";
-                //console.log(Json);
-                //console.log(UPDATEDATA_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+spg+'&sData='+Json));
-                $.ajax({
-                    url:UPDATEDATA_ip+'?str='+AESEnCode('sFm='+'ILSGA'+'&sTraID='+trsKey+'&sPg='+spg+'&sData='+Json),
-                    type:'POST',
-                    dataType:"text",
-                    success:function (data) {
-                        let json=JSON.parse(AESDeCode(data));
-                        console.log(json.message);
-                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
-                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                            "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                            "3 返回失敗,textStatus:"+textStatus+
-                            "4 返回失敗,errorThrown:"+errorThrown
-                        );
-                    }
-                });
-            }
-
-            function  DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
-                let obj=JSON.parse(json);
-
-                $.each(obj,function (index,val) {
-                    if ((val.M_Nam).indexOf('&')>0){
-                        val.M_Nam= encodeURI(val.M_Nam.split("").map(function (value) {
-                            return  value.match(/&/)!==null?value.replace(/&/g,'＆'):value;
-                        }).join(""));
-                    }
-                });
-
-
-                let SavaJson=JSON.stringify(obj);
-
+            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
 
                 $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
-                    'sFm=ILSGA&sTraID='+sTraID+'&sPg='+Page+'&sData='+SavaJson+
+                    'sFm=ILSGA&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
                     '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
                     '&USER='+sUr+'&Indb='+InSertDB)
                 )
@@ -964,30 +779,39 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 });
 
             }
-
-
-
-
-
-            function DELILSG() {
-                let del_ip='/webservice/NISPWSDELILSG.php';
-               // console.log("http://localhost"+del_ip+"?str="+AESEnCode("sFm="+'ILSGA'+"&sTraID="+$('#transKEY').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#sUser").val()));
+            function DELILSG(sTraID,Page,sUr) {
                 $.ajax({
-                    url:del_ip+"?str="+AESEnCode("sFm="+'ILSGA'+"&sTraID="+$('#transKEY').val()+"&sPg="+$("#PageVal").val()+"&sCidFlag=D"+"&sUr="+$("#sUser").val()),
+                    url:"/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'ILSGA'+"&sTraID="+sTraID+"&sPg="+Page+"&sCidFlag=D"+"&sUr="+sUr),
                     type:'POST',
                     dataType:'text',
                     success:function (json) {
                         let data=JSON.parse(AESDeCode(json));
-                        if(data.result=='false'){
-                            errorModal('作廢失敗');
+                        if(data.result==='false'){
+                            alert('作廢失敗');
                             console.log(data.message);
                             return false;
                         }else {
                             $('#DELModal').modal('hide');
-                            Reset(2);
+                            DeFaultINI($("#DA_idpt").val(),$("#DA_idinpt").val());
+
+                            $("button[name=PageBtn]").css({'background-color' : '', 'opacity' : '','color':'white' });
+                            $("input[type=radio]").prop({'checked':false,'disabled':false});
+                            $("input[type=checkbox]").prop({'checked':false,'disabled':false});
+                            $('#timer,#timetxt').prop('readonly',false);
+
+                            $("#DELMENU,#PBTN_D").prop("disabled", true);
+                            $('#SubmitBtn,#PBTN_A,#PBTN_B,#PBTN_C').prop('disabled',false);
+                            $("input[type=text]:not(#sTraID,#sUser,#DataTxt,#DA_idpt,#DA_idinpt,#DA_sBed)").val("");
+                            $("#PageVal").val("A");
+                            $('#Text_A').val("");
+                            $(".Page").hide();
+
+
+
+
                         }
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
+                        console.log(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
                             "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
                             "3 返回失敗,textStatus:"+textStatus+
@@ -996,480 +820,102 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                     }
                 });
             }
-            function errorModal(str) {
-                $('#Errormodal').modal('show');
-                $("#ErrorText").text(str)
-            }
-            function focustext(modal) {
-                switch (modal) {
-                    case '1':
-                        $('#timer').focus();
-                        break;
-                    case '2':
-                        $('#timetxt').focus();
-                        break;
-                    case '3':
-                        $('#STVALval').focus();
-                        break;
-                    case '4':
-                        $('#dose0').focus();
-                        break;
-                    case '5':
-                        $('#fUSEF_0').focus();
-                        break;
-                    case '6':
-                        $('#dose1').focus();
-                        break;
-                    case '7':
-                        $('#fUSEF_1').focus();
-                        break;
-                    case '8':
-                        $('#dose2').focus();
-                        break;
-                    case '9':
-                        $('#fUSEF_2').focus();
-                        break;
-                    case '10':
-                        $('#DateStart').focus();
-                        break;
-                    case '11':
-                        $('#DateEnd').focus();
-                        break;
+            function Append_RadioBtn_forbid(arr){
+                if($("#NOisuling_RE").children().length==0){
+                    $.each(arr,function (index,item) {
+                        $("#NOisuling_RE").append(
+                            `
+                            <label  style='font-size: 4.5vmin'><input type='radio' name='NO_MMVAL' id='${item.F_ID}' value='${item.F_ID}' style='width: 6vmin;height: 6vmin' >
+                                 ${item.name}
+                            </label>
+                            `
+                        );
+                    });
                 }
             }
-            function ValidateNumber(number) {
-                let reg = new RegExp(/^\d+(\.\d{0,2})?$/);
-                if (!number.match(reg)) {
-                    return false;
+            function NISPWSCILREG(sTraID,Part,FORBID_Arr,LAST_PART) {
+                $("td").css({'backgroundColor':'white','color':'black'});
+
+                $.each(FORBID_Arr,function (index,val) {
+                    for (let i=1;i<=8;i++) {
+                        $("#"+val.REGION+i).css({'backgroundColor':'red','color':'white'});
+                    }
+                });
+
+                if(LAST_PART){
+                    $("#"+LAST_PART).css({'backgroundColor':'blue','color':'white'});
                 }
-            }
-            function NISPWSFMINI_Timer() {
-                /*console.log("http://localhost/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm=ILSGA&sPg=A"));*/
+
                 $.ajax({
-                    url:"/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm=ILSGA&sPg=A"),
-                    type:"POST",
-                    dataType:"text",
-                    success:function(data){
-                        let obj=JSON.parse(AESDeCode(data));
-                        let arr=JSON.parse(obj.ST_PREA);
+                    url:"/webservice/NISPWSCILREG.php?str="+AESEnCode("sFm=ILSGA&sTraID="+sTraID+"&sRgn="+Part),
+                    type:'POST',
+                    dataType:'text',
+                    success:function (json) {
+                        let data=JSON.parse(AESDeCode(json));
+                        let IDGP_num=$("input[name=part]:checked").val();
 
-                        $.each(arr,function (index,item) {
-                            $("#ISTM").append(
-                                `
-                                <label style='font-size: 4.5vmin'><input type='radio' name='sRdoDateTime' id='${item.T_ID}' value='${item.name}' style='width: 6vmin;height: 6vmin' >${item.name}</label>
-                                `
-                            )
-                        });
+                        $("#"+IDGP_num+data).css({'backgroundColor':'green','color':'white'});
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
-                        errorModal(
+                        console.log(
                             "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
                             "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
                             "3 返回失敗,textStatus:"+textStatus+
                             "4 返回失敗,errorThrown:"+errorThrown
                         );
                     }
+
                 });
-            }
-            function Reset(num) {
-                switch (num) {
-                    case 1:
-                        //畫面初始
-                        $("#ISSG").prop("disabled", true);
-                        $("#ISLN").prop("disabled", true);
-                        $("#Inhibit").prop("disabled", true);
-                        $("input[type=text]:not(#clickTime,#sUser)").val("");
-                        break;
-                    case 2:
-                        //作廢後保留
-                        $("#ISSG").prop("disabled", false);
-                        $("#ISLN").prop("disabled", false);
-                        $("#Inhibit").prop("disabled", false);
-                        $("input[type=text]:not(#clickTime,#sUser,#DataTxt,#DA_idpt,#DA_idinpt,#DA_sBed)").val("");
-                        $('#clickTime').val(0);
-                        break;
-                }
-                $("#BSData").hide();
-                $("#isuling").hide();
-                $("#Imgisuling").hide();
-                $("#NO_isuling").hide();
-
-                $("#Del").prop("disabled", true);
-                $("#DELMENU").prop("disabled", true);
-                $('#SubmitBtn').prop('disabled',false);
-                $("#Part").prop("disabled", true);
-
-                $("#PageVal").val("A");
-                $('#Textarea').val("");
-                $("#SERCH_Click").val("1");
-                $('#timer').prop('readonly',false);
-                $('#timetxt').prop('readonly',false);
-                $("#Serch").prop('disabled',false);
-
-                $("input[type=checkbox]:not(#ITNO_btn)").prop('checked',false);
-                $("input[type=checkbox]").prop('disabled',false);
-
-                $("input[type=radio]").prop('disabled',false);
-                $("input[type=radio]").prop('checked',false);
-
-                $("#ISSG").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                $("#ISLN").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                $("#Inhibit").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
-                $("#Part").css({ 'background-color' : '', 'opacity' : '' ,'color':'white'});
 
             }
-            function clearvalue(VAL){
-                switch (VAL) {
-                    case 0:
-                        $('#Isu_A').val("");
-                        break;
-                    case 1:
-                        $('#Isu_B').val("");
-                        break;
-                    case 2:
-                        $('#Isu_C').val("");
-                        break;
-                }
-                $('#fUSEF_'+VAL).val("");
-                $('#dose'+VAL).val("");
-                $("#sID"+VAL).val("");
-                $("#sUSEF"+VAL).val("");
 
-            }
-            function Serchcallback(AESdata){
-                let page=$("#PageVal").val();
-                let str=AESDeCode(AESdata);
-                let datastr=JSON.parse(JSON.stringify(str).replace(/\u0000/g, '').replace(/\\u0000/g, ""));
-                let data=JSON.parse(datastr);
-                if(data){
-                    $("#DELMENU").prop('disabled',false);
-                    $("#Del").prop('disabled',false);
-                    $("#timer").prop('readonly',true);
-                    $("#timetxt").prop('readonly',true);
-                    $("input[name=sRdoDateTime]").prop("disabled",true);
-                    $("#STVALval").val("");
-                    $("#sPress").val("");
-                    $("#STVALval").bind('input propertychange',function () {
-                        let newReg=new RegExp(/^[0-9]*$/);
-                        let val=$(this).val();
-
-                        if( val.length>0 && val.match(newReg)){
-                            $("input[name=sPressure]").prop('checked',false);
-                        }
-                        else if($("#P_"+val).length>0){
-                            $("#P_"+val).prop('checked',true);
-                            $(this).val("");
-                        }
-                        else {
-                            return false;
-                        }
-                    });
-
-                    switch (page) {
-                        case 'A':
-                            //console.log(data);
-                            $('#BSData').show();
-                            $('#ISLN').prop('disabled',true);
-                            $('#Inhibit').prop('disabled',true);
-
-                            $.each(data,function (index,val) {
-                                let idPt=val.idPt;
-                                let DT_EXCUTE=val.DT_EXCUTE;
-                                let TM_EXCUTE=val.TM_EXCUTE;
-                                let JID_TIME=val.JID_TIME;
-                                let MM_TPRS=val.MM_TPRS;
-                                let SPRESS=val.SPRESS;
-                                let ST_MEASURE=val.ST_MEASURE;
-                                let CID_MEAL=val.CID_MEAL;
-                                let transKEY=val.sTraID;
-                                let FORMSEQANCE=val.FORMSEQANCE;
-                                let SER_DT=val.SER_DT;
-                                let SER_TM=val.SER_TM;
-                                let regExp = new RegExp(/^[a-zA-Z]+$/);
-
-                                if(idPt!=$("#DA_idpt").val())
-                                {
-                                    errorModal("病人資訊已異動,請先重新操作一次");
-                                    return false;
-                                }
-
-                                TimeSet(JID_TIME,DT_EXCUTE,TM_EXCUTE);
-
-                                $('#FORMSEQANCE').val(FORMSEQANCE);
-                                $('#SER_DT').val(SER_DT);
-                                $('#SER_TM').val(SER_TM);
-                                $("#Textarea").val(MM_TPRS.match(/＆/)!=null?MM_TPRS.replace(/＆/g,'&'):MM_TPRS);
-                                $("#transKEY").val(transKEY);
-                                $("#STVALval").val(ST_MEASURE);
-
-                                if(SPRESS.match(regExp)){
-                                    $("#sPress").val(SPRESS);
-                                    $("#P_"+SPRESS).prop('checked',true);
-                                }
-
-                                if (CID_MEAL=='A'){
-                                    $("#Eating1").prop('checked',true);
-
-                                }
-                                else if(CID_MEAL=='B')
-                                {
-                                    $("#Eating2").prop('checked',true);
-                                }
-                                else{
-                                    $('input[name=IDGP]').prop('checked',false);
-                                }
-                            });
-
-
-                            break;
-                        case 'B':
-                            let txt_index='';
-                            /*  console.log(data);*/
-                            $.each(data,function (index) {
-                                if(index==0){
-                                    txt_index='A';
-                                }
-                                if(index==1){
-                                    txt_index='B';
-                                }
-                                if (index==2){
-                                    txt_index='C';
-                                }
-                                let idPt=data[index].idPt;
-                                let JID_TIME=data[index].JID_TIME;
-                                let ID_REGION=data[index].ID_REGION; //部位A1
-                                let ID_ORDER=data[index].ID_ORDER;   //藥名id
-                                let NM_ORDER=data[index].NM_ORDER;
-                                /* let DB_DOSE=data[index].DB_DOSE; //-1*/
-                                let ST_DOSE=data[index].ST_DOSE; //劑量
-                                let ST_USENO=data[index].ST_USENO; //頻率
-                                let LSTPT=data[index].LSTPT; //頻率
-                                let TM_EXCUTE=data[index].TM_EXCUTE;
-                                let DT_EXCUTE=data[index].DT_EXCUTE;
-                                if(idPt!=$("#DA_idpt").val()){
-                                    errorModal("病人資訊已異動,請先重新操作一次");
-                                    return false;
-                                }
-
-
-                                $('#isuling').show();
-                                $('#ISSG').prop('disabled',true);
-                                $('#Inhibit').prop('disabled',true);
-                                $("#SERCH_Click").val("2");
-                                $("#DT_EXE").val(DT_EXCUTE);
-                                $("#TM_EXE").val(TM_EXCUTE+"00");
-                                $("#LastPart").val(LSTPT);
-                                $("#transKEY").val(data[index].sTraID);
-                                $("#Isu_"+txt_index).val(NM_ORDER);
-                                $("#dose"+index).val(ST_DOSE);
-                                $("#fUSEF_"+index).val(ST_USENO);
-                                $("#sID"+index).val(data[index].ID_ORDER);
-                                $("#sUSEF"+index).val(data[index].ST_USENO);
-                                $("#ISLNLi").children().remove();
-                                $("#ISLNLi").append(
-                                    `
-                                    <li style="display: none">
-                                     <input type="text"   id='${"DT_E"+index}' value='${DT_EXCUTE}'>
-                                     <input type="text"   id='${"TM_E"+index}' value='${TM_EXCUTE}'>
-                                     <input type="text"   id='${"JID_T"+index}' value='${JID_TIME}'>
-                                     <input type="text"   id='${"ID_R"+index}' value='${ID_REGION}'>
-                                     <input type="text"   id='${"ID_O"+index}' value='${ID_ORDER}'>
-                                     <input type="text"   id='${"ST_D"+index}' value='${ST_DOSE}'>
-                                     <input type="text"   id='${"NM_O"+index}' value='${NM_ORDER}'>
-                                     <input type="text"   id='${"ST_U"+index}' value='${ST_USENO}'>
-                                     <input type="text"   id='${"LSTPT"+index}' value='${LSTPT}'>
-                                    </li>
-                                `
-                                );
-                                $("#Part"+ID_REGION).prop('checked',true);
-                                TimeSet(JID_TIME,DT_EXCUTE,TM_EXCUTE);
-
-
-                            });
-                            $('input[name=part]').prop('disabled',true);
-                            break;
-                        case 'C':
-                   /*       console.log(data);*/
-                            let C_idPt=data.idPt;
-                            let C_DT=data.DT_EXCUTE;
-                            let C_TM=data.TM_EXCUTE;
-                            let C_F_REGION=data.REGION;
-                            let C_NO_MMAL=data.NO_MMAL;
-                            let C_sTraID=data.sTraID;
-                            let C_FORMSEQANCE=data.FORMSEQANCE;
-                            let C_JID_TIME=data.JID_TIME;
-
-                            if(C_idPt!=$("#DA_idpt").val()){
-                                errorModal("病人資訊已異動,請先重新操作一次");
-                                return false;
-                            }
-
-                            $("#SERCH_Click").val("2");
-                            $("#Part").prop('disabled',true);
-                            $('#FORMSEQANCE').val(C_FORMSEQANCE);
-                            $("input[name='forbid']").prop('checked',false);
-                            $.each(C_F_REGION,function (index,val) {
-                                $('#No_'+val).prop('checked',true);
-                            });
-
-                            TimeSet(C_JID_TIME,C_DT,C_TM);
-                            Forbid_Dateback(C_idPt,C_DT,C_TM,C_NO_MMAL,C_sTraID);
-                            break;
-                    }
-                }
-
-            }
-            function bedcallback(data){
-                let str=AESDeCode(data);
-                let datastr=JSON.parse(JSON.stringify(str).replace(/\u0000/g, '').replace(/\\u0000/g, ""));
-                let dataObj=JSON.parse(datastr);
-                if(dataObj){
-
-                    const Disabled_T=['Part','Del','DELMENU','Part'];
-                    const CheackName_F=['sRdoDateTime','part','sPressure','IDGP'];
-                    const Disabled_F=['ISSG','ISLN','Inhibit','SubmitBtn'];
-                    const HandBtn=['ISSG','ISLN','Inhibit','Part','BSData','isuling','Imgisuling','NO_isuling'];
-
-                    const Value_Clear=['FORMSEQANCE','DT_EXE','TM_EXE','sSave','STDATA_FORMWT','STDATA_JID_NSRANK','STDATB_idFrm','transKEY','SER_TM','SER_DT',
-                        'timer','timetxt','LastPart','dose0','dose1','dose2','fUSEF_0','fUSEF_1','fUSEF_2','sID0','sUSEF0','sID1','sUSEF1','sUSEF2','sID2',
-                        'Isu_A','Isu_B','Isu_C','STVALval','Textarea'];
-
-                    $.each(CheackName_F,function (index,value) {
-                        $("input[name="+value+"]").prop("checked",false);
-                        $("input[name="+value+"]").prop("disabled",false);
-                    });
-
-                    $.each(Disabled_F,function (index,value) {
-                        $("#"+value).prop("disabled",false);
-                    });
-
-                    $.each(Disabled_T,function (index,value) {
-                        $("#"+value).prop("disabled",true);
-
-                    });
-
-                    $.each(Value_Clear,function (index,value) {
-                        $("#"+value).val("");
-
-                    });
-
-                    $.each(HandBtn,function (index,value) {
-                        //CSS
-                        if (index>3){
-                            $("#"+value).css({"display": "none"});
-                        }else {
-                            $("#"+value).css({'background-color' : '', 'opacity' : '','color':'white' });
-                        }
-
-                    });
-
-                    $("#DataTxt").val(dataObj[0].DataTxt);
-                    $("#DA_idpt").val(dataObj[0].IDPT);
-                    $("#DA_idinpt").val(dataObj[0].IDINPT);
-                    $("#DA_sBed").val(dataObj[0].SBED);
-                    $("#clickTime").val(0);
-                    $("#PageVal").val('A');
-
-                    $("#timer").prop("readOnly",false);
-                    $("#timetxt").prop("readOnly",false);
-                }
-            }
-            function TimeSet(JID_TIME,DT,TM) {
-                $("#timetxt").val(TM.substr(0,2)+TM.substr(2,2));
-                $("#timer").val(DT);
-                $("#IDTM").val(JID_TIME);
-                $("input[name=IDGP]").prop('checked',false);
-                $("#"+JID_TIME).prop('checked',true);
-
-                if(JID_TIME=="ISTM00000005"){
-                    $("input[name=IDGP]").prop('disabled',true);
-                }else {
-                    $("input[name=IDGP]").prop('disabled',false);
-                }
-            }
-            function fumadol() {
-                $('#FuModal').modal('show');
-                $("#Fuval").val("");
-            }
-            function PersonFuval() {
-                let Fval=$("#Fuval").val();
-                let index=$('#fut').val();
-                $("#fUSEF_"+index).val("");
-                $("#fUSEF_"+index).val(Fval);
-                $('#FuModal').modal('hide');
-            }
-            function  reloadmsg() {
-                return '確認要重新整理嗎?';
-            }
         });
-        function MEDbtnID(NUM) {
-            let txt = ($("#MEDli" + NUM).text()).trim();
-            let IDtxt=($("#DIA"+NUM).val()).trim();
-            let USERtxt=($("#sUSEF"+NUM).val()).trim();
-            let ckt=($("#ckt").val()).trim();
-            let QTY=($("#QTY"+NUM).val()).trim();
 
-            switch (ckt) {
-                case '1':
-
-                    $("#sID0").val(IDtxt);
-                    $("#sUSEF0").val(USERtxt);
-                    $("#Isu_A").val(txt);
-                    $("#fUSEF_0").val(USERtxt);
-                    $("#dose0").val(QTY);
-
-                    setTimeout("$(\"#dose0\").focus();",500);
-                    break;
-                case '2':
-
-                    $("#sID1").val(IDtxt);
-                    $("#sUSEF1").val(USERtxt);
-                    $("#Isu_B").val(txt);
-                    $("#fUSEF_1").val(USERtxt);
-                    $("#dose1").val(QTY);
-
-
-                    setTimeout("$(\"#dose1\").focus();",500);
-                    break;
-                case '3':
-                    $("#sID2").val(IDtxt);
-                    $("#sUSEF2").val(USERtxt);
-                    $("#Isu_C").val(txt);
-                    $("#fUSEF_2").val(USERtxt);
-                    $("#dose2").val(QTY);
-
-
-                    setTimeout("$(\"#dose2\").focus();",500);
-                    break;
-                default:
-                    break;
-            }
-        }
-        function fuval(val){
-            let num=$('#funum').val();
-            $("#fUSEF_"+num).val(val);
-            $('#FuModal').modal('hide');
-        }
     </script>
 
 </head>
 <body>
 
-<div id="wrapper"></div>
-<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>
+<!--<div id="wrapper"></div>
+<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>-->
+<div class="Parametertable">
+    <input id="B_INDEX" value="0"  type="text"  placeholder="B_INDEX"> <!--藥名切換-->
+    <input id="F_INDEX" value="0"  type="text"  placeholder="F_INDEX"> <!--頻率切換-->
+    <input id="DA_idpt" value="" type="text" name="DA_idpt"   placeholder="DA_idpt"> <!--病歷號-->
+    <input id="DA_idinpt" value="" type="text" name="DA_idinpt"  placeholder="DA_idinpt"><!--住院號-->
+    <input id="DA_sBed" value="" type="text" name="DA_sBed" placeholder="DA_sBed"><!--床號-->
+    <input id="FORMSEQANCE" type="text" value="" placeholder="FORMSEQANCE">
+    <input id="DT_EXE" type="text" value="" placeholder="DT_EXE">
+    <input id="TM_EXE" type="text" value="" placeholder="TM_EXE">
+    <input id="PageVal" type="text" value="" placeholder="PageVal">
+    <input id="sSave" value="" type="text" placeholder="sSave">      <!--存檔權限-->
+    <input id="sUser" type="text" value="<?php echo $Account?>" placeholder="sUser">
+    <input id="sPress" type="text" value="" placeholder="sPress">
+    <input id="STDATA_FORMWT" type="text" value="" placeholder="STDATA_FORMWT">
+    <input id="STDATA_JID_NSRANK" type="text" value="" placeholder="STDATA_JID_NSRANK">
+    <input id="STDATB_idFrm" type="text" value="" placeholder="STDATB_idFrm">
+    <input id="sTraID" value="" type="text" placeholder="sTraID"> <!--交易序號-->
+    <input id="SER_DT" value="" type="text" placeholder="SER_DT">
+    <input id="SER_TM" value="" type="text" placeholder="SER_TM">
+    <input id="ERRORVAL" value="" type="text" placeholder="ERRORVAL">
+    <input id="SERCH_Click" value="1" type="text" placeholder="SERCH_Click">
+    <input type="text" name="sIDTM" id="IDTM" value=""  placeholder="IDTM">
+</div>
 <div class="container">
     <h1>血糖胰島素注射</h1>
     <form id="form1" >
     <span style="margin-left:0 px">
-        <button type="button" class="btn btn-secondary btn-md" disabled style="display: none">回主畫面</button>
-        <button type="button"  class="btn btn-warning btn-md" style="margin-left: 1px"   id="sbed" >責任床位</button>
+        <button type="button" class="btn btn-secondary btn-md" name="FucBtn" disabled style="display: none">回主畫面</button>
+        <button type="button"  class="btn btn-warning btn-md" name="FucBtn" style="margin-left: 1px"   id="sbed" >責任床位</button>
         <span style="margin-left: 1px"><b>使用者:<?php echo $sUr?></b></span>
     </span>
 
         <span class="float-left">
-            <button type="submit" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
-            <button type="button" id="Serch" class="btn btn-primary btn-md" >查詢</button>
-            <button type="button" id="DELMENU" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal">作廢</button>
-            <button type="button" id="ReSet" class="btn btn-primary btn-md"  >清除</button>
+            <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" name="FucBtn" >儲存</button>
+            <button type="button" id="Serch" class="btn btn-primary btn-md" name="FucBtn">查詢</button>
+            <button type="button" id="DELMENU" class="btn btn-primary btn-md" name="FucBtn"  data-toggle="modal" data-target="#DELModal">作廢</button>
+            <button type="button" id="ReSet" class="btn btn-primary btn-md"  name="FucBtn" >清除</button>
+
+
             <button type="button" class="btn btn-secondary btn-md" disabled style="margin-right: 3px ;display: none">預設</button>
         </span>
 
@@ -1479,52 +925,32 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             </thead>
         </table>
         <input id="DataTxt" value="" class="form-control" type="text" readonly="readonly">
-        <div class="Parametertable">
-            <input id="clickTime" value="0"  type="text"  placeholder="clickTime"> <!--頁面載入 0 or 1-->
-            <input id="DA_idpt" value="" type="text" name="DA_idpt"   placeholder="DA_idpt"> <!--病歷號-->
-            <input id="DA_idinpt" value="" type="text" name="DA_idinpt"  placeholder="DA_idinpt"><!--住院號-->
-            <input id="DA_sBed" value="" type="text" name="DA_sBed" placeholder="DA_sBed"><!--床號-->
-            <input id="FORMSEQANCE" type="text" value="" placeholder="FORMSEQANCE">
-            <input id="DT_EXE" type="text" value="" placeholder="DT_EXE">
-            <input id="TM_EXE" type="text" value="" placeholder="TM_EXE">
-            <input id="PageVal" type="text" value="" placeholder="PageVal">
-            <input id="sSave" value="" type="text" placeholder="sSave">      <!--存檔權限-->
-            <input id="sUser" type="text" value="<?php echo $Account?>" placeholder="sUser">
-            <input id="sPress" type="text" value="" placeholder="sPress">
-            <input id="STDATA_FORMWT" type="text" value="" placeholder="STDATA_FORMWT">
-            <input id="STDATA_JID_NSRANK" type="text" value="" placeholder="STDATA_JID_NSRANK">
-            <input id="STDATB_idFrm" type="text" value="" placeholder="STDATB_idFrm">
-            <input id="transKEY" value="" type="text" placeholder="transKEY"> <!--交易序號-->
-            <input id="SER_DT" value="" type="text" placeholder="SER_DT">
-            <input id="SER_TM" value="" type="text" placeholder="SER_TM">
-            <input id="ERRORVAL" value="" type="text" placeholder="ERRORVAL">
-            <input id="SERCH_Click" value="1" type="text" placeholder="SERCH_Click">
-        </div>
+
         <div class="Otimer" >
             <div class="pageTime">
                 <label style="font-size: 4vmin">評估時間:</label>
                 <input  type="text" id="timer" value="" name="sDate" placeholder="YYYMMDD" maxlength="7" autocomplete="off">
                 <input type="text" id="timetxt" value="" name="sTime" placeholder="HHMM" maxlength="4" autocomplete="off">
-                <input type="text" name="sIDTM" id="IDTM" value=""  placeholder="IDTM" style="display:none;">
+
             </div>
             <div id="ISTM"></div>
         </div>
 
         <div class="Features">
-            <button type="button" class="btn btn-primary " name="click"  id="ISSG" value="A">血糖</button>
-            <button type="button" class="btn btn-primary " name="click"  id="ISLN" value="B">胰島素</button>
-            <button type="button" class="btn btn-primary "  name="click" id="Inhibit" value="C" >禁打</button>
-            <button type="button" class="btn btn-primary " name="click" id="Part" value="D">部位</button>
+            <button type="button" class="btn btn-primary " name="PageBtn"  id="PBTN_A" value="A">血糖</button>
+            <button type="button" class="btn btn-primary " name="PageBtn"  id="PBTN_B" value="B">胰島素</button>
+            <button type="button" class="btn btn-primary "  name="PageBtn" id="PBTN_C" value="C" >禁打</button>
+            <button type="button" class="btn btn-primary " name="PageBtn"  id="PBTN_D" value="D">部位</button>
         </div>
 
         <!--血糖-->
-        <div id="BSData" style="font-size: 3.5vmin">
+        <div id="P_A" class="Page" style="font-size: 3.5vmin">
             <div id="Eating">
                 <div style="background-color: brown;color:white;padding-top: 5px;padding-left: 5px;border-radius:3px;">
-                    <label style="margin-right: 5px;font-size: 5vmin"> <input type="radio" value="A" id="Eating1" name="IDGP"
+                    <label style="margin-right: 5px;font-size: 5vmin"> <input type="radio" value="A" id="IDGP_A" name="IDGP"
                                                                               style="width: 6vmin;height: 6vmin"
                         >飯前</label>
-                    <label style="margin-right: 5px;font-size: 5vmin"> <input type="radio" value="B" id="Eating2" name="IDGP"
+                    <label style="margin-right: 5px;font-size: 5vmin"> <input type="radio" value="B" id="IDGP_B" name="IDGP"
                                                                               style="width: 6vmin;height: 6vmin"
                         >飯後</label>
                 </div>
@@ -1542,17 +968,16 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                             >CE</label>
                     </div>
                     <div class="form-group shadow-textarea">
-                        <textarea class="form-control z-depth-1"  id="Textarea" name="MMVAL" rows="3"
+                        <textarea class="form-control z-depth-1"  id="Text_A" name="MMVAL" rows="3"
                                   placeholder="備註" autocomplete="off"></textarea>
                     </div>
                 </div>
             </div>
         </div>
         <!--胰島素-->
-        <div id="isuling">
+        <div id="P_B" class="Page">
             <div style="background-color: brown;color:white;font-size: 4vmin;border-radius:3px;">
-                <label style="display: none;">
-                    <input type="radio" value="1" id="ITNO_btn" name="ITNO"  checked>施打</label>
+                <label style="display: none;"> <input type="radio" value="1" id="ITNO_btn" name="ITNO"  checked>施打</label>
 
                 <label >上次施打位置:<input type="text"  value="" id="LastPart" readonly="readonly"></label>
             </div>
@@ -1572,70 +997,59 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
 
                 <div>
 
-                    <button type="button" name="ISLNch" value="1" class="btn btn-primary btn-md" style="font-size: 3.5vmin" data-toggle="modal"
+                    <button type="button" name="ISLNch" value="0" class="btn btn-primary btn-md" style="font-size: 3.5vmin" data-toggle="modal"
                             data-target="#isuModal" data-whatever="isubtn1">選擇
                     </button>
-                    <label>胰島素:</label><input type="text" value="" name="ISLN_A" id="Isu_A" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off">
+                    <label>胰島素:<input type="text" value="" name="MED_inp" id="Isu_0" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off" readonly="readonly"></label>
                     <div style="margin-top: 5px">
-                        <label>劑量:<input type="text" id="dose0"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
-                                    type="text" style="width: 80px;" id="fUSEF_0" class="FuQuenCy" autocomplete="off" >
-                            <button  id="FuClear1" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button></label>
+                        <label>劑量:<input type="text" id="QTY_0" name="QTY"  style="width: 70px;margin-right: 3px" autocomplete="off"></label>
+                        <label>頻率:<input type="text" style="width: 80px;" id="fUSEF_0" class="FuQuenCy" autocomplete="off" >
+                         <button id="CI_0" name="ClearInput" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
+                        </label>
                     </div>
-                    <div style="display: none">
-                        <input type="text" value="" id="sID0" ><!-- 藥id-->
-                        <input type="text" value="" id="sUSEF0">
-                        <input type="text" value="" id="ckt" >
-                        <input type="text" value="" id="fut">
-                        <input type="text" value="" id="funum">
-                    </div>
-
                 </div>
 
-                <div id="ISU2">
-                    <button type="button" name="ISLNch" value="2" class="btn btn-primary btn-md" style="font-size: 3.5vmin" data-toggle="modal"
+                <div>
+                    <button type="button" name="ISLNch" value="1" class="btn btn-primary btn-md" style="font-size: 3.5vmin" data-toggle="modal"
                             data-target="#isuModal" data-whatever="isubtn2">選擇
                     </button>
-                    <label>胰島素:</label><input type="text" value="" name="ISLN_B" id="Isu_B" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off">
+                    <label>胰島素:<input type="text" value="" name="MED_inp" id="Isu_1" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off" readonly="readonly"></label>
                     <div style="margin-top: 5px">
-                        <label>劑量:<input type="text" id="dose1"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
-                                    type="text" style="width: 80px;" id="fUSEF_1" class="FuQuenCy" autocomplete="off">
-                            <button type="button"  id="FuClear2" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
+                        <label>劑量:<input type="text" id="QTY_1" name="QTY"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
+                                type="text" style="width: 80px;" id="fUSEF_1" class="FuQuenCy" autocomplete="off">
+                            <button id="CI_1" name="ClearInput"  type="button" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
                         </label>
 
                     </div>
-                    <input type="text" value="" id="sID1" style="display: none">
-                    <input type="text" value="" id="sUSEF1" style="display: none">
                 </div>
-                <div id="ISU3" >
-                    <button type="button" name="ISLNch" value="3" class="btn btn-primary btn-md" style="font-size: 3.5vmin" data-toggle="modal"
+                <div>
+                    <button type="button" name="ISLNch" value="2" class="btn btn-primary btn-md" style="font-size: 3.5vmin" data-toggle="modal"
                             data-target="#isuModal" data-whatever="isubtn3">選擇
                     </button>
-                    <label>胰島素:</label><input type="text" value="" name="ISLN_C" id="Isu_C" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off">
+                    <label>胰島素:<input type="text" value="" name="MED_inp" id="Isu_2" style="border: 1px white;font-size: 4vmin;width:70vmin" autocomplete="off" readonly="readonly"></label>
                     <div style="margin-top: 5px">
-                        <label>劑量:<input type="text" id="dose2"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
-                                    type="text" style="width: 80px;" id="fUSEF_2" class="FuQuenCy" autocomplete="off">
-                            <button  type="button"   id="FuClear3" style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
+                        <label>劑量:<input type="text" id="QTY_2" name="QTY"  style="width: 70px;margin-right: 3px" autocomplete="off"></label><label>頻率:<input
+                                type="text" style="width: 80px;" id="fUSEF_2" class="FuQuenCy" autocomplete="off">
+                            <button id="CI_2" name="ClearInput"   type="button"  style="color: white;border:0;background-color: #6c757d;border-radius:3px;">清除此欄</button>
                         </label>
                     </div>
-                    <input type="text"  value="" id="sID2" style="display: none">
-                    <input type="text"  value="" id="sUSEF2" style="display: none">
                 </div>
             </div>
         </div>
         <!--禁打-->
-        <div id="NO_isuling" style="font-size: 4vmin;">
+        <div id="P_C" class="Page" style="font-size: 4vmin;">
             <div style="background-color:#FF0000;">
                 <label style="color: white">禁打部位</label>
             </div>
             <div style="background-color: #FFFBCC;border-radius:3px;padding-top: 5px">
-                <label><input type="checkbox" id="No_A" name="forbid" value="A" style="width: 4.5vmin;height: 4.5vmin" >A.左臂</label>
-                <label><input type="checkbox" id="No_B" name="forbid" value="B" style="width: 4.5vmin;height: 4.5vmin">B.左腹</label>
-                <label><input type="checkbox" id="No_C" name="forbid" value="C" style="width: 4.5vmin;height: 4.5vmin">C.左臀</label>
-                <label><input type="checkbox" id="No_D" name="forbid" value="D" style="width: 4.5vmin;height: 4.5vmin">D.左腿</label><br>
-                <label><input type="checkbox" id="No_E" name="forbid" value="E" style="width: 4.5vmin;height: 4.5vmin">E.右腿</label>
-                <label><input type="checkbox" id="No_F" name="forbid" value="F" style="width: 4.5vmin;height: 4.5vmin">F.右臀</label>
-                <label><input type="checkbox" id="No_G" name="forbid" value="G" style="width: 4.5vmin;height: 4.5vmin">G.右腹</label>
-                <label><input type="checkbox" id="No_H" name="forbid" value="H" style="width: 4.5vmin;height: 4.5vmin">H.右臂</label>
+                <label><input type="checkbox" id="No_A" name="forbid[]" value="A" style="width: 4.5vmin;height: 4.5vmin" >A.左臂</label>
+                <label><input type="checkbox" id="No_B" name="forbid[]" value="B" style="width: 4.5vmin;height: 4.5vmin">B.左腹</label>
+                <label><input type="checkbox" id="No_C" name="forbid[]" value="C" style="width: 4.5vmin;height: 4.5vmin">C.左臀</label>
+                <label><input type="checkbox" id="No_D" name="forbid[]" value="D" style="width: 4.5vmin;height: 4.5vmin">D.左腿</label><br>
+                <label><input type="checkbox" id="No_E" name="forbid[]" value="E" style="width: 4.5vmin;height: 4.5vmin">E.右腿</label>
+                <label><input type="checkbox" id="No_F" name="forbid[]" value="F" style="width: 4.5vmin;height: 4.5vmin">F.右臀</label>
+                <label><input type="checkbox" id="No_G" name="forbid[]" value="G" style="width: 4.5vmin;height: 4.5vmin">G.右腹</label>
+                <label><input type="checkbox" id="No_H" name="forbid[]" value="H" style="width: 4.5vmin;height: 4.5vmin">H.右臂</label>
             </div>
             <div style="background-color:#FF0000;">
                 <label style="color: white">禁打原因</label>
@@ -1645,7 +1059,7 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
             </div>
         </div>
         <!--部位圖-->
-        <div id="Imgisuling">
+        <div id="P_D" class="Page">
             <img src="ISLN800.bmp" style="z-index: -1;">
             <table id="A" border="1">                　
                 <tr>                    　
@@ -1884,23 +1298,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
         </div>
     </div>
 
-
-    <div class="modal fade bd-example-modal-sm" id="success" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" data-backdrop="static">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content" style="height: 8%;width: 35%">
-                <p style="font-size: 3vmin">儲存成功</p>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade bd-example-modal-sm" id="error" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel" aria-hidden="true" data-backdrop="static">
-        <div class="modal-dialog modal-sm">
-            <div class="modal-content" style="height: 8%;width: 35%">
-                <p style="font-size: 3vmin">儲存失敗</p>
-            </div>
-        </div>
-    </div>
-
-
     <div class="modal fade" id="DELModal" tabindex="-1" role="dialog" aria-labelledby="DELModalCenterTitle" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog  modal-sm modal-dialog-centered" role="document">
             <div class="modal-content" >
@@ -1932,12 +1329,25 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
                 </div>
 
                 <div class="modal-body" style="overflow-x: hidden;">
-                    <label style="font-size: 20px;margin-top: 2px;">自訂:<input value="" type="text" style="width: 100px" id="Fuval"></label>
-                    <button type="button" id="FuConfirm" class="btn btn-primary"  style="margin-left: 5px;border-radius: 4px;margin-top: -9px;">確定</button>
-                    <div class="row">
-                        <div class="col-6" id="fu1"></div>
-                        <div class="col-6" id="fu2"></div>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-12" >
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text">自訂</span>
+                                    <input type="text"  id="Fuval" class="form-control" placeholder="" >
+                                    <div class="input-group-append">
+                                        <button  id="FuConfirm" class="btn btn-outline-primary" data-dismiss="modal" type="button">確定</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-6" id="fu1"></div>
+                            <div class="col-6" id="fu2"></div>
+                        </div>
                     </div>
+
+
 
                 </div>
                 <div class="modal-footer">
@@ -1947,33 +1357,6 @@ $HOST_IP=$_SERVER['HTTP_HOST'];
         </div>
     </div>
 
-    <div class="modal fade" id="Errormodal" tabindex="-1" aria-labelledby="ErrormodalCenterTitle" role="dialog" aria-hidden="true" data-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered modal-md" role="document">
-            <div class="modal-content" style="height:30%;width: 90%;">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ErrormodalCenterTitle">錯誤提示</h5>
-                </div>
-                <div class="modal-body" style="overflow-y: auto">
-                    <p id="ErrorText" style="font-size: 2.5vmin;word-wrap: break-word"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" id="ErorFocus" class="btn btn-secondary" data-dismiss="modal" >關閉</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <h1 id="titleName"></h1>
-    <div>
-        <table id="ser_tb" ></table>
-        <ul id="SerchLi" >
-            <li></li>
-        </ul>
-        <div>
-            <ul id="ISLNLi">
-                <li></li>
-            </ul>
-        </div>
-    </div>
 </div>
 </body>
 </html>
