@@ -159,49 +159,50 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
     $V_FrmSeq=GetFrmseQ($conn); /*取frmseq*/
 
 
-
-    if (!ISRecordForDateTime($conn,'ISSG',$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE)){
-        return json_encode(array("result"=>"false","message"=>"同一時間禁止重複輸入"),JSON_UNESCAPED_UNICODE);
-    }
-
-
-
-
     //修改
     if ($sPg=="A" && $FORMSEQANCE !=""){
         tt_PosILSGCancel($conn,$ID_PATIENT,$ID_INPATIENT,'','',$sPg,$FORMSEQANCE,$sUr);
+
+        if (!ISRecordForDateTime($conn,'ISSG',$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE)){
+            return json_encode(array("result"=>"false","message"=>"同一時間禁止重複輸入"),JSON_UNESCAPED_UNICODE);
+        }
     }
 
     if ($sPg=="B" && $DT_EXCUTE!="" && $TM_EXCUTE!=""){
         tt_PosILSGCancel($conn,$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE,$sPg,'',$sUr);
+        if (!ISRecordForDateTime($conn,'ISLN',$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE)){
+            return json_encode(array("result"=>"false","message"=>"同一時間禁止重複輸入"),JSON_UNESCAPED_UNICODE);
+        }
     }
 
 
     if ($sPg=="C" && $DT_EXCUTE!="" && $TM_EXCUTE!="" && $FORMSEQANCE !=""){
         tt_PosILSGCancel($conn,$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE,$sPg,'',$sUr);
+        if (!ISRecordForDateTime($conn,'ISLNN',$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE)){
+            return json_encode(array("result"=>"false","message"=>"同一時間禁止重複輸入"),JSON_UNESCAPED_UNICODE);
+        }
     }
 
 
 
-     //Insert A
-
-    if ($sPg=="A" && $ST_DATAA[0]->{'SPRESS'} || $ST_DATAA[0]->{'STVAL'})
+    //Insert A
+/*   && $ST_DATAA[0]->{'SPRESS'} || $ST_DATAA[0]->{'STVAL'}*/
+    if ($sPg=="A" )
         {
             $resultA= json_decode(ISLG_INSERT($conn,$ST_DATAA,$ID_INPATIENT,$ID_PATIENT,$V_FrmSeq,$ID_BED,$DT_EXCUTE,$TM_EXCUTE,$JID_NSRANK,$FORMSEQANCE_WT,$NowDT,$UR_PROCESS));
             if ($resultA->{'result'}=="false"){
                 return json_encode($resultA,JSON_UNESCAPED_UNICODE);
-            }else{
+            }/*else{
                 //小index儲存程序 1090401 add
                 //InsertIndex($conn,'A',$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd);
 
-            };
+            };*/
         }
 
    //Insert B
     $Has_B_QTY=array_filter($ST_DATAB,function ($value){
         return $value->{'SDOSE'}!="";
     });
-
     if (count($Has_B_QTY)!=0){
        $PartAddNum =array_map(function ($value) use ($sTraID) {
             $IDGP=$value->{'IDGP'};
@@ -217,10 +218,10 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
 
       if ($resultB->{'result'}=="false"){
           return json_encode($resultB,JSON_UNESCAPED_UNICODE);
-      }else{
+      }/*else{
           //小index儲存程序 1090401 add
           //InsertIndex($conn,'B',$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd);
-      }
+      }*/
 }
 
    //Insert C
@@ -231,10 +232,10 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
       if ( !ISLNC_INSERT($conn,$Has_REGION,$ID_INPATIENT,$ID_PATIENT,$ID_BED,$DT_EXCUTE,$TM_EXCUTE,$JID_NSRANK,$FORMSEQANCE_WT,$NowDT,$UR_PROCESS)){
 
           return json_encode( array("result"=>"false","message"=>"禁打資料有誤"),JSON_UNESCAPED_UNICODE);
-      }else{
+      }/*else{
           //小index儲存程序 1090401 add
           //InsertIndex($conn,'B',$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd);
-      }
+      }*/
    }
 
     return json_encode(array("result"=>"true","message"=>""));
@@ -477,8 +478,6 @@ function PosILSGCancel($conn,$sFm,$sTraID,$sPg,$sUr,$sDataFlag){
    return $json_reponce;
 }
 function ISLG_INSERT($conn,$arr=array(),$ID_INPATIENT,$ID_PATIENT,$V_FrmSeq,$ID_BED,$DT_EXCUTE,$TM_EXCUTE,$JID_NSRANK,$FORMSEQANCE_WT,$NowDT,$UR_PROCESS){
-
-
    $Execute_result=array_map(function ($value) use ($conn, $V_FrmSeq, $UR_PROCESS, $NowDT, $FORMSEQANCE_WT, $JID_NSRANK, $ID_BED, $TM_EXCUTE, $DT_EXCUTE, $ID_INPATIENT, $ID_PATIENT) {
         $idFrm=$value->{'idFrm'};
         $SFRMSEQ=$value->{'SFRMSEQ'};
