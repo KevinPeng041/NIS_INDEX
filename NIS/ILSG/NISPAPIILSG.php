@@ -100,6 +100,8 @@ function GetILSGPageJson($conn,$sTraID,$sPg){
     return json_encode($response,JSON_UNESCAPED_UNICODE);
 }
 function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
+
+
     $DateTime = date("YmdHis");
     $NowDT= substr($DateTime, 0, 4) - 1911 . substr($DateTime, -10, 10);
     $sTm=str_pad($sTm,'6','0',STR_PAD_RIGHT);
@@ -108,6 +110,7 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
     if (!UP_TP_DATE($conn,$sDt,$sTm,$sTraID)){
         return false;
     }
+
 
     $Ssql="SELECT ST_DATAA, ST_DATAB, ST_DATAC,FORMSEQANCE,
             ID_INPATIENT,ID_PATIENT,ID_BED,DT_EXCUTE,
@@ -156,33 +159,45 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
     $V_FrmSeq=GetFrmseQ($conn); /*取frmseq*/
 
 
-    /*修改 A*/
+
+    if (!ISRecordForDateTime($conn,'ISSG',$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE)){
+        return json_encode(array("result"=>"false","message"=>"同一時間禁止重複輸入"),JSON_UNESCAPED_UNICODE);
+    }
+
+
+
+
+    //修改
     if ($sPg=="A" && $FORMSEQANCE !=""){
         tt_PosILSGCancel($conn,$ID_PATIENT,$ID_INPATIENT,'','',$sPg,$FORMSEQANCE,$sUr);
     }
-    /*修改 B*/
+
     if ($sPg=="B" && $DT_EXCUTE!="" && $TM_EXCUTE!=""){
         tt_PosILSGCancel($conn,$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE,$sPg,'',$sUr);
     }
 
-    /*修改 C*/
+
     if ($sPg=="C" && $DT_EXCUTE!="" && $TM_EXCUTE!="" && $FORMSEQANCE !=""){
         tt_PosILSGCancel($conn,$ID_PATIENT,$ID_INPATIENT,$DT_EXCUTE,$TM_EXCUTE,$sPg,'',$sUr);
     }
 
 
 
-     /*Insert PageA*/
+     //Insert A
 
     if ($sPg=="A" && $ST_DATAA[0]->{'SPRESS'} || $ST_DATAA[0]->{'STVAL'})
         {
             $resultA= json_decode(ISLG_INSERT($conn,$ST_DATAA,$ID_INPATIENT,$ID_PATIENT,$V_FrmSeq,$ID_BED,$DT_EXCUTE,$TM_EXCUTE,$JID_NSRANK,$FORMSEQANCE_WT,$NowDT,$UR_PROCESS));
             if ($resultA->{'result'}=="false"){
                 return json_encode($resultA,JSON_UNESCAPED_UNICODE);
+            }else{
+                //小index儲存程序 1090401 add
+                //InsertIndex($conn,'A',$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd);
+
             };
         }
 
-    /*Insert PageB*/
+   //Insert B
     $Has_B_QTY=array_filter($ST_DATAB,function ($value){
         return $value->{'SDOSE'}!="";
     });
@@ -202,10 +217,13 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
 
       if ($resultB->{'result'}=="false"){
           return json_encode($resultB,JSON_UNESCAPED_UNICODE);
+      }else{
+          //小index儲存程序 1090401 add
+          //InsertIndex($conn,'B',$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd);
       }
 }
 
-    /*Insert PageC*/
+   //Insert C
    $Has_REGION=array_filter($ST_DATAC,function ($value){
        return count($value->{'REGION'}) >0;
    });
@@ -213,8 +231,12 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
       if ( !ISLNC_INSERT($conn,$Has_REGION,$ID_INPATIENT,$ID_PATIENT,$ID_BED,$DT_EXCUTE,$TM_EXCUTE,$JID_NSRANK,$FORMSEQANCE_WT,$NowDT,$UR_PROCESS)){
 
           return json_encode( array("result"=>"false","message"=>"禁打資料有誤"),JSON_UNESCAPED_UNICODE);
+      }else{
+          //小index儲存程序 1090401 add
+          //InsertIndex($conn,'B',$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd);
       }
    }
+
     return json_encode(array("result"=>"true","message"=>""));
 }
 function GetILSGJson($conn,$IDPT,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq,$sDFL){
@@ -1078,4 +1100,33 @@ function tt_PosILSGCancel($conn,$idpt,$idinpt,$sDt,$sTm,$sPg,$formseq,$sUr){
         echo oci_error($stid)['message'];
     }
 
+}
+function InsertIndex($conn,$Page,$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd){
+    //小index儲存程序 1090401 add
+    $G_IS_USE_NXL=GetXmlType($conn,"ISLN")==''?'N':GetXmlType($conn,"ISLN");
+
+    $sExeDTMofISSG=$Page=="A"?$sDt.$sTm:"";
+    $sExeDTMofISLN=$Page=="A"?"":$sDt.$sTm;
+
+    $AHISLink="ISLN@".$ID_INPATIENT."-".trim($sExeDTMofISSG)."-".trim($sExeDTMofISLN);
+    $sHops=GetHospital($conn);
+    $idHospital=explode("/",$sHops)[0]; //醫院代碼
+
+    /*      $sHopsNo=explode("/",$sHops)[1];
+           $sHopsNo=(trim($sHopsNo)!="")?" ".$sHopsNo:"";*/
+
+
+    $sCidFlag="I";
+    if($G_IS_USE_NXL=="*" || $G_IS_USE_NXL=="A"){
+        $sKeyEmr106Prev=GetEMR106PrevSeq($conn,"ISLN",$AHISLink);
+        $sKeyEmr106New=ProcessEMR106($conn, $idHospital, "ISLN", $sCidFlag,$sKeyEmr106Prev,$AHISLink,$ID_INPATIENT,$ID_INPATIENT,"ISLN"."C",$sUr);
+        $AKeyEmr106New=$sKeyEmr106New;
+
+        if($sCidFlag=="U"){
+            CallEmrXmlExe($UR_PROCESS,$sUr,"yc_his_ser ",$pwd,"ISLN",$sCidFlag,"@","",$ID_PATIENT,$ID_INPATIENT,$sDt,$sTm,$AKeyEmr106New);
+
+        }else{
+            CallEmrXmlExe($UR_PROCESS,$sUr,"yc_his_ser ",$pwd,"ISLN",$sCidFlag,"@","",$ID_PATIENT,$ID_INPATIENT,$sDt,$sTm,$AKeyEmr106New);
+        }
+    }
 }
