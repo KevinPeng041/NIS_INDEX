@@ -1,5 +1,17 @@
 <?php
+include '../../NISPWSIFSCR.php';
+$str=$_GET['str'];
+$replaceSpace=str_replace(' ','+',$str);//空白先替換+
+parse_str(AESDeCode($replaceSpace),$output);
+
+$Account=$output['sIdUser'];/*帳號*/
+$passwd=$output['passwd'];/*密碼*/
+$sUr=$output['user'];/*使用者*/
+$From=$output['From'];/*L:登入介面,U:URL操作*/
+
+
 $Account="00FUZZY";
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -354,7 +366,6 @@ $Account="00FUZZY";
                     case "ReSetBtn":
                         $(".PageBtn").css({'background-color' : '','opacity' : '' ,'color':''});
                         $("#SerchBtn,#SubmitBtn,#DELBtn,.PageBtn").prop('disabled',true);
-
                         $("input[type=text]:not(.Parametertable>input)").val("");
                         $("input[type=radio]").prop("checked",false);
                         $("#ISTM").show();
@@ -389,9 +400,14 @@ $Account="00FUZZY";
                     GetPageJson(Page,sTraID);
                 }
 
+                WSST_arr.forEach(function (value) {
 
+                    if (ThisPageJson.has(value)){
+                        console.log(ThisPageJson.get(value));
+                        DB_WSST(value,sTraID,JSON.stringify(ThisPageJson.get(value)),'','','','','','false')
+                    }
+                });
 
-                WSST_arr.map(value =>ThisPageJson.get(value)!==undefined? DB_WSST(value,sTraID,JSON.stringify(ThisPageJson.get(value)),'','','','','','false'):'');
 
 
                 if (Page==="H" )
@@ -410,6 +426,7 @@ $Account="00FUZZY";
                 $(".PItem").hide();
                 $("#item"+Page).show();
                 $("#SubmitBtn").prop('disabled',false);
+                $(".ItemBtn").show();   //新增Btn
             });
 
             /***************************************Text Change Event**********************************************/
@@ -550,7 +567,7 @@ $Account="00FUZZY";
                 });
 
             }
-            function  DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
                 let obj=JSON.parse(json);
 
                 $.each(obj,function (index,val) {
@@ -601,7 +618,20 @@ $Account="00FUZZY";
                             alert('作廢失敗');
                             return false;
                         }else {
-                            location.reload();
+                            const Page_Arr=['A','B','C','D','E','F','G','H'];
+                            ThisPageJson.clear();
+                            Page_Arr.forEach(function (value) {
+                                $("#item"+value).children().remove();
+                                $("#"+value).css({'background-color':'','color':''})
+                            });
+
+                            GetINIJson($("#DA_idpt").val(),$("#DA_idinpt").val(),'<?php echo $Account?>');
+
+                            $("#DELBtn").prop('disabled',true);
+                            $(".ItemBtn").hide();
+                            $("#ISTM").show();
+                            $("#sDate,#sTime").val("");
+                            $("#SearchConfirm").val('N');
                         }
                     }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
@@ -883,7 +913,7 @@ $Account="00FUZZY";
     }
 
     .Parametertable input{
-       /* display: none;*/
+        display: none;
         background-color: #00FF00;
     }
     .Dir_s{
