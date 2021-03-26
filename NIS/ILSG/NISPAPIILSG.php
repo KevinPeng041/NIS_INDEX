@@ -159,6 +159,22 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
     $V_FrmSeq=GetFrmseQ($conn); /*取frmseq*/
 
 
+
+    $Has_A_QTY=$ST_DATAA[0]->{'SPRESS'}==""?$ST_DATAA[0]->{'STVAL'}:$ST_DATAA[0]->{'SPRESS'};
+    $Has_B_QTY=array_filter($ST_DATAB,function ($value){
+        return $value->{'SDOSE'}!="";
+    });
+    $Has_REGION=array_filter($ST_DATAC,function ($value){
+        return count($value->{'REGION'}) >0;
+    });
+
+
+
+    if (trim($Has_A_QTY)=="" && count($Has_B_QTY)==0 && count($Has_REGION)==0){
+        return json_encode(array("result"=>"false","message"=>"請確認是否有填值"),JSON_UNESCAPED_UNICODE);
+    }
+
+
     //修改
     if ($sPg=="A" && $FORMSEQANCE !=""){
         tt_PosILSGCancel($conn,$ID_PATIENT,$ID_INPATIENT,'','',$sPg,$FORMSEQANCE,$sUr);
@@ -186,8 +202,8 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
 
 
     //Insert A
-/*   && $ST_DATAA[0]->{'SPRESS'} || $ST_DATAA[0]->{'STVAL'}*/
-    if ($sPg=="A" )
+
+    if (trim($Has_A_QTY)!="")
         {
             $resultA= json_decode(ISLG_INSERT($conn,$ST_DATAA,$ID_INPATIENT,$ID_PATIENT,$V_FrmSeq,$ID_BED,$DT_EXCUTE,$TM_EXCUTE,$JID_NSRANK,$FORMSEQANCE_WT,$NowDT,$UR_PROCESS));
             if ($resultA->{'result'}=="false"){
@@ -198,12 +214,9 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
 
             };*/
         }
-
    //Insert B
-    $Has_B_QTY=array_filter($ST_DATAB,function ($value){
-        return $value->{'SDOSE'}!="";
-    });
-    if (count($Has_B_QTY)!=0){
+
+    if (count($Has_B_QTY)>0){
        $PartAddNum =array_map(function ($value) use ($sTraID) {
             $IDGP=$value->{'IDGP'};
             $URL="http://".$_SERVER['HTTP_HOST']."/webservice/NISPWSCILREG.php?str=".AESEnCode("sFm=ILSGA&sTraID=".$sTraID."&sRgn=".$IDGP);
@@ -223,11 +236,8 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
           //InsertIndex($conn,'B',$sDt,$sTm,$ID_PATIENT,$ID_INPATIENT,$UR_PROCESS,$sUr,$pwd);
       }*/
 }
-
    //Insert C
-   $Has_REGION=array_filter($ST_DATAC,function ($value){
-       return count($value->{'REGION'}) >0;
-   });
+
    if (count($Has_REGION)>0){
       if ( !ISLNC_INSERT($conn,$Has_REGION,$ID_INPATIENT,$ID_PATIENT,$ID_BED,$DT_EXCUTE,$TM_EXCUTE,$JID_NSRANK,$FORMSEQANCE_WT,$NowDT,$UR_PROCESS)){
 
