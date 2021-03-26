@@ -2,23 +2,13 @@
 include '../../NISPWSIFSCR.php';
 $str=$_GET['str'];
 $replaceSpace=str_replace(' ','+',$str);
-$EXPLODE_data=explode('&',AESDeCode($replaceSpace));
+parse_str(AESDeCode($replaceSpace),$output);
 
+$IdPt=$output['DA_idpt'];
+$IdInPt=$output['DA_idinpt'];
+$sUr=$output['sUser'];
+$nM_P=$output['nM_P'];
 
-$IdPt_STR=$EXPLODE_data[0];
-$IdInPt_STR=$EXPLODE_data[1];
-$sUr_STR=$EXPLODE_data[2];
-$nM_STR=$EXPLODE_data[3];
-
-$IdPt_value=explode('=',$IdPt_STR);
-$IdInPt_value=explode('=',$IdInPt_STR);
-$sUr_value=explode('=',$sUr_STR);
-$nM_value=explode('=',$nM_STR);
-
-$IdPt=$IdPt_value[1];
-$IdInPt=$IdInPt_value[1];
-/*$sUr=$sUr_value[1];*/
-$nM_P=$nM_value[1];
 $sUr='00FUZZY';
 
 ?>
