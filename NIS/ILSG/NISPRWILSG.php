@@ -3,25 +3,15 @@ header("Content-Type:text/html; charset=utf-8");
 date_default_timezone_set('Asia/Taipei');
 set_time_limit(0);
 include '../../NISPWSIFSCR.php';
-
 $str=$_GET['str'];
 $replaceSpace=str_replace(' ','+',$str);//空白先替換+
-$EXPLODE_data=explode('&',AESDeCode($replaceSpace));
+parse_str(AESDeCode($replaceSpace),$output);
 
-$sIdUser_STR=$EXPLODE_data[0];
-$passwd_STR=$EXPLODE_data[1];
-$user_STR=$EXPLODE_data[2];
-$From_STR=$EXPLODE_data[3];
+$Account=$output['sIdUser'];/*帳號*/
+$passwd=$output['passwd'];/*密碼*/
+$sUr=$output['user'];/*使用者*/
+$From=$output['From'];/*L:登入介面,U:URL操作*/
 
-$sIdUser_value=explode('=',$sIdUser_STR);
-$passwd_value=explode('=',$passwd_STR);
-$user_value=explode('=',$user_STR);
-$From_value=explode('=',$From_STR);
-
-$Account=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
-$passwd=trim($passwd_value[1]);/*密碼*/
-$sUr=trim($user_value[1]);/*使用者*/
-$From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 $HOST_IP=$_SERVER['HTTP_HOST'];
 $Account="00FUZZY";
 
@@ -75,7 +65,6 @@ $Account="00FUZZY";
                           val.IDTM=time_ID;
                       });
 
-                      console.log(PageJson.get(Page));
                   }
                }
 
@@ -287,7 +276,6 @@ $Account="00FUZZY";
                 }
 
                 A_JSON.IDTM=$("#IDTM").val();
-                console.log(A_JSON);
             });
 
             $("input[name='sPressure']").change(function () {
@@ -297,7 +285,6 @@ $Account="00FUZZY";
                 A_JSON.SPRESS=$(this).val();
                 A_JSON.STVAL="";
                 A_JSON.IDTM=$("#IDTM").val();
-                console.log(A_JSON);
             });
 
             $("#Text_A").on("change",function () {
@@ -327,7 +314,6 @@ $Account="00FUZZY";
                 let QTY=$(this).val();
                 PageJson.get('B')[index].SDOSE=QTY;
                 PageJson.get('B')[index].IDTM=$("#IDTM").val();
-                console.log(PageJson.get('B'));
             });
 
             $("button[name=ClearInput]").click(function () {
@@ -341,8 +327,6 @@ $Account="00FUZZY";
                 JSON_B.ID="";      //藥名ID
                 JSON_B.SDOSE="";   //劑量
                 JSON_B.USEF="";    //頻率
-
-                console.log(PageJson.get('B'));
             });
 
             $(".FuQuenCy").on("focus",function () {
@@ -449,8 +433,6 @@ $Account="00FUZZY";
             function Serchcallback(AESdata){
                 let page=$("#PageVal").val();
                 let Json_obj=JSON.parse(AESDeCode(AESdata));
-                console.log(Json_obj);
-
                 $("#timer,#timetxt").prop('readonly',true);
                 $("#input[name=sRdoDateTime]").prop('disabled',true);
 
@@ -611,7 +593,6 @@ $Account="00FUZZY";
                     dataType:"text",
                     success:function (data) {
                         let json=JSON.parse(AESDeCode(data));
-                        console.log(json);
                         let sTraID=json.sTraID;
                         let Save=json.sSave;
                         let FORMSEQANCE_WT=json.FORMSEQANCE_WT;
@@ -650,9 +631,6 @@ $Account="00FUZZY";
                         if (!PageJson.has(Page)){
                             PageJson.set(Page,Json_obj);//各頁面Json
                         }
-
-                        console.log(JSON_Data);
-
 
 
                         //page UI Append
@@ -775,8 +753,6 @@ $Account="00FUZZY";
                             alert("儲存失敗,錯誤訊息:"+json.message);
                             $("#wrapper").hide();
                         }
-
-                        console.log(Page,json);
                     }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                     console.log(
                         "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -813,9 +789,6 @@ $Account="00FUZZY";
                             $("#PageVal").val("A");
                             $('#Text_A').val("");
                             $(".Page").hide();
-
-
-
 
                         }
                     },error:function (XMLHttpResponse,textStatus,errorThrown) {
