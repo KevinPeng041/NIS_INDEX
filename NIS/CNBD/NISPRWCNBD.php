@@ -2,23 +2,12 @@
 include '../../NISPWSIFSCR.php';
 $str=$_GET['str'];
 $replaceSpace=str_replace(' ','+',$str);//空白先替換+
-$EXPLODE_data=explode('&',AESDeCode($replaceSpace));
+parse_str(AESDeCode($replaceSpace),$output);
 
-
-$sIdUser_STR=$EXPLODE_data[0];
-$passwd_STR=$EXPLODE_data[1];
-$user_STR=$EXPLODE_data[2];
-$From_STR=$EXPLODE_data[3];
-
-$sIdUser_value=explode('=',$sIdUser_STR);
-$passwd_value=explode('=',$passwd_STR);
-$user_value=explode('=',$user_STR);
-$From_value=explode('=',$From_STR);
-
-$Account=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
-$passwd=trim($passwd_value[1]);/*密碼*/
-$sUr=trim($user_value[1]);/*使用者*/
-$From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
+$Account=$output['sIdUser'];/*帳號*/
+$passwd=$output['passwd'];/*密碼*/
+$sUr=$output['user'];/*使用者*/
+$From=$output['From'];/*L:登入介面,U:URL操作*/
 
 ?>
 
