@@ -1,24 +1,17 @@
 <?php
 include '../../NISPWSIFSCR.php';
 $str=$_GET['str'];
-$replaceSpace=str_replace(' ','+',$str);
-$EXPLODE_data=explode('&',AESDeCode($replaceSpace));
+$replaceSpace=str_replace(' ','+',$str);//空白先替換+
+parse_str(AESDeCode($replaceSpace),$output);
 
-$sIdUser_STR=$EXPLODE_data[0];
-$passwd_STR=$EXPLODE_data[1];
-$user_STR=$EXPLODE_data[2];
-$From_STR=$EXPLODE_data[3];
+$Account=$output['sIdUser'];/*帳號*/
+$passwd=$output['passwd'];/*密碼*/
+$sUr=$output['user'];/*使用者*/
+$From=$output['From'];/*L:登入介面,U:URL操作*/
 
-$sIdUser_value=explode('=',$sIdUser_STR);
-$passwd_value=explode('=',$passwd_STR);
-$user_value=explode('=',$user_STR);
-$From_value=explode('=',$From_STR);
 
-$OPID=strtoupper(str_pad(trim($sIdUser_value[1]),7,"0",STR_PAD_LEFT));/*帳號*/
-$passwd=trim($passwd_value[1]);/*密碼*/
-$sUr=trim($user_value[1]);/*使用者*/
-$From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
-/*$OPID="00FUZZY";*/
+
+/*$Account="00FUZZY";*/
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -40,7 +33,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
             //url帳號密碼驗證
             let From='<?php echo $From?>';
             if (From==="U"){
-                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $OPID?>','<?php echo $passwd?>')));
+                let FromObj=JSON.parse(AESDeCode(UrlCheck('<?php echo $Account?>','<?php echo $passwd?>')));
                 if(FromObj.reponse==="false"){
                     alert("帳號密碼錯誤,請關閉視窗重新確認");
                     return;
@@ -93,12 +86,8 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 alert("責任床位視窗已開啟");
                                 break;
                             case "true":
-                                try {
-                                    x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNCD&sIdUser=<?php echo $OPID?>"),"責任床位",'width=850px,height=650px,scrollbars=yes,resizable=no');
+                                x=window.open("/webservice/NISPRWCBED.php?str="+AESEnCode("sFm=CNCD&sIdUser=<?php echo $Account?>"),"責任床位",'width=850px,height=650px,scrollbars=yes,resizable=no');
 
-                                }catch (e) {
-                                    console.log(e);
-                                }
                                 break;
                         }
                         x.bedcallback=bedcallback;
@@ -112,7 +101,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                                 y=window.open("/webservice/NISPWSLKQRY.php?str="+
                                     AESEnCode("sFm=CNCD&PageVal="+""+"&DA_idpt="+
                                         $('#DA_IdPt').val()+"&DA_idinpt="+$('#DA_InPt').val()+
-                                        "&sUser="+"<?php echo $OPID?>"+"&NM_PATIENT="+"")
+                                        "&sUser="+"<?php echo $Account?>"+"&NM_PATIENT="+"")
                                     ,"CNCD",'width=750px,height=650px,scrollbars=yes,resizable=no');
                                 break;
                         }
@@ -126,9 +115,8 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         break;
                     case "Del":
                         let del_ip='/webservice/NISPWSDELILSG.php';
-                        console.log("http://localhost"+del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"));
                         $.ajax({
-                            url:del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $OPID?>"),
+                            url:del_ip+"?str="+AESEnCode("sFm="+'CNCD'+"&sTraID="+$('#sTraID').val()+"&sPg="+""+"&sCidFlag=D"+"&sUr=<?php echo $Account?>"),
                             type:'POST',
                             dataType:'text',
                             success:function (json) {
@@ -154,22 +142,27 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         });
                         break;
                     case "BedChange":
-                        CallPatientData("<?php echo $OPID?>",$("#IdPt").val());
+                        CallPatientData("<?php echo $Account?>",$("#IdPt").val());
                         break;
                     case "Error_btn":
                         errorModal("",false);
                         break;
                     case "SubmitBtn":
 
-                        $("#loading").show();
-                        $("#wrapper").show();
+
                         let json=GetCheckVal();
                         let sTraID=$('#sTraID').val();
                         let sDt=$("#DateVal").val();
                         let sTm=$("#TimeVal").val();
 
-                        InsertWSST('A',sTraID,json,sDt,sTm,'','','<?php echo $OPID?>','true');
-                        console.log(json);
+                        if($("input[name=BDckbox]:checked").length==0){
+                            alert('請至少選擇一項存檔');
+                            return false;
+                        }
+
+                        $("#loading").show();
+                        $("#wrapper").show();
+                        InsertWSST('A',sTraID,json,sDt,sTm,'','','<?php echo $Account?>','true');
                         break;
                 }
             });
@@ -188,7 +181,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
 
                         }else {
                             if (focusID==="IdPt" && $("#DataTxt").val()===""){
-                                CallPatientData("<?PHP echo $OPID?>",$("#IdPt").val());
+                                CallPatientData("<?PHP echo $Account?>",$("#IdPt").val());
                             }else if(focusID==="IdPt" && $("#DataTxt").val()!==""){
                                 errorModal("是否要異動病人資料",true);
                             }
@@ -253,19 +246,19 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                 $("#DA_IdPt").val(dataObj[0].IDPT);
                 $("#DA_InPt").val(dataObj[0].IDINPT);
                 $("#SBED").val(dataObj[0].SBED);
-                DefaultData(dataObj[0].IDPT,dataObj[0].IDINPT,"<?php echo $OPID?>");
+                DefaultData(dataObj[0].IDPT,dataObj[0].IDINPT,"<?php echo $Account?>");
                 TimerDefault();
             }
             function checkBEDwindow() {
                 if(!x){
-                    console.log("not open");
+
                     return "true";
                 }else {
                     if(x.closed){
-                        console.log("window close");
+
                         return "true";
                     }else {
-                        console.log("window not close");
+
                         return "false";
                     }
                 }
@@ -295,7 +288,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                     success:function (data) {
                         let NewBedJson=JSON.parse(AESDeCode(data));
                         if (NewBedJson.length<1){
-                            alert("查無此病人");
+                            alert("查無此病人資料");
                             err.length=0;
                             ErrIndex=0;
                             ReStartELE();
@@ -307,7 +300,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
                         $("#DA_InPt").val(NewBedJson[0].IDINPT);
                         $("#SBED").val(NewBedJson[0].SBED);
 
-                        DefaultData(NewBedJson[0].IDPT,NewBedJson[0].IDINPT,"<?php echo $OPID?>");
+                        DefaultData(NewBedJson[0].IDPT,NewBedJson[0].IDINPT,"<?php echo $Account?>");
                         TimerDefault();
                         errRestar(err);
                     },
@@ -356,7 +349,7 @@ $From=trim($From_value[1]);/*L:登入介面,U:URL操作*/
     <input id="DA_InPt"  class="noneEle" type="text" value="" placeholder="DA_InPt">
     <input id="DA_IdPt"  class="noneEle" type="text" value="" placeholder="DA_IdPt">
     <input id="SBED"  class="noneEle" type="text" value="" placeholder="SBED">
-    <input id="NURSOPID"  class="noneEle" type="text" value="<?php echo $OPID?>" placeholder="NURSOPID">
+    <input id="NURSOPID"  class="noneEle" type="text" value="<?php echo $Account?>" placeholder="NURSOPID">
 </div>
 
 <div class="container">
