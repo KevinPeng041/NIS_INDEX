@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="crypto-js.js"></script>
+    <script type="text/javascript" src="jquery-3.4.1.js"></script>
+    <script src="JavaScript/jquery-ui.js"></script>
+    <link rel="stylesheet" href="bootstrap-4.3.1-dist/css/bootstrap.min.css">
+    <script src="crypto-js.js"></script>
+    <script src="AESCrypto.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            let Canvas=$("#CanvasPad")[0];
+            let ctx=Canvas.getContext('2d');
+            let img=$("img")[0];
+
+            var drag_value={
+                containment:'.drop-area',
+                scroll:false,
+                stack:'.draggable',
+                start:function () {
+
+                },
+                drag:function () {
+
+                },
+                stop:function () {
+
+                }
+            };
+
+            ctx.drawImage(img,0,0,Canvas.width,Canvas.height);
+            $(".draggable").draggable(drag_value);
+
+
+            $(".drop-area").on("click",function (e) {
+               if ($("#addBtn").is(":checked")){
+
+                   $("#CanvasPad").before(
+                    `
+                      <div class="draggable circle" style="left: ${e.offsetX+'px'};top: ${e.offsetY+'px'}">
+                             <p>drag</p>
+                      </div>
+                   `
+                   );
+
+                   $(".draggable").each(function () {
+                       $(this).draggable(drag_value);
+
+                   });
+
+
+               }
+
+            });
+
+            $(document).on("click",".draggable",function () {
+                if ($("#delBtn").is(":checked")){
+                    $(this).remove();
+                }
+            })
+
+        });
+
+    </script>
+</head>
+<style>
+.drop-area{
+      width: 300px;
+      height: 300px;
+  }
+  #CanvasPad{
+      width: 300px;
+      height: 300px;
+      z-index: 1;
+      border: 1px black solid;
+  }
+
+
+.circle{
+    border-radius: 50%;
+    height: 60px;
+    width: 60px;
+    border: 1px solid black;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+}
+.circle:hover{
+    background-color: yellow;
+}
+
+.triangle{
+    height: 0px;
+    width: 0px;
+    border-color: transparent transparent #00ff00 transparent;
+    border-style: solid solid solid solid;
+    border-width:  0px 20px 30px 20px;
+    position: absolute;
+    display: flex;
+}
+.triangle>div{
+    margin-left: -8px;
+    margin-top: 5px;
+    font-size: 15px;
+}
+
+</style>
+<body>
+
+
+ <div class="container">
+
+    <img src="img/Body.jpg" style="display: none">
+
+
+
+ <div class="drop-area">
+     <div class="draggable circle">
+         <p>drag</p>
+     </div>
+     <div class="draggable triangle">
+         <div>13</div>
+     </div>
+
+     <canvas id="CanvasPad"></canvas>
+ </div>
+
+     <input id="addBtn" type="radio" name="action">新增
+     <input id="delBtn" type="radio" name="action">刪除
+
+     <input type="radio" name="sign" value="triangle">三角
+     <input type="radio" name="sign" value="square">正方
+     <input type="radio" name="sign" value="circle">圓形
+</div>
+
+
+
+
+
+</body>
+
+</html>
+
