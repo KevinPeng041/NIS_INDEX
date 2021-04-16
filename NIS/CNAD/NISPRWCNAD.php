@@ -1,9 +1,9 @@
 <?php
 include '../../NISPWSIFSCR.php';
 $str=$_GET['str'];
+
 $replaceSpace=str_replace(' ','+',$str);//空白先替換+
 parse_str(AESDeCode($replaceSpace),$output);
-
 $Account=$output['sIdUser'];/*帳號*/
 $passwd=$output['passwd'];/*密碼*/
 $sUr=$output['user'];/*使用者*/
