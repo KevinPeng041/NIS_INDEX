@@ -9,9 +9,6 @@ $passwd=$output['passwd'];/*密碼*/
 $sUr=$output['user'];/*使用者*/
 $From=$output['From'];/*L:登入介面,U:URL操作*/
 
-
-
-/*$Account="00FUZZY";*/
 ?>
 <!DOCTYPE html>
 <html lang="en">
