@@ -2,11 +2,18 @@
 date_default_timezone_set('Asia/Taipei');
 function  GetCNADPatient($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
     //取輸血紀錄單 FOR NISPRWCBED
+    $DT_last= substr(date("Y",strtotime("now -2 day")),0,4);
+    $DT_last=(string)((int)$DT_last-1911).date("md",strtotime("now -2 day"));
+    $DT_now=substr(date("Y",strtotime("now")),0,4);
+    $DT_now=(string)((int)$DT_now-1911).date("md",strtotime("now"));
+
       $SQL="SELECT  BSK_ALLOWDATE, BSK_ALLOWTIME,MH_MEDNO,MH_NAME ,BSK_INDENTNO , BSK_TRANSRECNO
          FROM TBOSTK, TREMED
         WHERE BSK_CANCD = 'N' AND BSK_OUT = 'Y' AND BSK_ALLOWDATE <> ' '  AND BSK_INDENTNO <> ' '
-        AND BSK_MEDNO = MH_MEDNO AND BSK_ALLOWDATE BETWEEN '1090411' AND '1100311'
+        AND BSK_MEDNO = MH_MEDNO AND BSK_ALLOWDATE BETWEEN '$DT_last' AND '$DT_now'
           GROUP BY BSK_ALLOWDATE, BSK_ALLOWTIME,MH_MEDNO,MH_NAME,BSK_INDENTNO, BSK_TRANSRECNO";
+
+
     $stid=oci_parse($conn,$SQL);
     oci_execute($stid);
     $arr=[];
@@ -42,9 +49,16 @@ function  GetCNADPatient($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FOR
 }
 function GetCNADIniJson ($conn,$TransKey,$ID_COMFIRM,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT){
 //Default TableList 取表單預設 for NISPRWCNAD
+    $DT_last= substr(date("Y",strtotime("now -2 day")),0,4);
+    $DT_last=(string)((int)$DT_last-1911).date("md",strtotime("now -2 day"));
+
+    $DT_now=substr(date("Y",strtotime("now")),0,4);
+    $DT_now=(string)((int)$DT_now-1911).date("md",strtotime("now"));
+
+
     $SQL="SELECT BCK_DATMSEQ,BSK_BAGENO,BSK_MEDNO,MH_NAME,BKD_EGCODE,BSK_TRANSRECNO
             FROM TBOSTK,TBOKID,TREMED,TBOBCK
-            WHERE BSK_ALLOWDATE BETWEEN '1090411' AND '1100311'
+            WHERE BSK_ALLOWDATE BETWEEN '$DT_last' AND '$DT_now'
              AND TBOSTK.BSK_MEDNO=TREMED.MH_MEDNO
              AND BSK_BLDKIND=BKD_BLDKIND
              AND BSK_BAGENO=BCK_BAGENO
