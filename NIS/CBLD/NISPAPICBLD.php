@@ -67,7 +67,7 @@ function GetCBLDIniJson($conn,$Idpt,$sTraID,$sSave,$date,$sUr,$JID_NSRANK,$FORMS
         return json_encode($arr2,JSON_UNESCAPED_UNICODE);
     }
 }
-function GetCBLDPageJson($conn,$sTraID,$sPg){
+function GetCBLDPageJson($conn,$sPg,$sTraID){
     //取病患輸血紀錄清單
     $sql="select ST_DATAA,ST_DATAB,ST_DATAC from HIS803.NISWSTP WHERE ID_TABFORM = 'CBLD' AND ID_TRANSACTION = '$sTraID'";
     $stid=oci_parse($conn,$sql);
