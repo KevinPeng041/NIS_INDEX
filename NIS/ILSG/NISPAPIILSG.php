@@ -67,7 +67,7 @@ function GetILSGIniJson($conn,$idPt,$INPt,$sFm,$ID_BED,$sTraID,$sSave,$date,$sUr
     }
 
 }
-function GetILSGPageJson($conn,$sTraID,$sPg){
+function GetILSGPageJson($conn,$sPg,$sTraID){
 
 
     if ($sPg=="B"){
