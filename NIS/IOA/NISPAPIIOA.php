@@ -268,7 +268,6 @@ function PosIOASave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
              return $Quantity!==" ";
          });
 
-
          $Execute_result=array_map(function ($value) use ($conn,$FrmSeq,$IdPt,$IdinPt,$sTm,$sDt,$sUr,$ID_BED,$JID_NSRANK,$FormSeq_WT,$NowDT,$ID_FROMSYS,$ASCii_Num){
 
              $M_Nam=$value->{'M_Nam'}==""?" ":$value->{'M_Nam'};
@@ -689,7 +688,7 @@ function DB_UPDATE($conn,$sFm,$IdPt,$InPt,$DM_Cand,$UR_Cand){
     oci_execute($UP_Stid,OCI_NO_AUTO_COMMIT);
 
 }
-function GetFrmSeq($conn,$Tag){
+/*function GetFrmSeq($conn,$Tag){
     $FormSeq_SQL="SELECT NO_TABFORM FROM  HIS803.NSTBMF  WHERE ID_TABFORM= 'IOQT'";
     $Fsq_stid=oci_parse($conn,$FormSeq_SQL);
     if (!$Fsq_stid){
@@ -718,7 +717,7 @@ function GetFrmSeq($conn,$Tag){
     oci_execute($Up_Stid,OCI_NO_AUTO_COMMIT);
     oci_free_statement($Fsq_stid);
     return $Tag.$PAD_NO_TABFORM;
-}
+}*/
 function Append_O_Data($conn,$arr){
 
     $len= count($arr);
