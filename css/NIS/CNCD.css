@@ -47,7 +47,7 @@ td{
     width:35vmin;
     text-align: center;
     margin-top: 5px;
-
+    border: 1px white;
 }
 .Otimer .pageTime #TimeVal {
     width: 15vmin;
@@ -55,6 +55,12 @@ td{
     margin-top: 5px;
     border: 1px white;
     text-align: center;
+}
+#DataTxt{
+    font-size: 4vmin;
+    background-color: #FFFBCC;
+    border-radius:3px;
+    margin-top: 5px;
 }
 .Parametertable input{
     display: none;
