@@ -49,6 +49,12 @@ input[type=checkbox]{
     border: 1px white;
     text-align: center;
 }
+#DataTxt{
+    font-size: 4vmin;
+    background-color: #FFFBCC;
+    border-radius:3px;
+    margin-top: 5px;
+}
 .Parametertable input{
     display: none;
     background-color: #00FF00;
