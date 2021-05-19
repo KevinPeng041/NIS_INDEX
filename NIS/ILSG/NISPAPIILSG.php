@@ -156,7 +156,7 @@ function PosILSGSave($conn,$sTraID,$sFm,$sUr,$sPg,$sDt,$sTm,$pwd){
     $FORMSEQANCE_WT=$Data['FORMSEQANCE_WT'];
     $UR_PROCESS=$Data['UR_PROCESS'];
 
-    $V_FrmSeq=GetFrmseQ($conn); /*取frmseq*/
+    $V_FrmSeq=GetFrmseQ($conn,'ISSG'); /*取frmseq*/
 
 
 
@@ -662,7 +662,7 @@ function ISLNC_INSERT($conn,$arr=array(),$ID_INPATIENT,$ID_PATIENT,$ID_BED,$DT_E
     return true;
 }
 
-
+/*
 function GetFrmseQ($conn){
    $sql_Serch="SELECT NO_TABFORM FROM  HIS803.NSTBMF  WHERE ID_TABFORM= 'ISSG'";
    $stid=oci_parse($conn,$sql_Serch);
@@ -672,7 +672,7 @@ function GetFrmseQ($conn){
        $NO_TABFORM=ociresult($stid,'NO_TABFORM');
    }
 
-   /*回壓frmseq*/
+   //回壓frmseq
     $PAD_NO_TABFORM  = str_pad($NO_TABFORM,10,0,STR_PAD_LEFT);
     $FORMseq=$NO_TABFORM+1;
     $sql_update="UPDATE  HIS803.NSTBMF SET  NO_TABFORM=:NO_TAB WHERE ID_TABFORM= 'ISSG'";
@@ -684,7 +684,10 @@ function GetFrmseQ($conn){
     return 'ISSG'.$PAD_NO_TABFORM;
 
 
-}
+}*/
+
+
+
 function DCORDER($conn,$ID_INPATIENT,$ST_PREB,$ST_PREC){
     $date = date("Ymd");
     $STR = substr($date, 0, 4);
