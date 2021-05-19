@@ -2,7 +2,7 @@ body{
     overscroll-behavior-y: contain;
 }
 .btn {
-    margin-top: 3px;
+ /*   margin-top: 3px;*/
 }
 
 h1 {
@@ -72,7 +72,7 @@ h1 {
     z-index: 2;
     position: relative;
     margin-left: 190px;
-    margin-top: -28px;
+    margin-top: -27px;
 }
 
 #H {
@@ -136,8 +136,8 @@ li {
     max-width: 1140px;
 }
 .container button{
-    color: white;
-    font-size: 4.5vmin;
+  /*  color: white;
+    font-size: 4.5vmin;*/
 }
 .container .float-left{
     font-size: 3.7vmin;
@@ -152,13 +152,19 @@ li {
     width:35vmin;
     text-align: center;
     margin-top: 5px;
-
+    border: 1px white;
 }
 .container .Otimer  .pageTime #timetxt {
     width: 15vmin;
     margin-left: 5px;
     margin-top: 5px;
     border: 1px white;
+}
+#DataTxt{
+    font-size: 4vmin;
+    background-color: #FFFBCC;
+    border-radius:3px;
+    margin-top: 5px;
 }
 .container .Features{
     font-size: 3.5vmin;
@@ -172,6 +178,12 @@ li {
     background-color: brown;
     color: white;
 }
-#dose3{
-    -ms-ime-mode: disabled;
+.Page{
+    margin-top: 10px;
+    display: none;
+}
+button[name="PageBtn"],button[name="FucBtn"]{
+    margin-top:5px ;
+    font-size: 4.5vmin;
+
 }
