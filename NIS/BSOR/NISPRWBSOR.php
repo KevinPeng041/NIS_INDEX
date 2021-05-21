@@ -130,8 +130,15 @@ if ($sfm=="CUTS"){
 
                },
                inTableTd:(Page,data)=>{
-
                if (Page==="A"){
+
+                   if (!Data_obj.has("O_DATA")){
+                       //存原始資料
+
+                       let copy=JSON.parse(JSON.stringify(data));
+                       Data_obj.set("O_DATA",copy);
+                   }
+
                     if (!Data_obj.has('IMG') ){
                         Data_obj.set('IMG',data);
 
@@ -146,18 +153,12 @@ if ($sfm=="CUTS"){
                     });
 
                 }
-                if (Page==="B"){
+               if (Page==="B"){
                     let T_CD=Data_obj.get("TD_Child");
                     let T_ID=Data_obj.get("TR_CLASSNM");
                     let Data_json=Data_obj.get('DATA');
                     let sSTAT=  $("#sSTAT").val() ;//護理級值
                     data.forEach((value)=>{value.SSTAT=sSTAT});
-
-                    if (!Data_obj.has("O_DATA")){
-                        //存原始資料
-                        let copy=JSON.parse(JSON.stringify(data));
-                        Data_obj.set("O_DATA",copy);
-                    }
 
                    if (Data_obj.has('DATA')){
                        //判斷是否新增過
@@ -167,15 +168,16 @@ if ($sfm=="CUTS"){
                        Data_obj.set('DATA',data);
                    }
 
+
                    data= Data_obj.get('DATA')
                         .flat(Infinity);
 
                    Data_obj.set('DATA',data);
+
                    $.each(data,function (ItemNo,item) {
                       let DATA=item.TB_DATA;
                       let FORMSEQ=item.FORMSEQ;         //表單編號
                       let No_Number= DATA.NO_NUM.VALUE; //編號
-                      let SOURCE=DATA.TID_SOURCE.VALUE; //發生來源
 
                       let count_element=0;
                        for (let key in DATA){
@@ -194,19 +196,16 @@ if ($sfm=="CUTS"){
                                         </td>
                                     `
                                    );
-                                   $.each(T_CD[count_element],function (index,val) {
 
+                                   $.each(T_CD[count_element],function (index,val) {
                                        $("#"+title_ID+"_"+ItemNo+"_"+No_Number).append(
                                            `<option value="${val.ID_TABITEM}" >${val.ST_LEFT}</option>`
                                        );
 
-                                       if (title_ID==="BSOR000001" && val.ID_TABITEM===SOURCE)//發生來源預設勾選
-                                       {
-                                            if (SOURCE!==""){
-                                                $("#"+title_ID+"_"+ItemNo+"_"+No_Number+" option[value="+SOURCE+"]").prop('selected',true);
-
-                                            }
+                                       if (ELE_Val.trim()!==""){
+                                           $("#"+title_ID+"_"+ItemNo+"_"+No_Number+" option[value="+ELE_Val+"]").attr('selected',true);
                                        }
+
                                    })
 
 
@@ -218,7 +217,7 @@ if ($sfm=="CUTS"){
                                           <td>
                                                <input  type="text" class='table-edit' id="${title_ID+"_"+ItemNo+"_"+No_Number}" value="${ELE_Val}">
                                           </td>
-                                    `
+                                        `
                                    );
 
                                }
@@ -322,6 +321,8 @@ if ($sfm=="CUTS"){
                        let middelTop=Math.floor(ui.position.top+Height/2);
                        let middelLeft=Math.floor(ui.position.left+Width/2);
 
+
+
                        Data_obj.get('IMG')[ItemIndex].TOP=TOP;
                        Data_obj.get('IMG')[ItemIndex].LEFT=LEFT;
 
@@ -382,10 +383,9 @@ if ($sfm=="CUTS"){
                       const Freq=$("#FORMSEQANCE").val();
                       const Page=$("#Page").val();
                       const sUr="<?php echo $sUr?>";
-                      let obj=  Page==="A"?Data_obj.get('IMG'):Data_obj.get('DATA');
+                      let Json_obj=Page==="A"?cmp(Data_obj.get('O_DATA'),Data_obj.get('IMG')): Data_obj.get('DATA');
 
-                     // Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB
-                       DB_WSST(Page,sTraID,JSON.stringify(obj),sDt,sTm,'',Freq,sUr,'true');
+                       DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'',Freq,sUr,'true');
                       break;
                   case "SerchBtn":
                       if (!checkSerchwindow()){
@@ -431,7 +431,10 @@ if ($sfm=="CUTS"){
                        GetPageJson('B',sTraID);
                        Get_BJson=true;
                    }
-                   obj=Data_obj.get('IMG');
+                   let old_obj=Data_obj.get('O_DATA');
+                   let new_obj=Data_obj.get('IMG');
+                   obj=cmp(old_obj,new_obj);
+
                    $(".area-table,#MM_B").show();
                    $(".Main,#MM_A").hide(500);
                }
@@ -463,7 +466,7 @@ if ($sfm=="CUTS"){
                                if (val==="tb1"){
                                    let Region=$("#"+ele).val();
                                    $("#NO_REG").val(Region);
-                                   //
+
                                }
 
                            }
@@ -662,7 +665,31 @@ if ($sfm=="CUTS"){
 
            }
            function Serchcallback(AESobj){
+              const  obj=JSON.parse(AESDeCode(AESobj));
+              console.log(obj);
+              const sTraID=obj.sTraID;
+              const sTime=obj.TMEXCUTE;
+              const sDate=obj.DTEXCUTE;
+              const IDPT=obj.IDPT;
+              const INPT=obj.INPT;
+               $("#sTime").val(sTime);
+               $("#sDate").val(sDate);
+               $("#sTraID").val(sTraID);
 
+
+
+
+               if ($(".table-edit").parent().length>0){
+                   $(".table-edit").parent().remove();
+                   Data_obj.get('DATA').length=0;
+               }
+               $(".draggable").remove();
+
+
+               $(".EDIT").hide();
+               $(".Main,.B,#MM_B").hide();
+               Get_AJson=false; //GetPageJson false
+               Get_BJson=false;
            }
            function GetINIJson(sfm,idPt,INPt){
                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm='+sfm+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'))
@@ -688,6 +715,7 @@ if ($sfm=="CUTS"){
                    async:false,
                    success:function (data){
                          let obj= JSON.parse(AESDeCode(data));
+
                          creatTable.inTableTd(Page,obj);
 
                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
@@ -793,8 +821,36 @@ if ($sfm=="CUTS"){
                });
 
            }
+           function cmp(x,y) {
+
+               //x=>old_obj
+               //y=>new_obj
+               if (typeof (x)=="undefined" || typeof (y)=="undefined"){
+                   return false;
+               }
 
 
+               let CompareLength=x.length; // 原始長度
+
+               let copy=JSON.parse(JSON.stringify(y));
+               let compareArr=copy.splice(0,CompareLength);
+
+               return x.map((val, index) => {
+                   let diff;
+                   for (const p in val) {
+                       if (val[p] !== compareArr[index][p]) {
+                           diff = compareArr[index];
+                       }
+                   }
+                   return diff ;
+
+               }).filter(res=>{
+                   if ( typeof res=="object"){
+                       return res;
+                   }
+
+               }).concat(copy);
+           }
 
         });
 
