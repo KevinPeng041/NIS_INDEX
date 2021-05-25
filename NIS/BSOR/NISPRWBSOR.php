@@ -349,12 +349,21 @@ if ($sfm=="CUTS"){
 
 
                   let copyObj=JSON.parse(JSON.stringify(Data_obj.get('NEWDATA')));
+                  let newTime=new Date();
+
+                  let DT_Y=(newTime.toLocaleDateString().slice(0,4)-1911).toString();
+                  let DT_M=(newTime.getMonth()+1<10?'0':'')+(newTime.getMonth()+1);
+                  let DT_D=(newTime.getDate()<10?'0':'')+newTime.getDate();
+
                   copyObj.TB_DATA.NO_NUM.VALUE=MaxNum.toString();
+                  copyObj.DT_START=DT_Y+DT_M+DT_D;
+
                   creatTable.inTableTd('B',[copyObj]);
 
                   AddShape(MaxNum,shape,e.offsetX+10,e.offsetY,15,15);
                   GetPIXELRegion(MaxNum,e.offsetX+7,e.offsetY+7);
                   $("#AddSign").val("");
+
                }
            });
            $(document).on('click','button',function (e) {
@@ -383,8 +392,10 @@ if ($sfm=="CUTS"){
                       const Freq=$("#FORMSEQANCE").val();
                       const Page=$("#Page").val();
                       const sUr="<?php echo $sUr?>";
-                      let Json_obj=Page==="A"?cmp(Data_obj.get('O_DATA'),Data_obj.get('IMG')): Data_obj.get('DATA');
+                     // let Json_obj=Page==="A"?cmp(Data_obj.get('O_DATA'),Data_obj.get('IMG')): Data_obj.get('DATA');
 
+                      let Json_obj=Page==="A"?Data_obj.get('IMG'): Data_obj.get('DATA');
+                        console.log(Json_obj);
                        DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'',Freq,sUr,'true');
                       break;
                   case "SerchBtn":
@@ -431,9 +442,12 @@ if ($sfm=="CUTS"){
                        GetPageJson('B',sTraID);
                        Get_BJson=true;
                    }
-                   let old_obj=Data_obj.get('O_DATA');
+                  /* let old_obj=Data_obj.get('O_DATA');
                    let new_obj=Data_obj.get('IMG');
                    obj=cmp(old_obj,new_obj);
+*/
+
+                   obj=Data_obj.get('IMG');
 
                    $(".area-table,#MM_B").show();
                    $(".Main,#MM_A").hide(500);
@@ -523,7 +537,6 @@ if ($sfm=="CUTS"){
 
                let timer=Timeit.filter(function (value) { return  value!==":"});
                let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
-               let time_ID=$(this).attr('id');
                $("#sDate").val(yyyy-1911+MM+dd);
                $("#sTime").val(timerVal);
            });
@@ -557,6 +570,7 @@ if ($sfm=="CUTS"){
                       </div>
                    `
                );
+
                $("#"+shape_Nm+txt).css({
                   "left" :X+"px",
                   "top" :Y+"px",
@@ -564,11 +578,12 @@ if ($sfm=="CUTS"){
                   "height" :H+"px"
                });
 
-             const isAdd= Data_obj.get('IMG').filter((value,index,arr)=>{
+
+              const isAdd= Data_obj.get('IMG').filter((value,index,arr)=>{
                    return value.NUM===txt;
                });
 
-                if (isAdd.length===0){
+               if (isAdd.length===0){
                     let newObj=JSON.parse(JSON.stringify(Data_obj.get('IMG')[0]));
 
                     newObj.NUM=txt.toString();
@@ -576,10 +591,9 @@ if ($sfm=="CUTS"){
                     newObj.TOP=Y.toString();
                     newObj.W_TH=W.toString();
                     newObj.H_TH=H.toString();
-                    newObj.DT_START="";
+                    newObj.FRMSEQ="";
                     Data_obj.get('IMG').push(newObj);
                 }
-               
 
                $(".draggable").each(function () {
                    $(this).draggable(drag_value);
@@ -715,7 +729,7 @@ if ($sfm=="CUTS"){
                    async:false,
                    success:function (data){
                          let obj= JSON.parse(AESDeCode(data));
-
+                        console.log(obj);
                          creatTable.inTableTd(Page,obj);
 
                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
