@@ -85,8 +85,6 @@ if ($sfm=="CUTS"){
                         `
                    );
 
-                   console.log(obj);
-
                    $.each(Tb_NM_obj,function (index,val) {
                        //新增左標題
                        let classNm=val.ID_TABITEM===""?'tb'+index:val.ID_TABITEM;
@@ -176,7 +174,6 @@ if ($sfm=="CUTS"){
 
                    $.each(data,function (ItemNo,item) {
                       let DATA=item.TB_DATA;
-                      let FORMSEQ=item.FORMSEQ;         //表單編號
                       let No_Number= DATA.NO_NUM.VALUE; //編號
 
                       let count_element=0;
@@ -221,7 +218,9 @@ if ($sfm=="CUTS"){
                                    );
 
                                }
-
+                                if (No_Number.trim()===""){
+                                    $("#"+title_ID+"_"+ItemNo+"_"+No_Number).parent().hide();
+                                }
 
                            }
                            count_element++;
@@ -325,7 +324,7 @@ if ($sfm=="CUTS"){
 
                        Data_obj.get('IMG')[ItemIndex].TOP=TOP;
                        Data_obj.get('IMG')[ItemIndex].LEFT=LEFT;
-
+                       console.log(Data_obj.get('IMG'));
                        GetPIXELRegion(Num,middelLeft,middelTop);
 
                    }
@@ -369,6 +368,7 @@ if ($sfm=="CUTS"){
            $(document).on('click','button',function (e) {
               let id=$(this).attr('id');
               let sTraID=$("#sTraID").val();
+              const Page=$("#Page").val();
               switch (id) {
                   case "sbed":
                       if (!checkBEDwindow()){
@@ -390,7 +390,7 @@ if ($sfm=="CUTS"){
                       const sDt=$("#sDate").val();
                       const sTm=$("#sTime").val();
                       const Freq=$("#FORMSEQANCE").val();
-                      const Page=$("#Page").val();
+
                       const sUr="<?php echo $sUr?>";
                      // let Json_obj=Page==="A"?cmp(Data_obj.get('O_DATA'),Data_obj.get('IMG')): Data_obj.get('DATA');
 
@@ -412,6 +412,10 @@ if ($sfm=="CUTS"){
                               ,"<?php echo $sfm?>",'width=750px,height=650px,scrollbars=yes,resizable=no');
                       }
                       Serchwindow.Serchcallback=Serchcallback;
+                      break;
+                  case "DELBtn":
+
+                      DB_DEL(sTraID,Page,'<?php echo $sUr?>');
                       break;
                   default:
                       break;
@@ -442,11 +446,6 @@ if ($sfm=="CUTS"){
                        GetPageJson('B',sTraID);
                        Get_BJson=true;
                    }
-                  /* let old_obj=Data_obj.get('O_DATA');
-                   let new_obj=Data_obj.get('IMG');
-                   obj=cmp(old_obj,new_obj);
-*/
-
                    obj=Data_obj.get('IMG');
 
                    $(".area-table,#MM_B").show();
@@ -461,7 +460,7 @@ if ($sfm=="CUTS"){
            $(document).on("click mousedown",".draggable",function (e) {
                let is_Add=$("#AddSign").val() === "0";
                let ThisDiv_id=$(this).attr('id');
-               let Num=ThisDiv_id.substr(1,ThisDiv_id.length);
+               let Num=$(this).children().text();
 
                $("#div_nm").val(ThisDiv_id);
 
@@ -477,11 +476,11 @@ if ($sfm=="CUTS"){
                                    let Num=$("#"+ele).val();
                                    $("#NO_NUM").val(Num);
                                }
-                               if (val==="tb1"){
+                               /*if (val==="tb1"){
                                    let Region=$("#"+ele).val();
                                    $("#NO_REG").val(Region);
 
-                               }
+                               }*/
 
                            }
 
@@ -489,8 +488,7 @@ if ($sfm=="CUTS"){
                        });
                });
 
-
-
+               $("#NO_NUM").val(Num);
 
 
 
@@ -513,17 +511,15 @@ if ($sfm=="CUTS"){
 
                }).join("");
                let ThisData=Data_obj.get('DATA')[rowIndex].TB_DATA;
-
-
                let i=0;
                for (let key in ThisData){
                    if (parseInt(Index)===i)
                    {
                        ThisData[key].VALUE=$(this).val();
-
                    }
                    i++;
                }
+               console.log(ThisData);
            });
            $(document).on('change','input[name=sRdoDateTime]',function () {
 
@@ -591,7 +587,7 @@ if ($sfm=="CUTS"){
                     newObj.TOP=Y.toString();
                     newObj.W_TH=W.toString();
                     newObj.H_TH=H.toString();
-                    newObj.FRMSEQ="";
+                    newObj.FORMSEQ="";
                     Data_obj.get('IMG').push(newObj);
                 }
 
@@ -742,6 +738,7 @@ if ($sfm=="CUTS"){
                    }
                });
            }
+
            function NISPWSFMINI_Timer(sFm,Page) {
                $.ajax({
                    url:"/webservice/NISPWSFMINI.php?str="+AESEnCode("sFm="+sFm+"&sPg="+Page),
@@ -784,7 +781,7 @@ if ($sfm=="CUTS"){
                                    let ele=arr.join("_");
                                    $("#"+ele).val(Region);
                                    $("#NO_NUM").val(Num);
-                                   $("#NO_REG").val(Region);
+                                  // $("#NO_REG").val(Region);
                                }
                            });
                    });
@@ -835,35 +832,38 @@ if ($sfm=="CUTS"){
                });
 
            }
-           function cmp(x,y) {
+           function DB_DEL(sTraID,Page,sUr) {
+               const DelNum=$("#NO_NUM").val();
+               $.ajax("/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'BSOR'+"&sTraID="+sTraID+"&sPg="+Page+"&sCidFlag="+DelNum+"&sUr="+sUr+"&TsFm="+'<?php echo $sfm?>'))
+                   .done(function (data) {
+                       let response=JSON.parse(AESDeCode(data));
+                       console.log(response);
 
-               //x=>old_obj
-               //y=>new_obj
-               if (typeof (x)=="undefined" || typeof (y)=="undefined"){
-                   return false;
-               }
+                       /*
+                        if(re.result==="false"){
+                            alert('作廢失敗');
+                            return false;
+                        }else {
+
+                          //  ThisPageJson.clear();
 
 
-               let CompareLength=x.length; // 原始長度
+                        //    GetINIJson($("#DA_idpt").val(),$("#DA_idinpt").val(),'');
 
-               let copy=JSON.parse(JSON.stringify(y));
-               let compareArr=copy.splice(0,CompareLength);
-
-               return x.map((val, index) => {
-                   let diff;
-                   for (const p in val) {
-                       if (val[p] !== compareArr[index][p]) {
-                           diff = compareArr[index];
-                       }
-                   }
-                   return diff ;
-
-               }).filter(res=>{
-                   if ( typeof res=="object"){
-                       return res;
-                   }
-
-               }).concat(copy);
+                          $("#DELBtn").prop('disabled',true);
+                           $(".ItemBtn").hide();
+                           $("#ISTM").show();
+                           $("#sDate,#sTime").val("");
+                           $("#SearchConfirm").val('N');
+                       }*/
+                   }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                   console.log(
+                       "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                       "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                       "3 返回失敗,textStatus:"+textStatus+
+                       "4 返回失敗,errorThrown:"+errorThrown
+                   );
+               });
            }
 
         });
@@ -1122,10 +1122,10 @@ if ($sfm=="CUTS"){
                                 <span class="input-group-text" id="inputGroup-sizing-sm">編號</span>
                             </div>
                             <input type="text" id="NO_NUM" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-                            <div class="input-group-prepend">
+                           <!-- <div class="input-group-prepend">
                                 <span class="input-group-text" id="inputGroup-sizing-sm">部位</span>
                             </div>
-                            <input type="text" id="NO_REG" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
+                            <input type="text" id="NO_REG" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">-->
                         </div>
 
                         <button  class="sign btn btn-outline-primary" value="0">新增</button>
