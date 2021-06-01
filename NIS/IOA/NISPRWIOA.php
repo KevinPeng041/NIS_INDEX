@@ -997,7 +997,7 @@ $Account="00FUZZY";
         <span class="title float-left">
             <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
             <button type="button" id="SerchBtn" class="btn btn-primary btn-md" >查詢</button>
-            <button type="button" id="DELBtn" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal">作廢</button>
+            <button type="button" id="DELBtn" class="btn btn-primary btn-md"  >作廢</button>
             <button type="button" id="ReSetBtn" class="btn btn-primary btn-md"  >清除</button>
         </span>
     <!----------------------------------------------------------Patient Name-------------------------------------------------------------------------->
