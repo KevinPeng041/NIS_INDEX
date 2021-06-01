@@ -37,15 +37,17 @@ if ($sfm=="CUTS"){
        $(document).ready(function () {
            (function () {
                NISPWSFMINI_Timer('ILSGA','A');
-               $(".EDIT").hide();
-               $(".Main,#MM_B").hide();
+              // $(".EDIT").hide();
+               $(".MMDIV").hide();
+               $(".Main").hide();//#MM_B
+               $("#SubmitBtn,#DELBtn").prop('disabled',true);
+               $("#SubmitBtn").prop('disabled',true);
            })();
 
            let imageLoaded = function() {
                let Canvas=$("#CanvasPad")[0];
                let ctx=Canvas.getContext('2d');
                let img=$("img")[0];
-
                ctx.drawImage(img,0,0,Canvas.width,Canvas.height);
            };
 
@@ -166,7 +168,6 @@ if ($sfm=="CUTS"){
                        Data_obj.set('DATA',data);
                    }
 
-
                    data= Data_obj.get('DATA')
                         .flat(Infinity);
 
@@ -217,8 +218,12 @@ if ($sfm=="CUTS"){
                                         `
                                    );
 
+                                   if (title_ID==="tb0" || title_ID==="BSOR000043" || title_ID==="BSOR000044"){
+                                       $("#"+title_ID+"_"+ItemNo+"_"+No_Number).prop('disabled',true);
+                                   }
+
                                }
-                                if (No_Number.trim()===""){
+                               if (No_Number.trim()===""){
                                     $("#"+title_ID+"_"+ItemNo+"_"+No_Number).parent().hide();
                                 }
 
@@ -230,14 +235,13 @@ if ($sfm=="CUTS"){
                 }
                },
                inMMText:(data)=>{
-
-                    let En_CharCODE=66;
-                    let div_nm={"66":"壓瘡等級說明","65":"護理措施"};
-                   for (let key in data){
-                       $(".MM_TEXT").append(
+                    let En_CharCODE=65;
+                    let MM_title={"65":"壓瘡等級說明","66":"護理措施"};
+                    for (let key in data){
+                       $(".MM_"+String.fromCharCode(En_CharCODE)).append(
                         `
                         <div id="${'MM_'+String.fromCharCode(En_CharCODE)}">
-                            <label><b>${div_nm[En_CharCODE]}</b></label>
+                            <label><b>${MM_title[En_CharCODE]}</b></label>
                         </div>
                         `
                        );
@@ -248,11 +252,11 @@ if ($sfm=="CUTS"){
                                `
                               <p>${val}</p>
 
-                         `
+                             `
                            );
                        });
 
-                       En_CharCODE--;
+                       En_CharCODE++;
 
                    }
 
@@ -319,14 +323,13 @@ if ($sfm=="CUTS"){
 
                        let middelTop=Math.floor(ui.position.top+Height/2);
                        let middelLeft=Math.floor(ui.position.left+Width/2);
-
+                       let Region= GetPIXELRegion(middelLeft,middelTop);
 
 
                        Data_obj.get('IMG')[ItemIndex].TOP=TOP;
                        Data_obj.get('IMG')[ItemIndex].LEFT=LEFT;
-                       console.log(Data_obj.get('IMG'));
-                       GetPIXELRegion(Num,middelLeft,middelTop);
-
+                       PasteRegion(Num,Region);
+                       $("#NO_REG").val(Region);
                    }
                };
            var Get_AJson,Get_BJson=false;
@@ -360,7 +363,16 @@ if ($sfm=="CUTS"){
                   creatTable.inTableTd('B',[copyObj]);
 
                   AddShape(MaxNum,shape,e.offsetX+10,e.offsetY,15,15);
-                  GetPIXELRegion(MaxNum,e.offsetX+7,e.offsetY+7);
+                  let Region= GetPIXELRegion(e.offsetX+7,e.offsetY+7);
+                  PasteRegion(MaxNum,Region);
+
+                   //新增部位名稱
+                   $.each( Data_obj.get('DATA'),function (index,obj) {
+                       if (obj.TB_DATA.NO_NUM.VALUE===MaxNum.toString()){
+                           obj.TB_DATA.NM_ORGAN.VALUE=Region;
+                       }
+                   });
+
                   $("#AddSign").val("");
 
                }
@@ -369,6 +381,12 @@ if ($sfm=="CUTS"){
               let id=$(this).attr('id');
               let sTraID=$("#sTraID").val();
               const Page=$("#Page").val();
+              const IdPt=$("#DA_idpt").val();
+              const InPt=$("#DA_idinpt").val();
+              const PName=$("#DataTxt").val();
+              const sDt=$("#sDate").val();
+              const sTm=$("#sTime").val();
+
               switch (id) {
                   case "sbed":
                       if (!checkBEDwindow()){
@@ -387,35 +405,103 @@ if ($sfm=="CUTS"){
                       BEDwindow.bedcallback=bedcallback;
                       break;
                   case "SubmitBtn":
-                      const sDt=$("#sDate").val();
-                      const sTm=$("#sTime").val();
+
                       const Freq=$("#FORMSEQANCE").val();
-
                       const sUr="<?php echo $sUr?>";
-                     // let Json_obj=Page==="A"?cmp(Data_obj.get('O_DATA'),Data_obj.get('IMG')): Data_obj.get('DATA');
-
                       let Json_obj=Page==="A"?Data_obj.get('IMG'): Data_obj.get('DATA');
-                        console.log(Json_obj);
-                       DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'',Freq,sUr,'true');
+
+                      let B_obj=Data_obj.get('DATA');
+
+                      const error_msg=B_obj.map((val)=>{
+                          let msg=[];
+
+                          for (let key in val.TB_DATA){
+                              let Num=(val.TB_DATA.NO_NUM.VALUE).trim();
+
+                              if (Num!=="" && (val.TB_DATA[key].VALUE).trim()===""){
+
+                                  if (val.TB_DATA[key].ID==="BSOR000001"){
+                                      msg.push('編號:'+Num+'提醒:發生來源禁止空值');
+                                  }
+                                  if (val.TB_DATA[key].ID==="BSOR000009"){
+                                      msg.push('編號:'+Num+'提醒:壓瘡等級禁止空值');
+                                  }
+
+                              }
+
+                          }
+                            return msg;
+                      }).reduce((previousValue, currentValue, currentIndex, array)=>{
+                          return previousValue.concat(currentValue);
+                      },[]);
+
+
+                   /*   if (Page==="B"){
+                          Json_obj.filter((val)=>{
+                              return val.TB_DATA.NO_NUM.VALUE!=="";
+                          }).sort((x,y)=> x-y);
+                      }
+*/
+
+
+                      if (error_msg.length>0){
+                            alert(error_msg.join('\n'));
+                            return false;
+                        }
+
+                      console.log(Json_obj);
+                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'',Freq,sUr,'true');
                       break;
                   case "SerchBtn":
                       if (!checkSerchwindow()){
                           alert("查詢視窗已開啟");
                           break;
                       }else {
-                          const IdPt=$("#DA_idpt").val();
-                          const InPt=$("#DA_idinpt").val();
-                          const PName=$("#DataTxt").val();
+
+
+                          if (IdPt.trim()==="" ||InPt.trim()==="" ||PName.trim()==="")
+                          {
+                              alert('請先選擇病人');
+                              return  false;
+                          }
                           Serchwindow=window.open("/webservice/NISPWSLKQRY.php?str="+
                               AESEnCode("sFm="+"<?php echo $sfm?>"+"&PageVal="+""+"&DA_idpt="+IdPt+"&DA_idinpt="+InPt
                                   +"&sUser="+"<?php echo $sUr?>"+"&NM_PATIENT="+PName)
-                              ,"<?php echo $sfm?>",'width=750px,height=650px,scrollbars=yes,resizable=no');
+                                    ,"<?php echo $sfm?>",'width=750px,height=650px,scrollbars=yes,resizable=no');
                       }
                       Serchwindow.Serchcallback=Serchcallback;
                       break;
                   case "DELBtn":
+                      let DelConfirm_Str="";
+                      let Num=$("#NO_NUM").val();
+                      if (Page==="A"){
+                          if (Num.trim()===""){
+                              alert('請選擇要作廢的編號');
+                              return  false;
+                          }
+                          DelConfirm_Str="確定要作廢編號["+Num+"]的所有資料嗎?(所有此編號的紀錄將一併刪除)";
+                      }else {
+                          DelConfirm_Str="是否確定要作廢["+sDt+" "+sTm+"]的資料嗎?";
+                      }
+                      $("#DelModal").modal('show');
+                      $(".modal-body>p").empty();
+                      $(".modal-body>p").text(DelConfirm_Str);
+                      break;
+                  case "DelConfirm_Btn":
+                      let Update_result=DB_DEL(sTraID,Page,'<?php echo $sUr?>');
 
-                      DB_DEL(sTraID,Page,'<?php echo $sUr?>');
+                      if (Update_result.result==="false"){
+                          alert('作廢失敗:'+Update_result.message);
+                          console.log('作廢失敗:'+Update_result.message);
+                      } else {
+                          alert('作廢成功');
+                          Data_obj.clear();
+                          GetINIJson('<?php echo $sfm?>',IdPt,InPt);
+                          $("#DELBtn").prop('disabled',true);
+                          $("#sDate,#sTime").val("");
+                          $("#ISTM>label").children('input').prop('disabled',false);
+                      }
+                      $("#DelModal").modal('hide');
                       break;
                   default:
                       break;
@@ -438,8 +524,8 @@ if ($sfm=="CUTS"){
 
                    obj=Data_obj.get('DATA');
 
-                   $(".area-table,#MM_B").hide();
-                   $(".Main,#MM_A").show(500);
+                   $(".area-table").hide();
+                   $(".Main").show(500);
                }
                else {
                    if (!Get_BJson){
@@ -448,50 +534,28 @@ if ($sfm=="CUTS"){
                    }
                    obj=Data_obj.get('IMG');
 
-                   $(".area-table,#MM_B").show();
-                   $(".Main,#MM_A").hide(500);
+                   $(".area-table").show();
+                   $(".Main").hide(500);
                }
+               $(".MMDIV").hide();
+               $(".MM_"+Page).show();
                $("#Page").val(Page);
-
+               $("#SubmitBtn").prop('disabled',false);
                if(Get_AJson && Get_BJson){
                    DB_WSST(TransPage,sTraID,JSON.stringify(obj),'','','','','','false');
                }
            });
+
            $(document).on("click mousedown",".draggable",function (e) {
                let is_Add=$("#AddSign").val() === "0";
                let ThisDiv_id=$(this).attr('id');
                let Num=$(this).children().text();
+               let Region=Data_obj.get('IMG')
+                   .filter((value)=>{return value.NUM===Num});
 
                $("#div_nm").val(ThisDiv_id);
-
-               $(".table-edit").each(function(index,value){
-                   $(value).attr('id')
-                       .split("_")
-                       .forEach((val,index,arr)=>{
-                           let ele=arr.join("_");
-                           if(arr[2]===Num)
-                           {
-
-                               if (val==="tb0"){
-                                   let Num=$("#"+ele).val();
-                                   $("#NO_NUM").val(Num);
-                               }
-                               /*if (val==="tb1"){
-                                   let Region=$("#"+ele).val();
-                                   $("#NO_REG").val(Region);
-
-                               }*/
-
-                           }
-
-
-                       });
-               });
-
                $("#NO_NUM").val(Num);
-
-
-
+               $("#NO_REG").val(Region[0].NM_ORGAN);
                if (!is_Add){
                    $('.sign').css({'background-color' : '' ,'color':'',"border":""});
                }
@@ -500,26 +564,28 @@ if ($sfm=="CUTS"){
 
            //動態填值
            $(document).on("change",".table-edit",function () {
+               let Num= $(this).attr('id').split("_")[2];
 
-              let TD_class=$(this).parent().parent().attr('class');
+               let TD_class=$(this).parent().parent().attr('class');
+               let ThisData=Data_obj.get('DATA').filter((val)=>{
+                    return  val.TB_DATA.NO_NUM.VALUE===Num;
+               })[0].TB_DATA;
 
-               let rowIndex=$(this).parent().index()-1;
-               let Index=Data_obj.get('TR_CLASSNM').map((value,index)=>{
-                   if (TD_class===value){
-                       return index;
-                   }
 
-               }).join("");
-               let ThisData=Data_obj.get('DATA')[rowIndex].TB_DATA;
-               let i=0;
                for (let key in ThisData){
-                   if (parseInt(Index)===i)
-                   {
+                   if (TD_class===ThisData[key].ID && ThisData[key].ID!==""){
                        ThisData[key].VALUE=$(this).val();
+                   }else if (ThisData[key].ID===""){
+                       if (TD_class==="tb0"){
+                           ThisData.NO_NUM.VALUE=$(this).val();
+                       }
+                       if (TD_class==="tb1"){
+                           ThisData.NM_ORGAN.VALUE=$(this).val();
+                       }
                    }
-                   i++;
+
                }
-               console.log(ThisData);
+
            });
            $(document).on('change','input[name=sRdoDateTime]',function () {
 
@@ -595,23 +661,7 @@ if ($sfm=="CUTS"){
                    $(this).draggable(drag_value);
                });
            }
-           function checkBEDwindow() {
-
-               if(!BEDwindow){
-                   return true;
-               }else {
-                   return !!BEDwindow.closed;
-               }
-           }
-           function checkSerchwindow() {
-               if(!Serchwindow){
-                   return true;
-               }else {
-                   return !!Serchwindow.closed;
-               }
-           }
            function changeThisSize(num) {
-
                if (parseInt(num)<2){
                    return false;
                }
@@ -642,7 +692,7 @@ if ($sfm=="CUTS"){
                       "width": ele.innerWidth()+n,
                       "background-color":""
                   };
-              }
+            }
 
                $("#"+id).css(W_H);
            }
@@ -663,17 +713,17 @@ if ($sfm=="CUTS"){
                $("#DataTxt").val(P_NM);
                $("#sSTAT").val(ssTAT) ;
 
-               GetINIJson('<?php echo 'BSOR'.$sfm?>',idPt,INPt);
+               GetINIJson('<?php echo $sfm?>',idPt,INPt);
 
                 $(".Page").next('div').hide();
                 $(".area-table").hide();
                 $(".draggable").remove();
+                $(".DateTime").prop('readonly',false);
 
-               Get_AJson=false; //GetPageJson false
-               Get_BJson=false;
-
-
+               $("#SubmitBtn,#DELBtn").prop('disabled',true);
+               $("#ISTM>label").children('input').prop('disabled',false);
            }
+
            function Serchcallback(AESobj){
               const  obj=JSON.parse(AESDeCode(AESobj));
               console.log(obj);
@@ -682,11 +732,16 @@ if ($sfm=="CUTS"){
               const sDate=obj.DTEXCUTE;
               const IDPT=obj.IDPT;
               const INPT=obj.INPT;
+
+              if ($("#DA_idpt").val()!==IDPT || $("#DA_idinpt").val()!==INPT){
+                  alert('病人資料有異動請重新選擇病人');
+                  return;
+              }
+
+
                $("#sTime").val(sTime);
                $("#sDate").val(sDate);
                $("#sTraID").val(sTraID);
-
-
 
 
                if ($(".table-edit").parent().length>0){
@@ -695,19 +750,24 @@ if ($sfm=="CUTS"){
                }
                $(".draggable").remove();
 
+               $(".Main,.B,.EDIT").hide();
+               $(".DateTime").prop('readonly',true);
+               $("#DELBtn").prop('disabled',false);
+               $("#ISTM>label").children('input').prop('disabled',true);
 
-               $(".EDIT").hide();
-               $(".Main,.B,#MM_B").hide();
                Get_AJson=false; //GetPageJson false
                Get_BJson=false;
            }
            function GetINIJson(sfm,idPt,INPt){
-               $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm='+sfm+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'))
+               $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm='+sfm+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'+"&TsFm="+'<?php echo $sfm?>'))
                    .done(function(data) {
+
                         let obj= JSON.parse(AESDeCode(data));
                        creatTable.Default(obj);
                        $("#sTraID").val(obj.sTraID);
                        $("#sSave").val(obj.sSave);
+                       Get_AJson=false;
+                       Get_BJson=false;
                    })
                    .fail(function(XMLHttpResponse,textStatus,errorThrown) {
                        console.log(
@@ -720,7 +780,7 @@ if ($sfm=="CUTS"){
            }
            function GetPageJson(Page,sTraID) {
                $.ajax({
-                   url:"/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=BSOR&sTraID="+sTraID+"&sPg="+Page),
+                   url:"/webservice/NISPWSGETPRE.php?str="+AESEnCode("sFm=BSOR&sTraID="+sTraID+"&sPg="+Page+"&TsFm="+'<?php echo $sfm?>'),
                    dataType:"text",
                    async:false,
                    success:function (data){
@@ -767,30 +827,18 @@ if ($sfm=="CUTS"){
                    }
                });
            }
-           function GetPIXELRegion(Num,X,Y){
+           /**
+            * @return {string}
+            */
+           function GetPIXELRegion(X,Y){
+               let Region="";
+               console.log(X,Y);
                $.ajax({
-                   url:"/webservice/NISBSORPIXEL.php?str="+AESEnCode('&PIXEL_X='+X+'&PIXEL_Y='+Y)
+                   url:"/webservice/NISBSORPIXEL.php?str="+AESEnCode('&PIXEL_X='+X+'&PIXEL_Y='+Y),
+                   async:false
                }) .done(function(data) {
                    let obj= JSON.parse(AESDeCode(data));
-                   const Region=obj.NM_REGION===""?"不正確":obj.NM_REGION;
-                   $(".table-edit").each(function(index,value){
-                       $(value).attr('id')
-                           .split("_")
-                           .forEach((val,index,arr)=>{
-                               if (val==="tb1" && arr[2]===Num.toString()){
-                                   let ele=arr.join("_");
-                                   $("#"+ele).val(Region);
-                                   $("#NO_NUM").val(Num);
-                                  // $("#NO_REG").val(Region);
-                               }
-                           });
-                   });
-                    //新增部位名稱
-                   $.each( Data_obj.get('DATA'),function (index,obj) {
-                      if (obj.TB_DATA.NO_NUM.VALUE===Num.toString()){
-                           obj.TB_DATA.NM_ORGAN.VALUE=Region;
-                       }
-                   });
+                   Region=obj.NM_REGION===""?"不正確":obj.NM_REGION;
                }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
                    console.log(
                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -799,14 +847,27 @@ if ($sfm=="CUTS"){
                        "4 返回失敗,errorThrown:"+errorThrown
                    );
                });
-
+                return Region;
 
            }
+           function PasteRegion(Num,Region) {
+               $(".table-edit").each(function(index,value){
+                   $(value).attr('id')
+                       .split("_")
+                       .forEach((val,index,arr)=>{
+                           if (val==="tb1" && arr[2]===Num.toString()){
+                               let ele=arr.join("_");
+                               $("#"+ele).val(Region);
+                           }
+                       });
+               });
+           }
+
            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
                    'sFm='+"<?php echo $sfm?>"+'&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
                    '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
-                   '&USER='+sUr+'&Indb='+InSertDB)
+                   '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')
                )
                    .done(function (data) {
                        let json=JSON.parse(AESDeCode(data));
@@ -833,29 +894,16 @@ if ($sfm=="CUTS"){
 
            }
            function DB_DEL(sTraID,Page,sUr) {
+                let result="";
                const DelNum=$("#NO_NUM").val();
-               $.ajax("/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'BSOR'+"&sTraID="+sTraID+"&sPg="+Page+"&sCidFlag="+DelNum+"&sUr="+sUr+"&TsFm="+'<?php echo $sfm?>'))
+               $.ajax({
+                   url:"/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'BSOR'+"&sTraID="+sTraID+"&sPg="+Page+"&sCidFlag="+DelNum+"&sUr="+sUr+"&TsFm="+'<?php echo $sfm?>'),
+                   async:false
+               })
                    .done(function (data) {
                        let response=JSON.parse(AESDeCode(data));
                        console.log(response);
-
-                       /*
-                        if(re.result==="false"){
-                            alert('作廢失敗');
-                            return false;
-                        }else {
-
-                          //  ThisPageJson.clear();
-
-
-                        //    GetINIJson($("#DA_idpt").val(),$("#DA_idinpt").val(),'');
-
-                          $("#DELBtn").prop('disabled',true);
-                           $(".ItemBtn").hide();
-                           $("#ISTM").show();
-                           $("#sDate,#sTime").val("");
-                           $("#SearchConfirm").val('N');
-                       }*/
+                       result=response;
                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                    console.log(
                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -864,8 +912,25 @@ if ($sfm=="CUTS"){
                        "4 返回失敗,errorThrown:"+errorThrown
                    );
                });
+               return result;
            }
 
+
+           function checkBEDwindow() {
+
+               if(!BEDwindow){
+                   return true;
+               }else {
+                   return !!BEDwindow.closed;
+               }
+           }
+           function checkSerchwindow() {
+               if(!Serchwindow){
+                   return true;
+               }else {
+                   return !!Serchwindow.closed;
+               }
+           }
         });
 
     </script>
@@ -884,7 +949,7 @@ if ($sfm=="CUTS"){
           overflow-x:auto;
       }
 
-    table {
+      table {
         border: 1px solid #dee2e6;
           table-layout: auto;
           width: 100%;
@@ -901,7 +966,6 @@ if ($sfm=="CUTS"){
       td,th,tr{
           border: 1px solid #dee2e6;
       }
-
 
     .container .title button{
         color: white;
@@ -1003,15 +1067,12 @@ if ($sfm=="CUTS"){
 
 
   /*備註*/
-.MM_TEXT>div{
+.MMDIV>div{
    border: none;
     background-color: #FFFBCC;
 }
-.MM_TEXT>div:nth-child(1){
-    display: none;
-}
-  .MM_TEXT>div>P{
 
+  .MMDIV>div>P{
       font-size: 2vmin;
   }
 
@@ -1061,7 +1122,7 @@ if ($sfm=="CUTS"){
             <span class="title">
                 <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
                 <button type="button" id="SerchBtn" class="btn btn-primary btn-md" >查詢</button>
-                <button type="button" id="DELBtn" class="btn btn-primary btn-md"  data-toggle="modal" data-target="#DELModal">作廢</button>
+                <button type="button" id="DELBtn" class="btn btn-primary btn-md" >作廢</button>
                 <button type="button" id="ReSetBtn" class="btn btn-primary btn-md"  >清除</button>
                 <button type="button"  class="btn btn-warning btn-md"  id="sbed" >責任床位</button>
             </span>
@@ -1093,9 +1154,11 @@ if ($sfm=="CUTS"){
                 </div>
 
 
-                </div>
+            </div>
 
         </div>
+
+
 
         <div class="Page col-12">
             <button type="button" id="B" class="btn btn-primary btn-lg">評估資料</button>
@@ -1106,12 +1169,8 @@ if ($sfm=="CUTS"){
         <div class="Main col-12">
             <div class="row">
                 <div class="CanvasRow col-lg-5 col-md-12 col-sm-12">
-
                     <div class="drop-area">
-
                         <canvas id="CanvasPad" height="425" width="395" ></canvas>
-
-
                     </div>
                 </div>
 
@@ -1119,50 +1178,68 @@ if ($sfm=="CUTS"){
                     <div class="col-12">
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text" id="inputGroup-sizing-sm">編號</span>
+                                <span class="input-group-text" id="inputGroup-sizing-sm">選取編號</span>
                             </div>
                             <input type="text" id="NO_NUM" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
-                           <!-- <div class="input-group-prepend">
+                            <div class="input-group-prepend">
                                 <span class="input-group-text" id="inputGroup-sizing-sm">部位</span>
                             </div>
-                            <input type="text" id="NO_REG" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">-->
+                            <input type="text" id="NO_REG" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
                         </div>
 
                         <button  class="sign btn btn-outline-primary" value="0">新增</button>
-                        <button  class="sign btn btn-outline-primary" value="1">修改</button>
+                        <button  class="sign btn btn-outline-primary" value="1">刪除</button>
                         <button  class="sign btn btn-outline-primary" value="2">+</button>
                         <button  class="sign btn btn-outline-primary" value="3">-</button>
                     </div>
-
                     <div class="col-12">
-                         <div class="EDIT row">
-                              <div class="txtArea col-12">
+                        <div class="EDIT row">
+                            <div class="txtArea col-12">
 
-                              </div>
+                            </div>
 
-                              <div class="txtInput col-12 input-group">
+                            <div class="txtInput col-12 input-group">
 
-                              </div>
+                            </div>
 
-                              <div class="MM_TEXT col-12">
+                            <div class="MM_A col-12 MMDIV">
 
-                              </div>
+                            </div>
                         </div>
                     </div>
-
-
                 </div>
-
             </div>
-
         </div>
+
 
         <div class="B area-table">
 
         </div>
+        <div class="MM_B col-12 MMDIV">
+        </div>
+
 
     </div>
-
+    <!-- Modal -->
+    <div class="modal fade" id="DelModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>作廢提醒</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="DelConfirm_Btn" class="btn btn-primary">確定</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 
