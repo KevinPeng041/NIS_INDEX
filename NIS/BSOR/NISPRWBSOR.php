@@ -1,12 +1,12 @@
 <?php
 $sUr="00FUZZY";
-$sfm="BSOR";
+$sfm="CUTS";
 
 if ($sfm=="BSOR"){
     $shape="circle";
     $Title_NM="壓瘡評估作業";
 }
-if ($sfm=="TPUP"){
+if ($sfm=="TUPT"){
     $shape="triangle";
     $Title_NM="管路評估作業";
 
@@ -37,9 +37,8 @@ if ($sfm=="CUTS"){
        $(document).ready(function () {
            (function () {
                NISPWSFMINI_Timer('ILSGA','A');
-              // $(".EDIT").hide();
-               $(".MMDIV").hide();
-               $(".Main").hide();//#MM_B
+
+               $(".Main,.MMDIV").hide();
                $("#SubmitBtn,#DELBtn").prop('disabled',true);
                $("#SubmitBtn").prop('disabled',true);
            })();
@@ -66,7 +65,7 @@ if ($sfm=="CUTS"){
 
 
            var BEDwindow,Serchwindow;
-
+           var CancelNum=[];//被[刪除]的編號
            const creatTable={
                Default:(obj)=>{
                 let Tb_NM_obj=obj.T_NM; // 標題
@@ -74,7 +73,7 @@ if ($sfm=="CUTS"){
                 let T_CNM=obj.T_CNM; // td children
                 let MM_TEXT_obj=obj.MM_TEXT; //壓傷備註
                 let D_edit=obj.D_EDIT; //身高體重
-                let Is_Change=obj.IS_CHANGE; //壓瘡=>壓傷
+               // let Is_Change=obj.IS_CHANGE; //壓瘡=>壓傷
 
 
                    $(".area-table").children('table').remove();
@@ -90,8 +89,6 @@ if ($sfm=="CUTS"){
                    $.each(Tb_NM_obj,function (index,val) {
                        //新增左標題
                        let classNm=val.ID_TABITEM===""?'tb'+index:val.ID_TABITEM;
-
-
                        $("#Data_Table").append(
                            `
                                        <tr class="${classNm}">
@@ -112,152 +109,133 @@ if ($sfm=="CUTS"){
                    if (!Data_obj.has('NEWDATA')){
                        Data_obj.set('NEWDATA',obj.ST_DATAB);
                    }
+                   if(D_edit!==null){
+                       creatTable.inEdit(D_edit);
+                   }
+                   if (MM_TEXT_obj!==null){
+                       creatTable.inMMText(MM_TEXT_obj);
+                   }
                    Data_obj.set('MAXNUM',obj.MAXNUM);
 
-
-                   creatTable.inEdit(D_edit);
-                   if (Is_Change==="Y"){
+                  /* if (Is_Change==="Y"){
                        $("#T_Btn~label:first,h1").text(function () {
                            let str=$(this)[0].innerText;
                            let reg=/壓瘡/g;
                            $(this)[0].innerText= str.replace(reg,'壓傷');
                        });
 
-                   }
-                   if (MM_TEXT_obj!==null){
-                       creatTable.inMMText(MM_TEXT_obj);
-                    }
+                   }*/
+
+
 
                },
                inTableTd:(Page,data)=>{
-               if (Page==="A"){
 
-                   if (!Data_obj.has("O_DATA")){
-                       //存原始資料
+                 if (Page==="A"){
+                       $.each(data,function (index,val) {
+                           let LEFT=parseInt(val.LEFT);
+                           let TOP=parseInt(val.TOP);
+                           let Width=parseInt(val.W_TH);
+                           let Height=parseInt(val.H_TH);
+                           AddShape(val.NUM,'<?php echo $shape?>',LEFT+Math.floor(Width/2),TOP-Math.floor(Height/2),Width,Height);
 
-                       let copy=JSON.parse(JSON.stringify(data));
-                       Data_obj.set("O_DATA",copy);
+                       });
+
                    }
+                 if (Page==="B"){
 
-                    if (!Data_obj.has('IMG') ){
-                        Data_obj.set('IMG',data);
-
-                    }
-
-                    $.each(data,function (index,val) {
-                        let LEFT=parseInt(val.LEFT);
-                        let TOP=parseInt(val.TOP);
-                        let Width=parseInt(val.W_TH);
-                        let Height=parseInt(val.H_TH);
-                        AddShape(val.NUM,'<?php echo $shape?>',LEFT+5,TOP-10,Width,Height);
-                    });
-
-                }
-               if (Page==="B"){
-                    let T_CD=Data_obj.get("TD_Child");
-                    let T_ID=Data_obj.get("TR_CLASSNM");
-                    let Data_json=Data_obj.get('DATA');
-                    let sSTAT=  $("#sSTAT").val() ;//護理級值
-                    data.forEach((value)=>{value.SSTAT=sSTAT});
-
-                   if (Data_obj.has('DATA')){
-                       //判斷是否新增過
-                       Data_json.push(data);
-                   }
-                   else {
-                       Data_obj.set('DATA',data);
-                   }
-
-                   data= Data_obj.get('DATA')
-                        .flat(Infinity);
-
-                   Data_obj.set('DATA',data);
-
-                   $.each(data,function (ItemNo,item) {
-                      let DATA=item.TB_DATA;
-                      let No_Number= DATA.NO_NUM.VALUE; //編號
-
-                      let count_element=0;
-                       for (let key in DATA){
-                           let ELE_Type=DATA[key].TYPE;
-                           let ELE_Val=DATA[key].VALUE;
-                           let title_ID=T_ID[count_element];
+                       let T_CD=Data_obj.get("TD_Child");
+                       let T_ID=Data_obj.get("TR_CLASSNM");
 
 
-                           if ($("#"+title_ID+"_"+ItemNo+"_"+No_Number).length===0){
+                       data.forEach((value)=>{value.SSTAT=$("#sSTAT").val()}); //護理級值
 
-                               if (ELE_Type==="CB"){
-                                   $("."+title_ID).append(
-                                       `
-                                        <td>
-                                            <select id="${title_ID+"_"+ItemNo+"_"+No_Number}" class='table-edit'></select>
-                                        </td>
-                                    `
-                                   );
+                       $.each(data,function (ItemNo,item) {
+                           let DATA=item.TB_DATA;
+                           let No_Number= DATA.NO_NUM.VALUE; //編號
+                           let count_element=0;
 
-                                   $.each(T_CD[count_element],function (index,val) {
-                                       $("#"+title_ID+"_"+ItemNo+"_"+No_Number).append(
-                                           `<option value="${val.ID_TABITEM}" >${val.ST_LEFT}</option>`
+                           for (let key in DATA){
+                               let ELE_Type=DATA[key].TYPE;
+                               let ELE_Val=DATA[key].VALUE;
+                               let title_ID=T_ID[count_element];
+
+                               if ($("#"+title_ID+"_"+ItemNo+"_"+No_Number).length===0){
+
+                                   if (ELE_Type==="CB"){
+                                       $("."+title_ID).append(
+                                           `
+                                            <td class="${No_Number}">
+                                                <select id="${title_ID+"_"+ItemNo+"_"+No_Number}" class='table-edit'></select>
+                                            </td>
+                                        `
                                        );
 
-                                       if (ELE_Val.trim()!==""){
-                                           $("#"+title_ID+"_"+ItemNo+"_"+No_Number+" option[value="+ELE_Val+"]").attr('selected',true);
+                                       $.each(T_CD[count_element],function (index,val) {
+                                           $("#"+title_ID+"_"+ItemNo+"_"+No_Number).append(
+                                               `<option value="${val.ID_TABITEM}" >${val.ST_LEFT}</option>`
+                                           );
+
+                                           if (ELE_Val.trim()!==""){
+                                               $("#"+title_ID+"_"+ItemNo+"_"+No_Number+" option[value="+ELE_Val+"]").attr('selected',true);
+                                           }
+
+                                       })
+
+
+                                   }
+
+                                   if (ELE_Type==="ET"){
+                                       $("."+title_ID).append(
+                                           `
+                                              <td class="${No_Number}">
+                                                   <input  type="text" class='table-edit' id="${title_ID+"_"+ItemNo+"_"+No_Number}" value="${ELE_Val}">
+                                              </td>
+                                            `
+                                       );
+
+                                       if (title_ID==="tb0" || title_ID==="BSOR000043" || title_ID==="BSOR000044"){
+                                           $("#"+title_ID+"_"+ItemNo+"_"+No_Number).prop('disabled',true);
                                        }
 
-                                   })
-
-
-                               }
-
-                               if (ELE_Type==="ET"){
-                                   $("."+title_ID).append(
-                                       `
-                                          <td>
-                                               <input  type="text" class='table-edit' id="${title_ID+"_"+ItemNo+"_"+No_Number}" value="${ELE_Val}">
-                                          </td>
-                                        `
-                                   );
-
-                                   if (title_ID==="tb0" || title_ID==="BSOR000043" || title_ID==="BSOR000044"){
-                                       $("#"+title_ID+"_"+ItemNo+"_"+No_Number).prop('disabled',true);
+                                   }
+                                   if (No_Number.trim()===""){
+                                       $("#"+title_ID+"_"+ItemNo+"_"+No_Number).parent().hide();
                                    }
 
                                }
-                               if (No_Number.trim()===""){
-                                    $("#"+title_ID+"_"+ItemNo+"_"+No_Number).parent().hide();
-                                }
-
+                               count_element++;
                            }
-                           count_element++;
-                       }
-                      });
-
-                }
+                       });
+                     console.log(data);
+                   }
                },
                inMMText:(data)=>{
                     let En_CharCODE=65;
                     let MM_title={"65":"壓瘡等級說明","66":"護理措施"};
+
                     for (let key in data){
-                       $(".MM_"+String.fromCharCode(En_CharCODE)).append(
-                        `
+                        if ($("#"+'MM_'+String.fromCharCode(En_CharCODE)).length===0){
+                            $(".MM_"+String.fromCharCode(En_CharCODE)).append(
+                                `
                         <div id="${'MM_'+String.fromCharCode(En_CharCODE)}">
                             <label><b>${MM_title[En_CharCODE]}</b></label>
                         </div>
                         `
-                       );
+                            );
 
 
-                       $.each(data[key],function (index,val) {
-                           $("#MM_"+String.fromCharCode(En_CharCODE)).append(
-                               `
+                            $.each(data[key],function (index,val) {
+                                $("#MM_"+String.fromCharCode(En_CharCODE)).append(
+                                    `
                               <p>${val}</p>
 
                              `
-                           );
-                       });
+                                );
+                            });
 
-                       En_CharCODE++;
-
+                            En_CharCODE++;
+                        }
                    }
 
                 },
@@ -268,12 +246,14 @@ if ($sfm=="CUTS"){
 
 
                   for (let key in txtArea_Nm) {
-                      $(".txtArea").append(
-                          `
+                      if ($("#textArea").length===0){
+                          $(".txtArea").append(
+                              `
                            <label for="textArea">${txtArea_Nm['TB_NM']+":"}</label>
                            <textarea id="textArea" class="form-control form-control-lg " readonly></textarea>
                           `
-                      )
+                          )
+                      }
                   }
                   $.each(txtInput,function (index,val) {
                       $(".txtInput").append(
@@ -328,11 +308,15 @@ if ($sfm=="CUTS"){
 
                        Data_obj.get('IMG')[ItemIndex].TOP=TOP;
                        Data_obj.get('IMG')[ItemIndex].LEFT=LEFT;
+
+                       Data_obj.get('DATA')[ItemIndex].TB_DATA.NM_ORGAN.VALUE=Region;
+
                        PasteRegion(Num,Region);
                        $("#NO_REG").val(Region);
                    }
                };
            var Get_AJson,Get_BJson=false;
+
 
            $(".drop-area").on("click",function (e) {
                //e.clientX , e.clientY
@@ -344,12 +328,9 @@ if ($sfm=="CUTS"){
                   //取Canvas上圖形最大號 若為空,num=0
 
 
-                  let num= Data_obj.get('MAXNUM')==="0"?0:parseInt(Data_obj.get('MAXNUM'));
-
-                  let MaxNum=num+1;
-                  Data_obj.set('MAXNUM',MaxNum.toString());//回壓最大直
-
-
+                  let num=Data_obj.get('MAXNUM')==="0"?0:parseInt(Data_obj.get('MAXNUM'));
+                  let MaxNum=num+1; //最大號
+                  let add_Num="";  // 新增的編號
                   let copyObj=JSON.parse(JSON.stringify(Data_obj.get('NEWDATA')));
                   let newTime=new Date();
 
@@ -357,24 +338,50 @@ if ($sfm=="CUTS"){
                   let DT_M=(newTime.getMonth()+1<10?'0':'')+(newTime.getMonth()+1);
                   let DT_D=(newTime.getDate()<10?'0':'')+newTime.getDate();
 
-                  copyObj.TB_DATA.NO_NUM.VALUE=MaxNum.toString();
+
+               /***********取被刪除編號重新排序，已被刪除的最小號開始新增***************************/
+                if (CancelNum.length>0){
+                    CancelNum.sort((x,y)=>x-y);
+                    add_Num=CancelNum[0];
+                    CancelNum.splice(0,1);
+                }else {
+                    add_Num=MaxNum;
+                    Data_obj.set('MAXNUM',MaxNum.toString());//回壓最大直
+                }
+             /******************************end**************************************************/
+                  copyObj.TB_DATA.NO_NUM.VALUE=add_Num.toString();
                   copyObj.DT_START=DT_Y+DT_M+DT_D;
 
-                  creatTable.inTableTd('B',[copyObj]);
+                   if (Data_obj.has('DATA')){
+                       //判斷是否新增過
+                       Data_obj.get('DATA').push(copyObj);
+                   }
+                   else {
+                       Data_obj.set('DATA',[copyObj]);
+                   }
 
-                  AddShape(MaxNum,shape,e.offsetX+10,e.offsetY,15,15);
+                   creatTable.inTableTd('B',[copyObj]);
+
+                  AddShape(add_Num,shape,e.offsetX+10,e.offsetY,15,15);
                   let Region= GetPIXELRegion(e.offsetX+7,e.offsetY+7);
-                  PasteRegion(MaxNum,Region);
+                  PasteRegion(add_Num,Region);
 
-                   //新增部位名稱
-                   $.each( Data_obj.get('DATA'),function (index,obj) {
-                       if (obj.TB_DATA.NO_NUM.VALUE===MaxNum.toString()){
-                           obj.TB_DATA.NM_ORGAN.VALUE=Region;
-                       }
-                   });
 
-                  $("#AddSign").val("");
+                // 迭代新增部位名稱
+                for (let [key, value] of Data_obj){
+                    if (key==="IMG" ){
+                        value.filter((val)=>{return val.NUM===add_Num.toString()})
+                            .forEach((val)=>{val.NM_ORGAN=Region});
 
+                        console.log(value);
+                    }
+                    if (key==="DATA"){
+                        value.filter((val)=>{return val.TB_DATA.NO_NUM.VALUE===add_Num.toString()})
+                            .forEach((val)=>val.TB_DATA.NM_ORGAN.VALUE=Region);
+                    }
+                }
+
+                $("#AddSign").val("");
                }
            });
            $(document).on('click','button',function (e) {
@@ -386,7 +393,7 @@ if ($sfm=="CUTS"){
               const PName=$("#DataTxt").val();
               const sDt=$("#sDate").val();
               const sTm=$("#sTime").val();
-
+              const Num=$("#NO_NUM").val();
               switch (id) {
                   case "sbed":
                       if (!checkBEDwindow()){
@@ -406,7 +413,7 @@ if ($sfm=="CUTS"){
                       break;
                   case "SubmitBtn":
 
-                      const Freq=$("#FORMSEQANCE").val();
+
                       const sUr="<?php echo $sUr?>";
                       let Json_obj=Page==="A"?Data_obj.get('IMG'): Data_obj.get('DATA');
 
@@ -426,6 +433,9 @@ if ($sfm=="CUTS"){
                                   if (val.TB_DATA[key].ID==="BSOR000009"){
                                       msg.push('編號:'+Num+'提醒:壓瘡等級禁止空值');
                                   }
+                                  if (val.TB_DATA[key].ID==="BSOR000051"){
+                                      msg.push('編號:'+Num+'提醒:傷口等級禁止空值');
+                                  }
 
                               }
 
@@ -436,44 +446,36 @@ if ($sfm=="CUTS"){
                       },[]);
 
 
-                   /*   if (Page==="B"){
-                          Json_obj.filter((val)=>{
-                              return val.TB_DATA.NO_NUM.VALUE!=="";
-                          }).sort((x,y)=> x-y);
-                      }
-*/
-
-
                       if (error_msg.length>0){
                             alert(error_msg.join('\n'));
                             return false;
                         }
-
-                      console.log(Json_obj);
-                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'',Freq,sUr,'true');
+                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',sUr,'true');
                       break;
-                  case "SerchBtn":
-                      if (!checkSerchwindow()){
+                  case "SearchBtn":
+                      if (!checkSerchwindow())
+                      {
                           alert("查詢視窗已開啟");
                           break;
-                      }else {
-
+                      }
+                      else {
 
                           if (IdPt.trim()==="" ||InPt.trim()==="" ||PName.trim()==="")
                           {
                               alert('請先選擇病人');
                               return  false;
                           }
+
                           Serchwindow=window.open("/webservice/NISPWSLKQRY.php?str="+
-                              AESEnCode("sFm="+"<?php echo $sfm?>"+"&PageVal="+""+"&DA_idpt="+IdPt+"&DA_idinpt="+InPt
-                                  +"&sUser="+"<?php echo $sUr?>"+"&NM_PATIENT="+PName)
+                              AESEnCode("sFm="+"BSOR"+"&PageVal="+""+"&DA_idpt="+IdPt+"&DA_idinpt="+InPt
+                                  +"&sUser="+"<?php echo $sUr?>"+"&NM_PATIENT="+PName+"&TsFm="+"<?php echo $sfm?>")
                                     ,"<?php echo $sfm?>",'width=750px,height=650px,scrollbars=yes,resizable=no');
                       }
                       Serchwindow.Serchcallback=Serchcallback;
                       break;
                   case "DELBtn":
                       let DelConfirm_Str="";
-                      let Num=$("#NO_NUM").val();
+
                       if (Page==="A"){
                           if (Num.trim()===""){
                               alert('請選擇要作廢的編號');
@@ -483,9 +485,10 @@ if ($sfm=="CUTS"){
                       }else {
                           DelConfirm_Str="是否確定要作廢["+sDt+" "+sTm+"]的資料嗎?";
                       }
-                      $("#DelModal").modal('show');
+
                       $(".modal-body>p").empty();
                       $(".modal-body>p").text(DelConfirm_Str);
+                      $("#DelModal").modal('show');
                       break;
                   case "DelConfirm_Btn":
                       let Update_result=DB_DEL(sTraID,Page,'<?php echo $sUr?>');
@@ -493,25 +496,68 @@ if ($sfm=="CUTS"){
                       if (Update_result.result==="false"){
                           alert('作廢失敗:'+Update_result.message);
                           console.log('作廢失敗:'+Update_result.message);
-                      } else {
+                      }
+                      else {
                           alert('作廢成功');
-                          Data_obj.clear();
+                          window.location.reload(true);
+                        /*  Data_obj.clear();
                           GetINIJson('<?php echo $sfm?>',IdPt,InPt);
                           $("#DELBtn").prop('disabled',true);
-                          $("#sDate,#sTime").val("");
+                          $("#sDate,#sTime,#NO_NUM,#NO_REG").val("");
                           $("#ISTM>label").children('input').prop('disabled',false);
+                          $(".draggable").remove();
+                          $(".Main,.B,.MMDIV").hide();//pageA,pageB,pageMM*/
                       }
                       $("#DelModal").modal('hide');
+                      break;
+                  case "CancelBtn":
+                      RemoveShape(Num);
+                      break;
+                  case "ReSetBtn":
+                      $("input[type=text]:not(#sfm)").val("");
+                      $("input[type=radio]").prop('checked',false);
+                      $(".Main,.B,.MMDIV").hide();
                       break;
                   default:
                       break;
               }
            });
            $(".sign").on('click',function () {
+               //0=>add
+               //1=>remove
+               //2=>Tobig
+               //3=>Tosmall
+               const Sign_val=$(this).val();
+
+               if (Sign_val==="1"){
+                   let Num=$("#NO_NUM").val();
+                   if(Num.trim()==="")
+                   {
+                       alert("請選擇要刪除的編號");
+                       return ;
+                   }
+
+                   //沒有表單單號能刪除
+                   if (Data_obj.get('IMG').filter((val)=>{return val.FORMSEQ!=="" && val.NUM===Num}).length>0){
+                       alert("提醒:僅能刪除新增的[編號]");
+                       return ;
+                   }
+
+
+                   $(".modal-body>p").empty();
+                   $(".modal-body>p").text('確定要刪除編號:['+$("#NO_NUM").val()+']嗎?');
+                   $("#CancelModal").modal('show');
+               }
                $("#AddSign").val($(this).val());
                changeThisSize($(this).val());
            });
            $(".Page>button").on('click',function () {
+
+            if ($("#DataTxt").val()===""){
+                alert('請先選擇病人');
+                return ;
+            }
+
                const Page=$(this).attr('id');
                let sTraID=$("#sTraID").val();
                let obj="";
@@ -522,8 +568,8 @@ if ($sfm=="CUTS"){
                         Get_AJson=true;
                     }
 
-                   obj=Data_obj.get('DATA');
 
+                   obj=Data_obj.get('DATA');
                    $(".area-table").hide();
                    $(".Main").show(500);
                }
@@ -532,15 +578,18 @@ if ($sfm=="CUTS"){
                        GetPageJson('B',sTraID);
                        Get_BJson=true;
                    }
+                   $("button[id='A']").prop('disabled',false);
                    obj=Data_obj.get('IMG');
-
                    $(".area-table").show();
                    $(".Main").hide(500);
                }
+                console.log(obj);
+
                $(".MMDIV").hide();
                $(".MM_"+Page).show();
                $("#Page").val(Page);
                $("#SubmitBtn").prop('disabled',false);
+
                if(Get_AJson && Get_BJson){
                    DB_WSST(TransPage,sTraID,JSON.stringify(obj),'','','','','','false');
                }
@@ -550,6 +599,7 @@ if ($sfm=="CUTS"){
                let is_Add=$("#AddSign").val() === "0";
                let ThisDiv_id=$(this).attr('id');
                let Num=$(this).children().text();
+
                let Region=Data_obj.get('IMG')
                    .filter((value)=>{return value.NUM===Num});
 
@@ -561,12 +611,13 @@ if ($sfm=="CUTS"){
                }
 
            });
-
            //動態填值
            $(document).on("change",".table-edit",function () {
+
                let Num= $(this).attr('id').split("_")[2];
 
                let TD_class=$(this).parent().parent().attr('class');
+
                let ThisData=Data_obj.get('DATA').filter((val)=>{
                     return  val.TB_DATA.NO_NUM.VALUE===Num;
                })[0].TB_DATA;
@@ -585,7 +636,7 @@ if ($sfm=="CUTS"){
                    }
 
                }
-
+               console.log(ThisData);
            });
            $(document).on('change','input[name=sRdoDateTime]',function () {
 
@@ -627,7 +678,7 @@ if ($sfm=="CUTS"){
 
                $("#CanvasPad").before(
                    `
-                      <div class="${'draggable '+shape}" id="${shape_Nm+txt}" >
+                      <div class="${'draggable '+shape+' '+txt}" id="${shape_Nm+txt}" >
                            ${text_ele}
                       </div>
                    `
@@ -661,40 +712,67 @@ if ($sfm=="CUTS"){
                    $(this).draggable(drag_value);
                });
            }
+           function RemoveShape(Num) {
+
+                let Index="";
+                $.each(Data_obj.get('IMG'),function (index,val) {
+                    if (val.NUM===Num){
+                        Index=index;
+                    }
+                });
+
+                Data_obj.get('IMG').splice(Index,1);
+                Data_obj.get('DATA').splice(Index,1);
+                $("."+Num).remove();
+                $("#NO_REG,#NO_NUM").val("");
+
+                CancelNum.push(parseInt(Num));
+              //  $("#CancelNum").val(Num);
+                $("#CancelModal").modal('hide');
+           }
            function changeThisSize(num) {
-               if (parseInt(num)<2){
-                   return false;
+               if (parseInt(num) < 2) {
+                   return;
                }
-               let id=$("#div_nm").val();
+               let sfm = '<?php echo $sfm?>';
+               let id = $("#div_nm").val();
+               let N = num === "2" ? 1 : -1;
+
+               let ele = $("#" + id);
+               let h = ele.outerHeight(true) + N;
+               let w = ele.outerWidth(true) + N;
+
+               if (id.trim()===""){
+                   alert('請選擇要修改的編號');
+                   return;
+               }
+
+               if (h <= 15 || w <= 15) {
+                   return;
+               }
 
 
-               let n=num==="2"?10:-10;
-               let shape=id.substring(0, 1) ;
+               if (sfm === "TPUP") {
+                   let border_width = ele.css('border-width')
+                       .split(" ")
+                       .map(value => parseInt(value) + N + 'px');
 
-               let ele=$("#"+id);
-               let W_H="";
 
-               if (shape==="t")
-            {
+                   $("#" + id).css({
+                       "border-width": border_width.join(" ")
+                   });
 
-                  let border_width=ele.css('border-width')
-                      .split(" ")
-                      .map(value => parseInt(value)+n+'px');
-                  W_H={
-                      "border-width":border_width.join(" ")
-                  }
-            }
-            else
-            {
+               } else {
 
-                  W_H={
-                      "height":ele.innerHeight()+n,
-                      "width": ele.innerWidth()+n,
-                      "background-color":""
-                  };
-            }
+                   $("#" + id).css({"height": h,"width": w});
 
-               $("#"+id).css(W_H);
+                   Data_obj.get('IMG')
+                       .filter((val) => {return val.NUM === id.substring(1, id.length)})
+                       .forEach((val) => {
+                       val.W_TH = h.toString();
+                       val.H_TH = w.toString();
+                   });
+               }
            }
            function bedcallback(data){
                let str=AESDeCode(data);
@@ -722,11 +800,11 @@ if ($sfm=="CUTS"){
 
                $("#SubmitBtn,#DELBtn").prop('disabled',true);
                $("#ISTM>label").children('input').prop('disabled',false);
+               CancelNum.length=0;
            }
 
            function Serchcallback(AESobj){
               const  obj=JSON.parse(AESDeCode(AESobj));
-              console.log(obj);
               const sTraID=obj.sTraID;
               const sTime=obj.TMEXCUTE;
               const sDate=obj.DTEXCUTE;
@@ -742,27 +820,28 @@ if ($sfm=="CUTS"){
                $("#sTime").val(sTime);
                $("#sDate").val(sDate);
                $("#sTraID").val(sTraID);
-
-
                if ($(".table-edit").parent().length>0){
                    $(".table-edit").parent().remove();
                    Data_obj.get('DATA').length=0;
                }
                $(".draggable").remove();
 
-               $(".Main,.B,.EDIT").hide();
+               $(".Main,.B,.MMDIV").hide();//pageA,pageB,pageMM
                $(".DateTime").prop('readonly',true);
                $("#DELBtn").prop('disabled',false);
                $("#ISTM>label").children('input').prop('disabled',true);
+               $("button[id='A']").prop('disabled',true);
 
                Get_AJson=false; //GetPageJson false
                Get_BJson=false;
+               CancelNum.length=0;
+
            }
            function GetINIJson(sfm,idPt,INPt){
-               $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm='+sfm+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'+"&TsFm="+'<?php echo $sfm?>'))
+               $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=BSOR'+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'+"&TsFm="+'<?php echo $sfm?>'))
                    .done(function(data) {
-
                         let obj= JSON.parse(AESDeCode(data));
+                        console.log(obj);
                        creatTable.Default(obj);
                        $("#sTraID").val(obj.sTraID);
                        $("#sSave").val(obj.sSave);
@@ -784,9 +863,23 @@ if ($sfm=="CUTS"){
                    dataType:"text",
                    async:false,
                    success:function (data){
+
                          let obj= JSON.parse(AESDeCode(data));
-                        console.log(obj);
-                         creatTable.inTableTd(Page,obj);
+                            console.log(obj);
+                           let Data_A=obj.DATA_A;
+                           let Data_B=obj.DATA_B;
+                           let CreatDataTd=Page==="A"?Data_A:Data_B;
+
+                           if (!Data_obj.has('IMG') ){
+                               Data_obj.set('IMG',Data_A);
+                           }
+
+                           if (!Data_obj.has('DATA')){
+                               Data_obj.set("DATA",Data_B);
+                           }
+
+                         creatTable.inTableTd(Page,CreatDataTd);
+
 
                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
                        console.log(
@@ -832,7 +925,6 @@ if ($sfm=="CUTS"){
             */
            function GetPIXELRegion(X,Y){
                let Region="";
-               console.log(X,Y);
                $.ajax({
                    url:"/webservice/NISBSORPIXEL.php?str="+AESEnCode('&PIXEL_X='+X+'&PIXEL_Y='+Y),
                    async:false
@@ -865,7 +957,7 @@ if ($sfm=="CUTS"){
 
            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
-                   'sFm='+"<?php echo $sfm?>"+'&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
+                   'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
                    '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
                    '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')
                )
@@ -914,7 +1006,6 @@ if ($sfm=="CUTS"){
                });
                return result;
            }
-
 
            function checkBEDwindow() {
 
@@ -1039,6 +1130,9 @@ if ($sfm=="CUTS"){
       border: 2px solid red;
       position: absolute;
       display: flex;
+      background-color: greenyellow;
+      opacity: 0.8;
+      z-index: 1;
   }
 
 
@@ -1049,8 +1143,9 @@ if ($sfm=="CUTS"){
   }
 
   .square>div{
+      margin-top: -5px;
       text-align: center;
-
+      font-weight: bold;
   }
 
 
@@ -1101,14 +1196,14 @@ if ($sfm=="CUTS"){
         <input id="DA_idpt"     value=""  type="text"  placeholder="病歷號">
         <input id="DA_idinpt"   value=""  type="text"  placeholder="住院號">
         <input id="DA_sBed"     value=""  type="text"  placeholder="床位">
-        <input id="FORMSEQANCE"     value=""  type="text"  placeholder="表單編號">
-        <input id="sSTAT"     value=""  type="text"  placeholder="護理站代碼">
+        <input id="sSTAT"       value=""  type="text"  placeholder="護理站代碼">
         <input id="sSave"       value=""  type="text"  placeholder="存檔權限">
         <input id="sTraID"      value=""  type="text"  placeholder="交易序號">
         <input id="div_nm"      value=""  type="text"  placeholder="所選圖形">
         <input id="AddSign"     value=""  type="text"  placeholder="是否新增">
-        <input id="Page"     value=""  type="text"  placeholder="頁面">
+        <input id="Page"        value=""  type="text"  placeholder="頁面">
         <input id="sfm"         value="<?php echo $sfm?>" type="text">
+       <!-- <input id="CancelNum"   value="" type="text"   placeholder="刪除的編號">-->
         <img src="../../img/BedSore.jpg" style="display: none">
     </div>
 
@@ -1121,7 +1216,7 @@ if ($sfm=="CUTS"){
 
             <span class="title">
                 <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
-                <button type="button" id="SerchBtn" class="btn btn-primary btn-md" >查詢</button>
+                <button type="button" id="SearchBtn" class="btn btn-primary btn-md" >查詢</button>
                 <button type="button" id="DELBtn" class="btn btn-primary btn-md" >作廢</button>
                 <button type="button" id="ReSetBtn" class="btn btn-primary btn-md"  >清除</button>
                 <button type="button"  class="btn btn-warning btn-md"  id="sbed" >責任床位</button>
@@ -1235,7 +1330,27 @@ if ($sfm=="CUTS"){
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="DelConfirm_Btn" class="btn btn-primary">確定</button>
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="CancelModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5>刪除提醒</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="CancelBtn" class="btn btn-primary">確定</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
                 </div>
             </div>
         </div>
