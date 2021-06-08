@@ -7,9 +7,14 @@ function GetBSORIniJson($conn,$sFm,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr
     $stid=oci_parse($conn,$SQL);
     oci_bind_by_name($stid,':ID_TABFORM',$sFm);
     oci_execute($stid);
-    $arr='';
+
     $ST_DATAA='';
     $ST_DATAB="";
+    $MM_TEXT="";
+    $Tittle_Nm="";
+    $Tittle_CNm="";
+    $Data_Edit="";
+
     while (oci_fetch_array($stid)){
         $ST_DATAA=oci_result($stid,"ST_DATAA")->load();
         $ST_DATAB=oci_result($stid,"ST_DATAB")->load();
@@ -17,35 +22,47 @@ function GetBSORIniJson($conn,$sFm,$Idpt,$INPt,$ID_BED,$sTraID,$sSave,$date,$sUr
         $Tittle_Nm=oci_result($stid,"ST_PREB")->load();
         $Tittle_CNm=oci_result($stid,"ST_PREC")->load();
         $Data_Edit=oci_result($stid,"ST_PRED")->load();
-        $arr=array(
-            "MM_TEXT"=>json_decode($MM_TEXT),
-            "T_NM"=>json_decode($Tittle_Nm),
-            "T_CNM"=>GetStationOrder($conn,$Tittle_CNm),
-            "D_EDIT"=>json_decode($Data_Edit)
-        );
     }
 
- /*  $isChange=ChangeChr($conn)!="Y"?"N":"Y";
-    $arr['IS_CHANGE']=$isChange;*/
+    $response=array(
+        "MM_TEXT"=>json_decode($MM_TEXT),
+        "T_NM"=>json_decode($Tittle_Nm),
+        "T_CNM"=>GetStationOrder($conn,$sFm,$Tittle_CNm),
+        "D_EDIT"=>json_decode($Data_Edit)
+    );
 
 
-    $arr['sSave']=$sSave;
-    $arr['sTraID']=$sTraID;
-    $arr['ST_DATAB']=json_decode($ST_DATAB);
-    $arr['MAXNUM']= MaxNumber($conn,$sFm,$Idpt,$INPt);
 
-    $DATA=GetNoRegion($conn,$ST_DATAA,$ST_DATAB,$Idpt,$INPt,substr($sFm,0,1));
+    $response['sSave']=$sSave;
+    $response['sTraID']=$sTraID;
+    $response['ST_DATAB']=json_decode($ST_DATAB);
+    $response['MAXNUM']= MaxNumber($conn,$sFm,$Idpt,$INPt);
+
+    if ($sFm=="TUPT"){
+
+        $GetNoRegion_Param=array(
+            ":ID_PATIENT"=>$Idpt,
+            ":ID_INPATIENT"=>$INPt
+        );
+
+    }else{
+
+        $GetNoRegion_Param=array(
+            ":ID_PATIENT"=>$Idpt,
+            ":ID_INPATIENT"=>$INPt,
+            ":CID_BEDSORE"=>substr($sFm,0,1)
+                );
+
+    }
 
 
-   if (!InsertTP($conn,$sFm,$sTraID,$DATA,$Idpt,$INPt,' ',' ',$ID_BED,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT)){
+    $DATA=GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$GetNoRegion_Param);
+
+  /* if (!InsertTP($conn,$sFm,$sTraID,$DATA,$Idpt,$INPt,' ',' ',$ID_BED,$date,$sUr,$JID_NSRANK,$FORMSEQANCE_WT)){
         return false;
     }
 
-  /*  if ( $isChange!="Y"){
-        return json_encode($arr,JSON_UNESCAPED_UNICODE);
-    }*/
-
-    return  json_encode($arr,JSON_UNESCAPED_UNICODE);
+    return  json_encode($response,JSON_UNESCAPED_UNICODE);*/
 }
 
 function GetBSORPageJson($conn,$sFm,$sPg,$sTraID){
@@ -692,16 +709,40 @@ function ChangeChr($conn){
 }
 
 /*有效時間取得的部位*/
-function GetNoRegion($conn,$ST_DATAA,$ST_DATAB,$ID_PATIENT,$ID_INPATIENT,$CID_BEDSORE){
+function GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$Parameter){
 
 $obj_A=json_decode($ST_DATAA);
 $obj_B=json_decode($ST_DATAB);
 
-
 $arr_A=[];
 $arr_B=[];
 
-$SQL="SELECT DISTINCT NSTBBS.FORMSEQANCE_BS,NSBSOR.DT_START,NSBSOR.NO_BEDSORE,TID_SOURCE,NM_ORGAN,IT_TOP,IT_LEFT,IT_WIDTH,IT_HEIGTH
+if ($sFm=="TUPT"){
+    $SQL="SELECT PG.FORMSEQANCE,PG.NO_PROBLEM,PG.NM_ORGAN,PG.DT_EXECUTE,
+        PG.IT_TOP,PG.IT_LEFT,PG.IT_WIDTH,PG.IT_HEIGTH,
+        PT.ID_TUBE,PT.IT_TERMDAYS,PT.CD_STATUS,PT.NM_TUBE,PT.NM_BRAND
+        FROM  NSTUPG PG, NSTUPT PT
+        WHERE  PG.FORMSEQANCE=PT.FORMSEQANCE
+        AND PG.ID_PATIENT='01166354' 
+        AND PG.ID_INPATIENT='970000260'
+        AND PT.DT_EXECUTE||PT.TM_EXECUTE = 
+        (
+          
+            SELECT MAX(T.DT_EXECUTE || T.TM_EXECUTE) AS LAST_DTTM 
+            FROM  NSTUPG G,NSTUPT T
+            WHERE G.FORMSEQANCE=T.FORMSEQANCE
+            AND G.ID_PATIENT='01166354' 
+            AND G.ID_INPATIENT='970000260' 
+            AND G.DM_ENDING=' ' AND T.DM_ENDING=' '
+        )
+        AND PG.DM_ENDING=' ' AND PT.DM_ENDING=' '
+        ORDER BY PG.NO_PROBLEM DESC
+        ";
+
+}
+else{
+
+    $SQL="SELECT DISTINCT NSTBBS.FORMSEQANCE_BS,NSBSOR.DT_START,NSBSOR.NO_BEDSORE,TID_SOURCE,NM_ORGAN,IT_TOP,IT_LEFT,IT_WIDTH,IT_HEIGTH
         FROM NSBSOR, NSTBBS 
         WHERE NSTBBS.FORMSEQANCE_BS = NSBSOR.FORMSEQANCE_BS
           AND NSBSOR.ID_PATIENT = :ID_PATIENT AND NSBSOR.ID_INPATIENT = :ID_INPATIENT
@@ -719,56 +760,86 @@ $SQL="SELECT DISTINCT NSTBBS.FORMSEQANCE_BS,NSBSOR.DT_START,NSBSOR.NO_BEDSORE,TI
         )
         ORDER BY NO_BEDSORE ASC
         ";
+}
+
+
 
     $stid=oci_parse($conn,$SQL);
+    foreach ($Parameter as $key=>$value){
+        oci_bind_by_name($stid,$key,$Parameter[$key]);
+    }
 
-    oci_bind_by_name($stid,':ID_PATIENT',$ID_PATIENT);
-    oci_bind_by_name($stid,':ID_INPATIENT',$ID_INPATIENT);
-    oci_bind_by_name($stid,':CID_BEDSORE',$CID_BEDSORE);
     oci_execute($stid);
 
-    $count=0;
-    while (oci_fetch_array($stid)){
+        $count=0;
+        while (oci_fetch_array($stid)){
+            //序列化後複製
+            $tmp_A = unserialize(serialize($obj_A));
+            $tmp_B = unserialize(serialize($obj_B));
 
-      //序列化後複製
-      $tmp_A = unserialize(serialize($obj_A));
-      $tmp_B = unserialize(serialize($obj_B));
+            $LEFT=oci_result($stid,'IT_LEFT');
+            $TOP=oci_result($stid,'IT_TOP');
+            $W_TH=oci_result($stid,'IT_WIDTH');
+            $H_TH=oci_result($stid,'IT_HEIGTH');
 
-        $FORMSEQANCE_BS=oci_result($stid,'FORMSEQANCE_BS');
-        $NO_BEDSORE=oci_result($stid,'NO_BEDSORE');
-        $NM_ORGAN=oci_result($stid,'NM_ORGAN');
-        $TID_SOURCE=oci_result($stid,'TID_SOURCE');
-        $LEFT=oci_result($stid,'IT_LEFT');
-        $TOP=oci_result($stid,'IT_TOP');
-        $W_TH=oci_result($stid,'IT_WIDTH');
-        $H_TH=oci_result($stid,'IT_HEIGTH');
-        $DT_START=oci_result($stid,'DT_START');
+            $tmp_A->TOP=$TOP;
+            $tmp_A->LEFT=$LEFT;
+            $tmp_A->W_TH=$W_TH;
+            $tmp_A->H_TH=$H_TH;
 
-        $tmp_A->NUM=$NO_BEDSORE;
-        $tmp_A->TOP=$TOP;
-        $tmp_A->LEFT=$LEFT;
-        $tmp_A->W_TH=$W_TH;
-        $tmp_A->H_TH=$H_TH;
-        $tmp_A->FORMSEQ=$FORMSEQANCE_BS;
-        $tmp_A->NM_ORGAN=$NM_ORGAN;
+            if ($sFm=="TUPT"){
+                $FORMSEQANCE=oci_result($stid,'FORMSEQANCE');
+                $NO_PROBLEM=oci_result($stid,'NO_PROBLEM');
+                $NM_ORGAN=oci_result($stid,'NM_ORGAN');
+
+                $ID_TUBE=oci_result($stid,'ID_TUBE');
+                $IT_TERMDAYS=oci_result($stid,'IT_TERMDAYS');
+                $CD_STATUS=oci_result($stid,'CD_STATUS');
+                $NM_TUBE=oci_result($stid,'NM_TUBE');
+                $NM_BRAND=oci_result($stid,'NM_BRAND');
+                $DT_EXECUTE=oci_result($stid,'DT_EXECUTE');//置入日期
+
+                $tmp_A->NUM=$NO_PROBLEM;
+                $tmp_A->FORMSEQ=$FORMSEQANCE;
+                $tmp_A->NM_ORGAN=$NM_ORGAN;
+
+                $tmp_B->TB_DATA->NO_NUM->VALUE=$NO_PROBLEM;
+                $tmp_B->TB_DATA->NM_ORGAN->VALUE=$NM_ORGAN;
+                $tmp_B->TB_DATA->TID_SOURCE->VALUE=$ID_TUBE;
+                $tmp_B->FORMSEQ=$FORMSEQANCE;
 
 
-        $tmp_B->TB_DATA->NO_NUM->VALUE=$NO_BEDSORE;
-        $tmp_B->TB_DATA->NM_ORGAN->VALUE=$NM_ORGAN;
-        $tmp_B->TB_DATA->TID_SOURCE->VALUE=$TID_SOURCE;
-        $tmp_B->FORMSEQ=$FORMSEQANCE_BS;
-        $tmp_B->DT_START=$DT_START;
+            }else{
+                $FORMSEQANCE_BS=oci_result($stid,'FORMSEQANCE_BS');
+                $NO_BEDSORE=oci_result($stid,'NO_BEDSORE');
+                $NM_ORGAN=oci_result($stid,'NM_ORGAN');
+                $TID_SOURCE=oci_result($stid,'TID_SOURCE');
+                $DT_START=oci_result($stid,'DT_START');
 
-        array_push($arr_A,$tmp_A);
-        array_push($arr_B,$tmp_B);
-      $count++;
-    }
+                $tmp_A->NUM=$NO_BEDSORE;
+                $tmp_A->FORMSEQ=$FORMSEQANCE_BS;
+                $tmp_A->NM_ORGAN=$NM_ORGAN;
 
-    if ($count==0){
-        //有效時間內無資料 取預設值push
-        array_push($arr_A,json_decode($ST_DATAA));
-        array_push($arr_B,json_decode($ST_DATAB));
-    }
+
+                $tmp_B->TB_DATA->NO_NUM->VALUE=$NO_BEDSORE;
+                $tmp_B->TB_DATA->NM_ORGAN->VALUE=$NM_ORGAN;
+                $tmp_B->TB_DATA->TID_SOURCE->VALUE=$TID_SOURCE;
+                $tmp_B->FORMSEQ=$FORMSEQANCE_BS;
+                $tmp_B->DT_START=$DT_START;
+            }
+
+            array_push($arr_A,$tmp_A);
+            array_push($arr_B,$tmp_B);
+            $count++;
+        }
+
+        if ($count==0){
+            //有效時間內無資料 取預設值push
+            array_push($arr_A,json_decode($ST_DATAA));
+            array_push($arr_B,json_decode($ST_DATAB));
+        }
+
+
     $result=array("A"=>$arr_A,"B"=>$arr_B);
 
     return $result;
@@ -829,16 +900,47 @@ function InsertTP($conn,$sfm,$sTraID,$data,$Idpt,$INPt,$sDT,$sTm,$ID_BED,$DM_PRO
     return true;
 }
 
-/*發生來源*/
-function GetStationOrder($conn,$CNM_arr){
-    $NEW_arr=json_decode($CNM_arr);
+/*TUPT=>管路名稱 other=> 發生來源*/
+function GetStationOrder($conn,$sFm,$CNM_arr){
+     if ($sFm=="TUPT"){
+         $SQL="SELECT * FROM (
+                    SELECT ID_TUBE, NM_TUBE, IT_TERMDAYS
+                    FROM NSTUMI
+                  WHERE (DM_ENDING = ' ' OR DM_ENDING > NIS_DM_PROCESS)
+                  AND IS_CANCD = 'N'
+                  AND ID_TUBE <> 'XXX'
+                  ORDER BY Upper(NM_TUBE), SR_TUBE)
+                UNION ALL
+                  SELECT ID_TUBE, NM_TUBE, IT_TERMDAYS 
+                    FROM NSTUMI
+                  WHERE (DM_ENDING = ' ' OR DM_ENDING > NIS_DM_PROCESS)
+                  AND IS_CANCD = 'N'
+                  AND ID_TUBE = 'XXX'" ;
+     }else{
+         $SQL=" SELECT ID_STATION, NM_STATION FROM NIS_V_HNST_Q0 ORDER BY ID_STATION";
+     }
 
-    $SQL=" SELECT ID_STATION, NM_STATION FROM NIS_V_HNST_Q0 ORDER BY ID_STATION";
     $stid=oci_parse($conn,$SQL);
     oci_execute($stid);
 
+    $NEW_arr=json_decode($CNM_arr);
     while (oci_fetch_array($stid)){
-        array_push( $NEW_arr[2],array("ID_TABITEM"=>oci_result($stid,'ID_STATION'),"ST_LEFT"=>oci_result($stid,'NM_STATION')));
+        if ($sFm=="TUPT"){
+            $ID_TUBE=oci_result($stid,'ID_TUBE');
+            $NM_TUBE=oci_result($stid,'NM_TUBE');
+            $IT_TERMDAYS=oci_result($stid,'IT_TERMDAYS');
+
+
+            array_push( $NEW_arr[2],array("ID_TABITEM"=>$ID_TUBE,"ST_LEFT"=>$NM_TUBE,"IT_TERMDAYS"=>$IT_TERMDAYS));
+        }
+        else{
+            $ID_STATION=oci_result($stid,'ID_STATION');
+            $NM_STATION=oci_result($stid,'NM_STATION');
+
+
+            array_push( $NEW_arr[2],array("ID_TABITEM"=>$ID_STATION,"ST_LEFT"=>$NM_STATION));
+        }
+
 
     }
 
