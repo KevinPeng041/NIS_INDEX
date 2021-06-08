@@ -1,6 +1,6 @@
 <?php
 $sUr="00FUZZY";
-$sfm="CUTS";
+$sfm="TUPT";
 
 if ($sfm=="BSOR"){
     $shape="circle";
@@ -89,13 +89,18 @@ if ($sfm=="CUTS"){
                    $.each(Tb_NM_obj,function (index,val) {
                        //新增左標題
                        let classNm=val.ID_TABITEM===""?'tb'+index:val.ID_TABITEM;
+
                        $("#Data_Table").append(
                            `
-                                       <tr class="${classNm}">
-                                             <th>${val.ST_LEFT}</th>
-                                       </tr>
+                            <tr class="${classNm}">
+                                 <th>${val.ST_LEFT}</th>
+                            </tr>
                                                  `
                        );
+
+                       if ("<?php echo $sfm?>"==="TUPT" && index >=9){
+                           $("."+classNm).hide();
+                       }
 
                        T_ID.push(classNm);
                    });
@@ -125,7 +130,7 @@ if ($sfm=="CUTS"){
                        });
 
                    }*/
-
+                console.log(Data_obj);
 
 
                },
@@ -207,7 +212,6 @@ if ($sfm=="CUTS"){
                                count_element++;
                            }
                        });
-                     console.log(data);
                    }
                },
                inMMText:(data)=>{
@@ -414,7 +418,7 @@ if ($sfm=="CUTS"){
                   case "SubmitBtn":
 
 
-                      const sUr="<?php echo $sUr?>";
+
                       let Json_obj=Page==="A"?Data_obj.get('IMG'): Data_obj.get('DATA');
 
                       let B_obj=Data_obj.get('DATA');
@@ -450,7 +454,7 @@ if ($sfm=="CUTS"){
                             alert(error_msg.join('\n'));
                             return false;
                         }
-                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',sUr,'true');
+                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
                       break;
                   case "SearchBtn":
                       if (!checkSerchwindow())
@@ -501,7 +505,7 @@ if ($sfm=="CUTS"){
                           alert('作廢成功');
                           window.location.reload(true);
                         /*  Data_obj.clear();
-                          GetINIJson('<?php echo $sfm?>',IdPt,InPt);
+                          GetINIJson('$sfm',IdPt,InPt);
                           $("#DELBtn").prop('disabled',true);
                           $("#sDate,#sTime,#NO_NUM,#NO_REG").val("");
                           $("#ISTM>label").children('input').prop('disabled',false);
@@ -774,6 +778,7 @@ if ($sfm=="CUTS"){
                    });
                }
            }
+
            function bedcallback(data){
                let str=AESDeCode(data);
                let dataObj=JSON.parse(str)[0];
@@ -802,7 +807,6 @@ if ($sfm=="CUTS"){
                $("#ISTM>label").children('input').prop('disabled',false);
                CancelNum.length=0;
            }
-
            function Serchcallback(AESobj){
               const  obj=JSON.parse(AESDeCode(AESobj));
               const sTraID=obj.sTraID;
@@ -837,6 +841,7 @@ if ($sfm=="CUTS"){
                CancelNum.length=0;
 
            }
+
            function GetINIJson(sfm,idPt,INPt){
                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=BSOR'+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'+"&TsFm="+'<?php echo $sfm?>'))
                    .done(function(data) {
@@ -891,6 +896,59 @@ if ($sfm=="CUTS"){
                    }
                });
            }
+
+           function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+               $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
+                   'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
+                   '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
+                   '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')
+               )
+                   .done(function (data) {
+                       let json=JSON.parse(AESDeCode(data));
+
+                       console.log(Page,json);
+
+                       if(InSertDB==="true" && json.result==="true"){
+                           alert('存檔成功');
+                           window.location.replace(window.location.href);
+                       }
+                       if(InSertDB==="true" && json.result!=="true"){
+                           alert("儲存失敗,錯誤訊息:"+json.message);
+                       }
+
+
+                   }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                   console.log(
+                       "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                       "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                       "3 返回失敗,textStatus:"+textStatus+
+                       "4 返回失敗,errorThrown:"+errorThrown
+                   );
+               });
+
+           }
+           function DB_DEL(sTraID,Page,sUr) {
+               let result="";
+               const DelNum=$("#NO_NUM").val();
+               $.ajax({
+                   url:"/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'BSOR'+"&sTraID="+sTraID+"&sPg="+Page+"&sCidFlag="+DelNum+"&sUr="+sUr+"&TsFm="+'<?php echo $sfm?>'),
+                   async:false
+               })
+                   .done(function (data) {
+                       let response=JSON.parse(AESDeCode(data));
+                       console.log(response);
+                       result=response;
+                   }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                   console.log(
+                       "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                       "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                       "3 返回失敗,textStatus:"+textStatus+
+                       "4 返回失敗,errorThrown:"+errorThrown
+                   );
+               });
+               return result;
+           }
+
 
            function NISPWSFMINI_Timer(sFm,Page) {
                $.ajax({
@@ -955,57 +1013,7 @@ if ($sfm=="CUTS"){
                });
            }
 
-           function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
-               $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
-                   'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
-                   '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
-                   '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')
-               )
-                   .done(function (data) {
-                       let json=JSON.parse(AESDeCode(data));
 
-                       console.log(Page,json);
-
-                      if(InSertDB==="true" && json.result==="true"){
-                           alert('存檔成功');
-                           window.location.replace(window.location.href);
-                       }
-                       if(InSertDB==="true" && json.result!=="true"){
-                           alert("儲存失敗,錯誤訊息:"+json.message);
-                       }
-
-
-                   }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
-                   console.log(
-                       "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                       "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                       "3 返回失敗,textStatus:"+textStatus+
-                       "4 返回失敗,errorThrown:"+errorThrown
-                   );
-               });
-
-           }
-           function DB_DEL(sTraID,Page,sUr) {
-                let result="";
-               const DelNum=$("#NO_NUM").val();
-               $.ajax({
-                   url:"/webservice/NISPWSDELILSG.php?str="+AESEnCode("sFm="+'BSOR'+"&sTraID="+sTraID+"&sPg="+Page+"&sCidFlag="+DelNum+"&sUr="+sUr+"&TsFm="+'<?php echo $sfm?>'),
-                   async:false
-               })
-                   .done(function (data) {
-                       let response=JSON.parse(AESDeCode(data));
-                       console.log(response);
-                       result=response;
-                   }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
-                   console.log(
-                       "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
-                       "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
-                       "3 返回失敗,textStatus:"+textStatus+
-                       "4 返回失敗,errorThrown:"+errorThrown
-                   );
-               });
-               return result;
-           }
 
            function checkBEDwindow() {
 
@@ -1119,7 +1127,7 @@ if ($sfm=="CUTS"){
       width: 0px;
       border-color: transparent transparent #FF9797 transparent;
       border-style: solid solid solid solid;
-      border-width:  0 5px 10px 5px;
+      border-width:  0 8px 15px 8px;
       position: absolute;
       display: flex;
   }
