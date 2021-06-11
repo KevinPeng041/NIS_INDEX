@@ -130,11 +130,9 @@ if ($sfm=="CUTS"){
                        });
 
                    }*/
-                console.log(Data_obj);
-
 
                },
-               inTableTd:(Page,data)=>{
+               inTableTd:(sfm,Page,data)=>{
 
                  if (Page==="A"){
                        $.each(data,function (index,val) {
@@ -153,12 +151,32 @@ if ($sfm=="CUTS"){
                        let T_ID=Data_obj.get("TR_CLASSNM");
 
 
-                       data.forEach((value)=>{value.SSTAT=$("#sSTAT").val()}); //護理級值
+                      // data.forEach((value)=>{value.SSTAT=$("#sSTAT").val()});
 
                        $.each(data,function (ItemNo,item) {
+
+                           let count_element=0;
                            let DATA=item.TB_DATA;
                            let No_Number= DATA.NO_NUM.VALUE; //編號
-                           let count_element=0;
+
+                           if (sfm==="BSOR" || sfm==="CUTS"){
+                               item.SSTAT=$("#sSTAT").val(); //護理級值
+                           }else {
+                              //管路一覽.
+                               if( $("#sNM_Tab").children().length===0){
+                                       $.each(T_CD[2],function (index ,val) {
+                                           if ((val.ST_LEFT).trim()!==""){
+                                               $("#sNM_Tab").append(
+                                                   `
+                                                  <div class="col-4"><button class="sNM_Ck form-control btn btn-primary btn-lg" value="${val.ST_LEFT+"_"+val.ID_TABITEM+"_"+val.IT_TERMDAYS+"_"+val.IS_IO}">選擇</button></div>
+                                                  <div class="col-8 h6">${val.ST_LEFT}</div>
+                                                 `
+                                               );
+                                           }
+                                       });
+                               }
+                           }
+
 
                            for (let key in DATA){
                                let ELE_Type=DATA[key].TYPE;
@@ -191,13 +209,29 @@ if ($sfm=="CUTS"){
                                    }
 
                                    if (ELE_Type==="ET"){
-                                       $("."+title_ID).append(
-                                           `
+
+                                       if (title_ID==="sNMTUBE"){
+                                            //管路名稱
+                                           $("."+title_ID).append(
+                                               `
+                                              <td class="${No_Number}">
+                                                   <input  type="text" class='table-edit' id="${title_ID+"_"+ItemNo+"_"+No_Number}" value="${ELE_Val}">
+                                                   <button value="${ItemNo+"_"+No_Number}" class="sNM_Open form-control-sm btn btn-success">選擇</button>
+                                              </td>
+                                            `
+                                           );
+
+                                       }else {
+                                           //發生來源
+                                           $("."+title_ID).append(
+                                               `
                                               <td class="${No_Number}">
                                                    <input  type="text" class='table-edit' id="${title_ID+"_"+ItemNo+"_"+No_Number}" value="${ELE_Val}">
                                               </td>
                                             `
-                                       );
+                                           );
+                                       }
+
 
                                        if (title_ID==="tb0" || title_ID==="BSOR000043" || title_ID==="BSOR000044"){
                                            $("#"+title_ID+"_"+ItemNo+"_"+No_Number).prop('disabled',true);
@@ -211,6 +245,7 @@ if ($sfm=="CUTS"){
                                }
                                count_element++;
                            }
+
                        });
                    }
                },
@@ -274,6 +309,7 @@ if ($sfm=="CUTS"){
 
                }
            };
+
            var drag_value={
                    containment:'.drop-area',
                    scroll:false,
@@ -307,41 +343,34 @@ if ($sfm=="CUTS"){
 
                        let middelTop=Math.floor(ui.position.top+Height/2);
                        let middelLeft=Math.floor(ui.position.left+Width/2);
-                       let Region= GetPIXELRegion(middelLeft,middelTop);
-
-
+                       let Region= GetPIXELRegion("<?php echo $sfm?>",middelLeft,middelTop);
                        Data_obj.get('IMG')[ItemIndex].TOP=TOP;
                        Data_obj.get('IMG')[ItemIndex].LEFT=LEFT;
 
-                       Data_obj.get('DATA')[ItemIndex].TB_DATA.NM_ORGAN.VALUE=Region;
+                       if ("<?php echo $sfm?>"==="TUPT"){
+                           Data_obj.get('IMG')[ItemIndex].NM_ORGAN=Region.NM_REG;
+                           Data_obj.get('IMG')[ItemIndex].ID_REGION=Region.ID_REG;
+                       }
 
-                       PasteRegion(Num,Region);
-                       $("#NO_REG").val(Region);
+                       Data_obj.get('DATA')[ItemIndex].TB_DATA.NM_ORGAN.VALUE=Region.NM_REG;
+                       PasteRegion(Num,Region.NM_REG);
+                       $("#NO_REG").val(Region.NM_REG);
+
                    }
                };
            var Get_AJson,Get_BJson=false;
 
 
            $(".drop-area").on("click",function (e) {
-               //e.clientX , e.clientY
                let is_Add=$("#AddSign").val() === "0";
                if (is_Add){
-
                   let shape='<?php echo $shape?>';
-
                   //取Canvas上圖形最大號 若為空,num=0
-
 
                   let num=Data_obj.get('MAXNUM')==="0"?0:parseInt(Data_obj.get('MAXNUM'));
                   let MaxNum=num+1; //最大號
                   let add_Num="";  // 新增的編號
                   let copyObj=JSON.parse(JSON.stringify(Data_obj.get('NEWDATA')));
-                  let newTime=new Date();
-
-                  let DT_Y=(newTime.toLocaleDateString().slice(0,4)-1911).toString();
-                  let DT_M=(newTime.getMonth()+1<10?'0':'')+(newTime.getMonth()+1);
-                  let DT_D=(newTime.getDate()<10?'0':'')+newTime.getDate();
-
 
                /***********取被刪除編號重新排序，已被刪除的最小號開始新增***************************/
                 if (CancelNum.length>0){
@@ -354,7 +383,16 @@ if ($sfm=="CUTS"){
                 }
              /******************************end**************************************************/
                   copyObj.TB_DATA.NO_NUM.VALUE=add_Num.toString();
-                  copyObj.DT_START=DT_Y+DT_M+DT_D;
+
+                  if ("<?php echo $sfm?>"!=="TUPT"){
+                      let newTime=new Date();
+                      let DT_Y=(newTime.toLocaleDateString().slice(0,4)-1911).toString();
+                      let DT_M=(newTime.getMonth()+1<10?'0':'')+(newTime.getMonth()+1);
+                      let DT_D=(newTime.getDate()<10?'0':'')+newTime.getDate();
+
+                      copyObj.DT_START=DT_Y+DT_M+DT_D;
+                  }
+
 
                    if (Data_obj.has('DATA')){
                        //判斷是否新增過
@@ -364,24 +402,28 @@ if ($sfm=="CUTS"){
                        Data_obj.set('DATA',[copyObj]);
                    }
 
-                   creatTable.inTableTd('B',[copyObj]);
+                  creatTable.inTableTd("<?php echo $sfm?>",'B',[copyObj]);
 
                   AddShape(add_Num,shape,e.offsetX+10,e.offsetY,15,15);
-                  let Region= GetPIXELRegion(e.offsetX+7,e.offsetY+7);
-                  PasteRegion(add_Num,Region);
+                  let Region= GetPIXELRegion("<?php echo $sfm?>",e.offsetX+7,e.offsetY+7);
+                  PasteRegion(add_Num,Region.NM_REG);
 
 
                 // 迭代新增部位名稱
                 for (let [key, value] of Data_obj){
                     if (key==="IMG" ){
                         value.filter((val)=>{return val.NUM===add_Num.toString()})
-                            .forEach((val)=>{val.NM_ORGAN=Region});
-
-                        console.log(value);
+                            .forEach((val)=>{
+                                if ("<?php echo $sfm?>"==="TUPT"){
+                                    val.ID_REGION=Region.ID_REG;
+                                }
+                                    val.NM_ORGAN=Region.NM_REG;
+                            });
                     }
+
                     if (key==="DATA"){
                         value.filter((val)=>{return val.TB_DATA.NO_NUM.VALUE===add_Num.toString()})
-                            .forEach((val)=>val.TB_DATA.NM_ORGAN.VALUE=Region);
+                            .forEach((val)=>val.TB_DATA.NM_ORGAN.VALUE=Region.NM_REG);
                     }
                 }
 
@@ -389,7 +431,8 @@ if ($sfm=="CUTS"){
                }
            });
            $(document).on('click','button',function (e) {
-              let id=$(this).attr('id');
+              let btn_id=$(this).attr('id'); //sNM_Open
+              let btn_class=$(this).attr('class').split(" ")[0];
               let sTraID=$("#sTraID").val();
               const Page=$("#Page").val();
               const IdPt=$("#DA_idpt").val();
@@ -398,7 +441,7 @@ if ($sfm=="CUTS"){
               const sDt=$("#sDate").val();
               const sTm=$("#sTime").val();
               const Num=$("#NO_NUM").val();
-              switch (id) {
+              switch (btn_id) {
                   case "sbed":
                       if (!checkBEDwindow()){
                           alert("責任床位視窗已開啟");
@@ -416,20 +459,16 @@ if ($sfm=="CUTS"){
                       BEDwindow.bedcallback=bedcallback;
                       break;
                   case "SubmitBtn":
-
-
-
                       let Json_obj=Page==="A"?Data_obj.get('IMG'): Data_obj.get('DATA');
 
                       let B_obj=Data_obj.get('DATA');
 
                       const error_msg=B_obj.map((val)=>{
                           let msg=[];
-
                           for (let key in val.TB_DATA){
                               let Num=(val.TB_DATA.NO_NUM.VALUE).trim();
-
-                              if (Num!=="" && (val.TB_DATA[key].VALUE).trim()===""){
+                              let Obj_Val=val.TB_DATA[key].VALUE;
+                              if (Num!=="" && Obj_Val.toString().trim()===""){
 
                                   if (val.TB_DATA[key].ID==="BSOR000001"){
                                       msg.push('編號:'+Num+'提醒:發生來源禁止空值');
@@ -440,7 +479,9 @@ if ($sfm=="CUTS"){
                                   if (val.TB_DATA[key].ID==="BSOR000051"){
                                       msg.push('編號:'+Num+'提醒:傷口等級禁止空值');
                                   }
-
+                                  if (val.TB_DATA[key].ID==="sNMTUBE"){
+                                      msg.push('編號:'+Num+'提醒:管路名稱禁止空值');
+                                  }
                               }
 
                           }
@@ -450,11 +491,14 @@ if ($sfm=="CUTS"){
                       },[]);
 
 
-                      if (error_msg.length>0){
+                      if (error_msg.length>0)
+                      {
                             alert(error_msg.join('\n'));
                             return false;
-                        }
-                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
+                      }
+
+                      DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
+
                       break;
                   case "SearchBtn":
                       if (!checkSerchwindow())
@@ -525,6 +569,81 @@ if ($sfm=="CUTS"){
                   default:
                       break;
               }
+
+
+              if (btn_class==="sNM_Open"){
+                  $("#sNMTUBEModal").modal('show');
+                  $("#OpenSNM_Modal").val($(this).val());
+              }
+              else if (btn_class==="sNM_Ck"){
+                  let strVal=($(this).val()).split("_");
+                  let strOpenSNM_Val=( $("#OpenSNM_Modal").val()).split("_");
+
+                  let NM_TUBE=strVal[0];//管路名稱
+                  let ID_TUBE=strVal[1];//管路id
+                  let IT_TERMDAYS=parseInt(strVal[2]);//管路預估換管日
+                  let IS_IO=strVal[3];//入院帶入
+
+                  let Index=strOpenSNM_Val[0];//編號Index
+                  let Num=strOpenSNM_Val[1];//編號
+                  let FormSeq=Data_obj.get('IMG').filter((val)=>{return val.NUM===Num})[0].FORMSEQ;
+                  let sDTEND="";
+
+                  const FilterNumData=Data_obj.get('DATA').filter((val)=>{return val.TB_DATA.NO_NUM.VALUE===Num})[0];
+
+
+                  if (FormSeq.trim()===""){
+                      let tDate=new Date();
+                      let strDate=tDate.toLocaleDateString().slice(0,4)-1911+
+                                  (tDate.getMonth()+1<10?'0':'')+
+                                  (tDate.getMonth()+1)+(tDate.getDate()<10?'0':'')+tDate.getDate();
+
+                      ['sDTEND_','sDTEXE_','sCDSTATUS_'].forEach((value => $("#"+value+Index+"_"+Num).val("")));
+
+                      if (IT_TERMDAYS !==0){
+                          sDTEND=addDate(strDate,IT_TERMDAYS);
+                      }
+                      $("#sDTEXE_"+Index+"_"+Num).val(strDate);
+                      $("#sDTEND_"+Index+"_"+Num).val(sDTEND);
+                      $("#sCDSTATUS_"+Index+"_"+Num).val(IS_IO);
+
+                      for (let key in FilterNumData.TB_DATA){
+                          if (key==="ID_TUBE"){
+                              FilterNumData.TB_DATA[key].VALUE=ID_TUBE;
+                          }
+                          if (key==="sNM_TUBE"){
+                              FilterNumData.TB_DATA[key].VALUE=NM_TUBE;
+                          }
+                          if (key==="sDT_EXE"){
+                              FilterNumData.TB_DATA[key].VALUE=strDate;
+                          }
+                          if (key==="sDT_END"){
+                              FilterNumData.TB_DATA[key].VALUE=sDTEND;
+                          }
+                          if (key==="CD_STATUS"){
+                              FilterNumData.TB_DATA[key].VALUE=IS_IO;
+                          }
+
+                          if (key==="IT_TERMDAYS"){
+                              FilterNumData.TB_DATA[key].VALUE=IT_TERMDAYS;
+                          }
+
+
+                      }
+                  }else {
+                      FilterNumData.TB_DATA.ID_TUBE.VALUE=ID_TUBE;
+                      FilterNumData.TB_DATA.sNM_TUBE.VALUE=NM_TUBE;
+                  }
+
+                  if (ID_TUBE==="XXX"){
+                      $("#sNMTUBE_"+Index+"_"+Num).val("");
+                  }else {
+                      $("#sNMTUBE_"+Index+"_"+Num).val(NM_TUBE);
+                  }
+
+                  $("#sNMTUBEModal").modal('hide');
+              }
+
            });
            $(".sign").on('click',function () {
                //0=>add
@@ -587,7 +706,6 @@ if ($sfm=="CUTS"){
                    $(".area-table").show();
                    $(".Main").hide(500);
                }
-                console.log(obj);
 
                $(".MMDIV").hide();
                $(".MM_"+Page).show();
@@ -618,29 +736,36 @@ if ($sfm=="CUTS"){
            //動態填值
            $(document).on("change",".table-edit",function () {
 
-               let Num= $(this).attr('id').split("_")[2];
+               let arrThis=$(this).attr('id').split("_");
 
-               let TD_class=$(this).parent().parent().attr('class');
-
+               let TD_class=arrThis[0];
+              // let Index= arrThis[1];
+               let Num= arrThis[2];
                let ThisData=Data_obj.get('DATA').filter((val)=>{
                     return  val.TB_DATA.NO_NUM.VALUE===Num;
                })[0].TB_DATA;
 
+               let Val=$(this).val();
 
-               for (let key in ThisData){
-                   if (TD_class===ThisData[key].ID && ThisData[key].ID!==""){
+               for (let key in ThisData)
+               {
+
+                   if (TD_class===ThisData[key].ID && ThisData[key].ID!=="")
+                   {
+
                        ThisData[key].VALUE=$(this).val();
-                   }else if (ThisData[key].ID===""){
+
+                   }
+                   else if (ThisData[key].ID===""){
                        if (TD_class==="tb0"){
-                           ThisData.NO_NUM.VALUE=$(this).val();
+                           ThisData.NO_NUM.VALUE=Val;
                        }
                        if (TD_class==="tb1"){
-                           ThisData.NM_ORGAN.VALUE=$(this).val();
+                           ThisData.NM_ORGAN.VALUE=Val;
                        }
                    }
 
                }
-               console.log(ThisData);
            });
            $(document).on('change','input[name=sRdoDateTime]',function () {
 
@@ -778,7 +903,6 @@ if ($sfm=="CUTS"){
                    });
                }
            }
-
            function bedcallback(data){
                let str=AESDeCode(data);
                let dataObj=JSON.parse(str)[0];
@@ -846,7 +970,6 @@ if ($sfm=="CUTS"){
                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=BSOR'+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'+"&TsFm="+'<?php echo $sfm?>'))
                    .done(function(data) {
                         let obj= JSON.parse(AESDeCode(data));
-                        console.log(obj);
                        creatTable.Default(obj);
                        $("#sTraID").val(obj.sTraID);
                        $("#sSave").val(obj.sSave);
@@ -870,7 +993,6 @@ if ($sfm=="CUTS"){
                    success:function (data){
 
                          let obj= JSON.parse(AESDeCode(data));
-                            console.log(obj);
                            let Data_A=obj.DATA_A;
                            let Data_B=obj.DATA_B;
                            let CreatDataTd=Page==="A"?Data_A:Data_B;
@@ -883,7 +1005,7 @@ if ($sfm=="CUTS"){
                                Data_obj.set("DATA",Data_B);
                            }
 
-                         creatTable.inTableTd(Page,CreatDataTd);
+                         creatTable.inTableTd("<?php echo $sfm?>",Page,CreatDataTd);
 
 
                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
@@ -905,8 +1027,6 @@ if ($sfm=="CUTS"){
                )
                    .done(function (data) {
                        let json=JSON.parse(AESDeCode(data));
-
-                       console.log(Page,json);
 
                        if(InSertDB==="true" && json.result==="true"){
                            alert('存檔成功');
@@ -936,7 +1056,6 @@ if ($sfm=="CUTS"){
                })
                    .done(function (data) {
                        let response=JSON.parse(AESDeCode(data));
-                       console.log(response);
                        result=response;
                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                    console.log(
@@ -981,14 +1100,18 @@ if ($sfm=="CUTS"){
            /**
             * @return {string}
             */
-           function GetPIXELRegion(X,Y){
-               let Region="";
+           function GetPIXELRegion(sFm,X,Y){
+               let response="";
                $.ajax({
                    url:"/webservice/NISBSORPIXEL.php?str="+AESEnCode('&PIXEL_X='+X+'&PIXEL_Y='+Y),
                    async:false
                }) .done(function(data) {
-                   let obj= JSON.parse(AESDeCode(data));
-                   Region=obj.NM_REGION===""?"不正確":obj.NM_REGION;
+                  let obj= JSON.parse(AESDeCode(data));
+                  if (obj.NM_REG===""){
+                      obj.NM_REG="不正確";
+                  }
+                   response=obj;
+
                }).fail(function(XMLHttpResponse,textStatus,errorThrown) {
                    console.log(
                        "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -997,23 +1120,45 @@ if ($sfm=="CUTS"){
                        "4 返回失敗,errorThrown:"+errorThrown
                    );
                });
-                return Region;
 
+               console.log(response);
+                return response;
            }
            function PasteRegion(Num,Region) {
                $(".table-edit").each(function(index,value){
                    $(value).attr('id')
                        .split("_")
                        .forEach((val,index,arr)=>{
-                           if (val==="tb1" && arr[2]===Num.toString()){
-                               let ele=arr.join("_");
-                               $("#"+ele).val(Region);
+                           if (val==="tb1" || val==="sNM"  && arr[2]===Num.toString())
+                           {
+                                let ele=arr.join("_");
+                                $("#"+ele).val(Region);
                            }
                        });
                });
            }
 
+           function addDate(day,AddDay) {
 
+
+               const Dates=(parseInt(day.substring(0,3))+1911).toString()+"-"+day.substring(3,5)+"-"+day.substring(5,7);
+
+               let dt=new Date(Dates);
+
+               dt.setDate(dt.getDate()+AddDay);
+               let month=dt.getMonth()+1;
+               let days=dt.getDate();
+               if (month < 10){
+                   month="0"+month;
+               }
+
+               if (days < 10){
+                   days="0"+days;
+               }
+
+               return (dt.getFullYear()-1911)+month.toString()+days.toString();
+
+           }
 
            function checkBEDwindow() {
 
@@ -1125,7 +1270,7 @@ if ($sfm=="CUTS"){
   .triangle{
       height: 0px;
       width: 0px;
-      border-color: transparent transparent #FF9797 transparent;
+      border-color: transparent transparent #AAAAFF transparent;
       border-style: solid solid solid solid;
       border-width:  0 8px 15px 8px;
       position: absolute;
@@ -1145,8 +1290,7 @@ if ($sfm=="CUTS"){
 
 
   .triangle>div {
-      margin-left: -6px;
-      margin-top: 2px;
+      margin-left: -4px;
       font-size: 10px;
   }
 
@@ -1193,8 +1337,12 @@ if ($sfm=="CUTS"){
     .CanvasRow{
         margin: 0 15px 0 0;
     }
-
-
+  #sNM_Tab>div,.sNM_Open{
+      margin: 5px 0 0 0;
+  }
+.col-8{
+    padding-top: 10px;
+}
 
 
 </style>
@@ -1210,6 +1358,7 @@ if ($sfm=="CUTS"){
         <input id="div_nm"      value=""  type="text"  placeholder="所選圖形">
         <input id="AddSign"     value=""  type="text"  placeholder="是否新增">
         <input id="Page"        value=""  type="text"  placeholder="頁面">
+        <input id="OpenSNM_Modal"         value="" type="text">
         <input id="sfm"         value="<?php echo $sfm?>" type="text">
        <!-- <input id="CancelNum"   value="" type="text"   placeholder="刪除的編號">-->
         <img src="../../img/BedSore.jpg" style="display: none">
@@ -1363,6 +1512,30 @@ if ($sfm=="CUTS"){
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="sNMTUBEModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>管路一覽</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div  class="modal-body">
+                    <div class="container-fluid">
+                        <div id="sNM_Tab" class="row">
+
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 
