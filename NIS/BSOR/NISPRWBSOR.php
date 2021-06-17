@@ -25,7 +25,7 @@ if ($sfm=="CUTS"){
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>壓瘡評估作業</title>
+    <title><?php echo  $Title_NM?></title>
     <script type="text/javascript" src="../../jquery-3.4.1.js"></script>
     <link rel="stylesheet" href="../../bootstrap-4.3.1-dist/css/bootstrap.min.css">
     <script src="../../bootstrap-4.3.1-dist/js/bootstrap.min.js" type="text/javascript"></script>
@@ -37,10 +37,14 @@ if ($sfm=="CUTS"){
        $(document).ready(function () {
            (function () {
                NISPWSFMINI_Timer('ILSGA','A');
-
                $(".Main,.MMDIV").hide();
                $("#SubmitBtn,#DELBtn").prop('disabled',true);
                $("#SubmitBtn").prop('disabled',true);
+               if ("<?php echo $sfm?>"!=="TUPT"){
+                   $(" .TPUT_div").hide();
+               }else {
+                   $(" .Otimer").hide();
+               }
            })();
 
            let imageLoaded = function() {
@@ -165,7 +169,7 @@ if ($sfm=="CUTS"){
                               //管路一覽.
                                if( $("#sNM_Tab").children().length===0){
                                        $.each(T_CD[2],function (index ,val) {
-                                           if ((val.ST_LEFT).trim()!==""){
+                                           if ((val.ST_LEFT)!==""){
                                                $("#sNM_Tab").append(
                                                    `
                                                   <div class="col-4"><button class="sNM_Ck form-control btn btn-primary btn-lg" value="${val.ST_LEFT+"_"+val.ID_TABITEM+"_"+val.IT_TERMDAYS+"_"+val.IS_IO}">選擇</button></div>
@@ -412,6 +416,7 @@ if ($sfm=="CUTS"){
                 // 迭代新增部位名稱
                 for (let [key, value] of Data_obj){
                     if (key==="IMG" ){
+
                         value.filter((val)=>{return val.NUM===add_Num.toString()})
                             .forEach((val)=>{
                                 if ("<?php echo $sfm?>"==="TUPT"){
@@ -468,7 +473,7 @@ if ($sfm=="CUTS"){
                           for (let key in val.TB_DATA){
                               let Num=(val.TB_DATA.NO_NUM.VALUE).trim();
                               let Obj_Val=val.TB_DATA[key].VALUE;
-                              if (Num!=="" && Obj_Val.toString().trim()===""){
+                              if (Num!=="" && Obj_Val.toString()===""){
 
                                   if (val.TB_DATA[key].ID==="BSOR000001"){
                                       msg.push('編號:'+Num+'提醒:發生來源禁止空值');
@@ -496,7 +501,7 @@ if ($sfm=="CUTS"){
                             alert(error_msg.join('\n'));
                             return false;
                       }
-
+                        console.log(Json_obj);
                       DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
 
                       break;
@@ -630,17 +635,20 @@ if ($sfm=="CUTS"){
 
 
                       }
-                  }else {
+                  }
+                  else {
                       FilterNumData.TB_DATA.ID_TUBE.VALUE=ID_TUBE;
                       FilterNumData.TB_DATA.sNM_TUBE.VALUE=NM_TUBE;
                   }
+
+
 
                   if (ID_TUBE==="XXX"){
                       $("#sNMTUBE_"+Index+"_"+Num).val("");
                   }else {
                       $("#sNMTUBE_"+Index+"_"+Num).val(NM_TUBE);
                   }
-
+                  console.log(FilterNumData);
                   $("#sNMTUBEModal").modal('hide');
               }
 
@@ -666,7 +674,6 @@ if ($sfm=="CUTS"){
                        return ;
                    }
 
-
                    $(".modal-body>p").empty();
                    $(".modal-body>p").text('確定要刪除編號:['+$("#NO_NUM").val()+']嗎?');
                    $("#CancelModal").modal('show');
@@ -674,12 +681,13 @@ if ($sfm=="CUTS"){
                $("#AddSign").val($(this).val());
                changeThisSize($(this).val());
            });
+
            $(".Page>button").on('click',function () {
 
-            if ($("#DataTxt").val()===""){
-                alert('請先選擇病人');
-                return ;
-            }
+                if ($("#DataTxt").val()===""){
+                    alert('請先選擇病人');
+                    return ;
+                }
 
                const Page=$(this).attr('id');
                let sTraID=$("#sTraID").val();
@@ -827,13 +835,14 @@ if ($sfm=="CUTS"){
 
                if (isAdd.length===0){
                     let newObj=JSON.parse(JSON.stringify(Data_obj.get('IMG')[0]));
-
+                    //新增標記
                     newObj.NUM=txt.toString();
                     newObj.LEFT=X.toString();
                     newObj.TOP=Y.toString();
                     newObj.W_TH=W.toString();
                     newObj.H_TH=H.toString();
                     newObj.FORMSEQ="";
+                    newObj.DATESEQ="";
                     Data_obj.get('IMG').push(newObj);
                 }
 
@@ -856,7 +865,6 @@ if ($sfm=="CUTS"){
                 $("#NO_REG,#NO_NUM").val("");
 
                 CancelNum.push(parseInt(Num));
-              //  $("#CancelNum").val(Num);
                 $("#CancelModal").modal('hide');
            }
            function changeThisSize(num) {
@@ -965,7 +973,6 @@ if ($sfm=="CUTS"){
                CancelNum.length=0;
 
            }
-
            function GetINIJson(sfm,idPt,INPt){
                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=BSOR'+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'+"&TsFm="+'<?php echo $sfm?>'))
                    .done(function(data) {
@@ -995,6 +1002,7 @@ if ($sfm=="CUTS"){
                          let obj= JSON.parse(AESDeCode(data));
                            let Data_A=obj.DATA_A;
                            let Data_B=obj.DATA_B;
+
                            let CreatDataTd=Page==="A"?Data_A:Data_B;
 
                            if (!Data_obj.has('IMG') ){
@@ -1006,7 +1014,7 @@ if ($sfm=="CUTS"){
                            }
 
                          creatTable.inTableTd("<?php echo $sfm?>",Page,CreatDataTd);
-
+                       console.log(Data_obj.get('DATA'));
 
                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
                        console.log(
@@ -1020,8 +1028,10 @@ if ($sfm=="CUTS"){
            }
 
            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+
+
                $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
-                   'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+json+
+                   'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+encodeURI(json)+
                    '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
                    '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')
                )
@@ -1233,7 +1243,7 @@ if ($sfm=="CUTS"){
     }
 
 
-    .Page~div{
+  .Page,.Page~div{
         margin-top: 10px;
       }
 
@@ -1427,6 +1437,7 @@ if ($sfm=="CUTS"){
                 </div>
 
                 <div class="SignRow col-lg-7 col-md-12 col-sm-12">
+
                     <div class="col-12">
                         <div class="input-group input-group-sm mb-3">
                             <div class="input-group-prepend">
@@ -1438,11 +1449,15 @@ if ($sfm=="CUTS"){
                             </div>
                             <input type="text" id="NO_REG" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
                         </div>
-
                         <button  class="sign btn btn-outline-primary" value="0">新增</button>
                         <button  class="sign btn btn-outline-primary" value="1">刪除</button>
                         <button  class="sign btn btn-outline-primary" value="2">+</button>
                         <button  class="sign btn btn-outline-primary" value="3">-</button>
+                    </div>
+                    <div class="TPUT_div col-12 mt-1">
+                        <button class="btn btn-info">換管</button>
+                        <button class="btn btn-info">拔管</button>
+                        <button class="btn btn-info">作廢</button>
                     </div>
                     <div class="col-12">
                         <div class="EDIT row">
