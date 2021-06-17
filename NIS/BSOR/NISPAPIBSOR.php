@@ -119,7 +119,7 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
     oci_free_statement($upstid);
 
 
-    $Ssql=" SELECT ID_INPATIENT,ID_PATIENT, ST_DATAA,ST_DATAB,ST_DATAC,
+    $Ssql=" SELECT ID_INPATIENT,ID_PATIENT, ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD,
              ID_BED,JID_NSRANK,FORMSEQANCE_WT
              FROM HIS803.NISWSTP
               WHERE ID_TABFORM = :ID_TABFORM
@@ -132,11 +132,13 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
     oci_bind_by_name($Ssql_stid,":ID_TABFORM",$sFm);
 
     oci_execute($Ssql_stid,OCI_NO_AUTO_COMMIT);
+
     $IdinPt="";
     $IdPt="";
     $ST_DATAA="";
     $ST_DATAB="";
     $ST_DATAC="";
+    $ST_DATAD="";
     $ID_BED="";
     $JID_NSRANK="";
     $FORMSEQANCE_WT="";
@@ -147,6 +149,7 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
         $ST_DATAA=$row['ST_DATAA'];//部位圖座標
         $ST_DATAB=$row['ST_DATAB'];//評估資料
         $ST_DATAC=$row['ST_DATAC'];//部位圖座標(原始值)
+        $ST_DATAD=$row['ST_DATAD'];//評估資料(原始值)
         $ID_BED=$row['ID_BED'];
         $JID_NSRANK=$row['JID_NSRANK'];
         $FORMSEQANCE_WT=$row['FORMSEQANCE_WT'];
@@ -159,9 +162,11 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
 
         $obj_A=json_decode($ST_DATAA);
         $obj_B=array_filter(json_decode($ST_DATAB),function ($val){return $val->TB_DATA->NO_NUM->VALUE!="";});
-        $obj_C=json_decode($ST_DATAC); //預設值
+        $obj_C=json_decode($ST_DATAC); //座標預設值
+        $obj_D=json_decode($ST_DATAD); //資料預設值
 
-       foreach ($obj_A as $key=>$value){
+
+        foreach ($obj_A as $key=>$value){
             $NUM=$value->NUM;
             if (trim($NUM)!=""){
                 $DATESEQANCE=GetDataSEQ($conn);
@@ -188,322 +193,412 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
         }
 
 
-        $Diff_Arr=obj_diff($obj_A,$obj_C);
+
+        $PIXCEL_DiffArr=obj_diff('A',$obj_A,$obj_C);//比對座標
 
 
-        $Cancel_Data=$Diff_Arr->OLD_DATA;//作廢陣列
-        $Insert_Data=$Diff_Arr->NEW_DATA;//新增陣列
-
-       //與預設值不同則需新增
-         if(count($Insert_Data)>0){
-            if (count($Cancel_Data)>0){
-                //已有紀錄先作廢
-               foreach ($Cancel_Data as $value){
-                        $FORMSEQ_BS=$value->FORMSEQ;
-
-                       if ($sFm=="BSOR" || $sFm=="CUTS"){
-
-                           $arr_UP_BSOR=array(":ID_PATIENT"=>$IdPt,
-                               ":ID_INPATIENT"=>$IdinPt,
-                               ":FORMSEQANCE_BS"=>$FORMSEQ_BS,
-                               ":CID_BEDSORE"=>substr($sFm,0,1),
-                               ":DM_CANCD"=>$System_DT,
-                               ":UR_CANCD"=>$sUr,
-                               ":UR_PROCESS"=>$sUr);
-                           $arr_UP_TBBS=array(
-                          ':DM_CANCD'=>$System_DT,
-                            ':UR_CANCD'=>$sUr,
-                            ':FORMSEQANCE_BS'=>$FORMSEQ_BS,
-                            ':ID_BED'=>$ID_BED);
-
-                           $UPDATE_BSOR=DB_Cancel($conn,'BSOR',$arr_UP_BSOR);
-                           if ($UPDATE_BSOR->result=="false"){
-                               $result['result']="false";
-                               $result['message']=$UPDATE_BSOR->message;
-                               return json_encode($result,JSON_UNESCAPED_UNICODE);
-                           }
-                           $UPDATE_TBBS=DB_Cancel($conn,'TBBS',$arr_UP_TBBS);
-                           if ($UPDATE_TBBS->result=="false"){
-                               $result['result']="false";
-                               $result['message']=$UPDATE_TBBS->message;
-                               return json_encode($result,JSON_UNESCAPED_UNICODE);
-                           }
-                       }
-
-                       else
-                       {
-                            //update  NSTUPG NSTUPT
-                       }
+        $Cancel_Data=$PIXCEL_DiffArr->OLD_DATA;//作廢陣列
+        $Insert_Data=$PIXCEL_DiffArr->NEW_DATA;//新增陣列
 
 
-                }
-            }
-
-            foreach ($Insert_Data as $value){
-                $FORMSEQ_BS=$value->FORMSEQ;//表單編號
-                $NO_BEDSORE=$value->NUM; //編號
-                $GetThisDTSEQ= array_filter($DTSEQ_SFMSEQ,function ($value)use ($FORMSEQ_BS,$NO_BEDSORE){
-                    return json_decode($value)->FMSEQ==$FORMSEQ_BS && json_decode($value)->NUM==$NO_BEDSORE;
-                });
-
-                $DATESEQ=json_decode(join($GetThisDTSEQ))->DTSEQ;
-
-                $IT_LEFT=$value->LEFT;
-                $IT_TOP=$value->TOP;
-                $IT_WIDTH=$value->W_TH;
-                $IT_HEIGTH=$value->H_TH;
+        /*無異 return 無須存檔 補tupt*/
+        if ($sFm !=="TUPT" && count($Cancel_Data)==0 && count($Insert_Data)==0)
+        {
+            $result['result']="false";
+            $result['message']='資料無任何異動';
+            return json_encode($result,JSON_UNESCAPED_UNICODE);
+        }
 
 
-                $GetData=GetNumData($obj_B,$NO_BEDSORE);
-                $ID_STATION=$GetData->SSTAT;//護理站代碼
-                $NM_ORGAN=$GetData->TB_DATA->NM_ORGAN->VALUE;//部位名稱
-
-                $DT_START=$GetData->DT_START;//開始日期
-                $TID_SOURCE=$GetData->TB_DATA->TID_SOURCE->VALUE;//發生來源
+    //與座標預設值不同則需新增
+    if(count($Insert_Data)>0){
+        //已有紀錄先作廢
+        if (count($Cancel_Data)>0){
+            foreach ($Cancel_Data as $value){
+                $FORMSEQ_BS=$value->FORMSEQ;
 
                 if ($sFm=="BSOR" || $sFm=="CUTS"){
-                    $arr_IN_BSOR=array(
-                    ":DATESEQANCE_FL"=>$DATESEQ
-                    ,":FORMSEQANCE_BS"=>$FORMSEQ_BS
-                    ,":ID_PATIENT"=>$IdPt
-                    ,":ID_INPATIENT"=>$IdinPt
-                    ,":DT_REGISTER"=>" "
-                    ,":NO_OPDSEQ"=>"0"
-                    ,":NO_BEDSORE"=>$NO_BEDSORE
-                    ,":CID_BEDSORE"=>substr($sFm,0,1)
-                    ,":DT_START"=>$DT_START
-                    ,":DT_END"=>" "
-                    ,":TID_SOURCE"=>$TID_SOURCE
-                    ,":ID_STATION"=>$ID_STATION
-                    ,":NM_ORGAN"=>$NM_ORGAN
-                    ,":TID_ENDSTATE"=>" "
-                    ,":IT_TOP"=>$IT_TOP
-                    ,":IT_LEFT"=>$IT_LEFT
-                    ,":IT_WIDTH"=>$IT_WIDTH
-                    ,":IT_HEIGTH"=>$IT_HEIGTH
-                    ,":ID_BED"=>$ID_BED
-                    ,":JID_NSRANK"=>$JID_NSRANK
-                    ,":FORMSEQANCE_WT"=>$FORMSEQANCE_WT
-                    ,":DM_PROCESS"=>$System_DT
-                    ,":UR_PROCESS"=>$sUr
-                    ,":DM_CANCD"=>" "
-                    ,":UR_CANCD"=>" "
-                    );
 
-                    $INSERT_BSOR=DB_INSERT($conn,$sFm,$arr_IN_BSOR);
-
-                    if ($INSERT_BSOR->result=="false"){
-                        $result['result']="false";
-                        $result['message']=$INSERT_BSOR->message;
-                        return json_encode($result,JSON_UNESCAPED_UNICODE);
-                    }
-                }else{
-                    //insert  NSTUPG
-                    $ID_REGION=$value->ID_REGION;
-                    $arr_IN_TUPG=array(
-                        ":DATESEQANCE"=>$DATESEQ,
-                        ":FORMSEQANCE"=>$FORMSEQ_BS,
+                    $arr_UP_BSOR=array(
                         ":ID_PATIENT"=>$IdPt,
                         ":ID_INPATIENT"=>$IdinPt,
-                        ":NO_OPDSEQ"=>"0",
-                        ":DT_REGISTER"=>" ",
-                        ":NO_PROBLEM"=>$NO_BEDSORE,
-                        ":ID_ORGAN"=>$ID_REGION,//部位代碼
-                        ":NM_ORGAN"=>$NM_ORGAN,
-                        ":IT_TOP"=>$IT_TOP,
-                        ":IT_LEFT"=>$IT_LEFT,
-                        ":IT_WIDTH"=>$IT_WIDTH,
-                        ":IT_HEIGTH"=>$IT_HEIGTH,
-                        ":IS_CANCD"=>"N",
-                        ":ID_BED"=>$ID_BED,
-                        ":JID_NSRANK"=>$JID_NSRANK,
-                        ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
-                        ":DM_PROCESS"=>$System_DT,
-                        ":UR_PROCESS"=>$sUr,
-                        ":DM_ENDING"=>" ",
-                        ":UR_ENDING"=>" "
+                        ":FORMSEQANCE_BS"=>$FORMSEQ_BS,
+                        ":CID_BEDSORE"=>substr($sFm,0,1),
+                        ":DM_CANCD"=>$System_DT,
+                        ":UR_CANCD"=>$sUr,
+                        ":UR_PROCESS"=>$sUr
                     );
 
-                   /* $INSERT_TUPG=DB_INSERT($conn,$sFm,$arr_IN_TUPG);
 
-                    if ($INSERT_TUPG->result=="false"){
+                    $arr_UP_TBBS=array(
+                        ':DM_CANCD'=>$System_DT,
+                        ':UR_CANCD'=>$sUr,
+                        ':FORMSEQANCE_BS'=>$FORMSEQ_BS,
+                        ':ID_BED'=>$ID_BED
+                    );
+
+                    $UPDATE_BSOR=DB_Cancel($conn,'BSOR',$arr_UP_BSOR);
+                    if ($UPDATE_BSOR->result=="false"){
                         $result['result']="false";
-                        $result['message']=$INSERT_TUPG->message;
+                        $result['message']=$UPDATE_BSOR->message;
                         return json_encode($result,JSON_UNESCAPED_UNICODE);
-                    }*/
-
-
-                }
-
-            }
-        }
-
-
-        if ($sFm=="BSOR" || $sFm=="CUTS"){
-            $DTEND=array_filter($obj_B,function ($val)use($sDt,$sUr){
-
-                if ($val->TB_DATA->ED_TYPE->VALUE!=""){
-                    $val->TB_DATA->ED_DATE->VALUE=$sDt;
-                    $val->TB_DATA->ED_PRO->VALUE=$sUr;
-                }
-                return  $val->TB_DATA->ED_TYPE->VALUE!="";});
-            if (count($DTEND)>0){
-                //結案狀態不是空值UPDATE BSOR 結案日期 sDt
-                foreach ($DTEND as $value){
-                    $ED_TYPE="";
-                    $FORMSEQ_BS=$value->FORMSEQ;
-                    $CID_BEDSORE=substr($sFm,0,1);
-
-
-                    foreach ($value->TB_DATA as $key=>$item){
-                        if ($item->ID =="BSOR000036" || $item->ID="BSOR000045"){
-                            $ED_TYPE=$item->VALUE; //結案狀態
-                        }
                     }
-
-                    $UPDATE_DTEND=UpDateToDTEND($conn,$IdPt,$IdinPt,$CID_BEDSORE,$FORMSEQ_BS,$sDt,$ED_TYPE);
-                    if ($UPDATE_DTEND->result=="false"){
+                    $UPDATE_TBBS=DB_Cancel($conn,'TBBS',$arr_UP_TBBS);
+                    if ($UPDATE_TBBS->result=="false"){
                         $result['result']="false";
-                        $result['message']=$UPDATE_DTEND->message;
+                        $result['message']=$UPDATE_TBBS->message;
                         return json_encode($result,JSON_UNESCAPED_UNICODE);
                     }
                 }
-            }
-            //TI TB 必新增
-
-            foreach ($DTSEQ_SFMSEQ as $key=>$value){
-
-                $DATESEQANCE_FL=json_decode($value)->DTSEQ;
-                $FORMSEQANCE_BS=json_decode($value)->FMSEQ;
-
-
-                $arr_IN_TBBS=array(
-                    ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
-                    ":FORMSEQANCE_BS"=>$FORMSEQANCE_BS,
-                    ":DT_EXCUTE"=>$sDt,
-                    ":TM_EXCUTE"=>$sTm,
-                    ":ID_BED"=>$ID_BED,
-                    ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
-                    ":DM_PROCESS"=>$System_DT,
-                    ":UR_PROCESS"=>$sUr,
-                    ":DM_CANCD"=>" ",
-                    ":UR_CANCD"=>" ",
-                    ":JID_NSRANK"=>$JID_NSRANK);
-                $INSERT_TBBS= DB_INSERT($conn,'TBBS',$arr_IN_TBBS);
-                if ($INSERT_TBBS->result=="false"){
-                    //return error msg
-                    $result['result']="false";
-                    $result['message']=$INSERT_TBBS->message;
-                    return json_encode($result,JSON_UNESCAPED_UNICODE);
-                }
-
-
-                //取表單對應的obj
-                $TIBS_Obj=array_filter($obj_B,function ($value) use ($FORMSEQANCE_BS){return $value->FORMSEQ!="" &&  $value->FORMSEQ==$FORMSEQANCE_BS;});
-
-                $INSERT_TIBS=InsertTIBS($conn,$TIBS_Obj,$sFm,$sUr,$DATESEQANCE_FL,$FORMSEQANCE_BS);
-
-                if ($INSERT_TIBS->result=="false"){
-                    //return error msg
-
-                    $result['result']="false";
-                    $result['message']=$INSERT_TIBS->message;
-                    return json_encode($result,JSON_UNESCAPED_UNICODE);
-                }
-
-            }
-        }
-        else{
-            //PT PI 必新增
-            foreach ($DTSEQ_SFMSEQ as $key=>$value){
-                $DATESEQANCE_FL=json_decode($value)->DTSEQ;
-                $FORMSEQANCE_BS=json_decode($value)->FMSEQ;
-                $Num=json_decode($value)->NUM;
-                $GetData=GetNumData($obj_B,$Num);
-                $DT_EXECUTE=$GetData->TB_DATA->sDT_EXE->VALUE;//置入日
-                $DT_ENDING=$GetData->TB_DATA->sDT_END->VALUE;//預計拔管日
-                $ST_DEPTH=$GetData->TB_DATA->DEPTH->VALUE;//深度
-                $ID_TUBE=$GetData->TB_DATA->ID_TUBE->VALUE;//管路ID
-                $ST_TUBE=$GetData->TB_DATA->sST_TUBE->VALUE; //型號
-                $IT_TERMDAYS=$GetData->TB_DATA->IT_TERMDAYS->VALUE; //預計換管日期
-                $CD_STATUS=$GetData->TB_DATA->CD_STATUS->VALUE;//入院帶入
-                $NM_TUBE=$GetData->TB_DATA->sNM_TUBE->VALUE;//管路名稱
-                $MB_RAND=$GetData->TB_DATA->MB_RAND->VALUE;//入院帶入
-
-
-
-                $arr_IN_TUPI=array(
-                    ":DATESEQANCE"=>GetDataSEQ($conn),
-                    ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
-                    ":DT_EXECUTE"=>$DT_EXECUTE,
-                    ":TM_EXECUTE"=>$sTm,//當下時間
-                    ":DT_ENDING"=>$DT_ENDING,
-                    ":TM_ENDING"=>$sTm,//當下時間
-                    ":IS_FIRST"=>"Y",
-                    ":IS_DRAWOUT"=>"N",
-                    ":IS_CANCD"=>"N",
-                    ":ID_BED"=>$ID_BED,
-                    ":JID_NSRANK"=>$JID_NSRANK,
-                    ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
-                    ":DM_PROCESS"=>$System_DT,
-                    ":UR_PROCESS"=>$sUr,
-                    ":DM_ENDING"=>" ",
-                    ":UR_ENDING"=>" ",
-                    ":ST_DEPTH"=>$ST_DEPTH
-                );
-
-                $arr_IN_TUPT=array(
-                    ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
-                    ":FORMSEQANCE"=>$FORMSEQANCE_BS,
-                    ":DT_EXECUTE"=>$DT_EXECUTE,
-                    ":TM_EXECUTE"=>$sTm,
-                    ":ID_TUBE"=>$ID_TUBE,
-                    ":ST_TUBE"=>$ST_TUBE,
-                    ":IT_TERMDAYS"=>$IT_TERMDAYS,
-                    ":DT_ENDING"=>" ",
-                    ":TM_ENDING"=>" ",
-                    ":IS_CANCD"=>"Y",
-                    ":ID_BED"=>$ID_BED,
-                    ":JID_NSRANK"=>$JID_NSRANK,
-                    ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
-                    ":DM_PROCESS"=>$System_DT,
-                    ":UR_PROCESS"=>$sUr,
-                    ":DM_ENDING"=>" ",
-                    ":UR_ENDING"=>" ",
-                    ":CD_STATUS"=>$CD_STATUS,
-                    ":NM_TUBE"=>$NM_TUBE,
-                    ":NM_BRAND"=>$MB_RAND
-                );
-
-
-
-               $INSERT_TUPI=DB_INSERT($conn,'TUPI',$arr_IN_TUPI);
-
-                if ($INSERT_TUPI->result=="false"){
-                    $result['result']="false";
-                    $result['message']=$INSERT_TUPI->message;
-                    return json_encode($result,JSON_UNESCAPED_UNICODE);
-                }
-
-                 $INSERT_TUPT=DB_INSERT($conn,'TUPT',$arr_IN_TUPT);
-
-                if ($INSERT_TUPT->result=="false")
+                else
                 {
+                    /*   $Num=$value->NUM;//需作廢的編號
+                     // $UP_DATESEQ=GetNumData($obj_B,$Num)->DATESEQ;
+                      $UP_FORMSEQ=GetNumData($obj_B,$Num)->FORMSEQ;//需作廢的表單編號
+
+                      $arr_UP_TUPG=array(
+                          ":DM_ENDING"=>$System_DT,
+                          ":UR_ENDING"=>$sUr,
+                          ":FORMSEQANCE"=>$UP_FORMSEQ,
+                          ":ID_PATIENT"=>$IdPt,
+                          ":ID_INPATIENT"=>$IdinPt,
+                          ":NO_PROBLEM"=>$Num
+                      );
+                     $arr_UP_TUPT=array(
+                          ":DM_ENDING"=>$System_DT,
+                          ":UR_ENDING"=>$sUr,
+                          ":DATESEQANCE_FL"=>$UP_DATESEQ,
+                          ":FORMSEQANCE"=>$UP_FORMSEQ
+                      );
+
+
+                      $UPDATE_TUPG= DB_Cancel($conn,'TUPG',$arr_UP_TUPG);
+
+                      if ($UPDATE_TUPG->result=="false"){
+                          $result['result']="false";
+                          $result['message']=$UPDATE_TUPG->message;
+                          return json_encode($result,JSON_UNESCAPED_UNICODE);
+                      }
+
+
+                      $UPDATE_TUPT= DB_Cancel($conn,'TUPT',$arr_UP_TUPT);
+
+                      if ($UPDATE_TUPT->result=="false"){
+                          $result['result']="false";
+                          $result['message']=$UPDATE_TUPT->message;
+                          return json_encode($result,JSON_UNESCAPED_UNICODE);
+                      }*/
+
+                }
+            }
+        }
+      /*  print_r($Insert_Data);
+        echo '<br>'.'<br>';*/
+        //存檔座標
+        foreach ($Insert_Data as $value){
+            $FORMSEQ_BS=$value->FORMSEQ;//表單編號
+            $NO_BEDSORE=$value->NUM; //編號
+            $GetThisDTSEQ= array_filter($DTSEQ_SFMSEQ,function ($value)use ($FORMSEQ_BS,$NO_BEDSORE){
+                return json_decode($value)->FMSEQ==$FORMSEQ_BS && json_decode($value)->NUM==$NO_BEDSORE;
+            });
+
+            $DATESEQ=json_decode(join($GetThisDTSEQ))->DTSEQ;
+
+            $IT_LEFT=$value->LEFT;
+            $IT_TOP=$value->TOP;
+            $IT_WIDTH=$value->W_TH;
+            $IT_HEIGTH=$value->H_TH;
+
+
+            $GetData=GetNumData($obj_B,$NO_BEDSORE);
+            $ID_STATION=$GetData->SSTAT;//護理站代碼
+            $NM_ORGAN=$GetData->TB_DATA->NM_ORGAN->VALUE;//部位名稱
+
+            $DT_START=$GetData->DT_START;//開始日期
+            $TID_SOURCE=$GetData->TB_DATA->TID_SOURCE->VALUE;//發生來源
+
+            if ($sFm=="BSOR" || $sFm=="CUTS"){
+                $arr_IN_BSOR=array(
+                    ":DATESEQANCE_FL"=>$DATESEQ
+                ,":FORMSEQANCE_BS"=>$FORMSEQ_BS
+                ,":ID_PATIENT"=>$IdPt
+                ,":ID_INPATIENT"=>$IdinPt
+                ,":DT_REGISTER"=>" "
+                ,":NO_OPDSEQ"=>"0"
+                ,":NO_BEDSORE"=>$NO_BEDSORE
+                ,":CID_BEDSORE"=>substr($sFm,0,1)
+                ,":DT_START"=>$DT_START
+                ,":DT_END"=>" "
+                ,":TID_SOURCE"=>$TID_SOURCE
+                ,":ID_STATION"=>$ID_STATION
+                ,":NM_ORGAN"=>$NM_ORGAN
+                ,":TID_ENDSTATE"=>" "
+                ,":IT_TOP"=>$IT_TOP
+                ,":IT_LEFT"=>$IT_LEFT
+                ,":IT_WIDTH"=>$IT_WIDTH
+                ,":IT_HEIGTH"=>$IT_HEIGTH
+                ,":ID_BED"=>$ID_BED
+                ,":JID_NSRANK"=>$JID_NSRANK
+                ,":FORMSEQANCE_WT"=>$FORMSEQANCE_WT
+                ,":DM_PROCESS"=>$System_DT
+                ,":UR_PROCESS"=>$sUr
+                ,":DM_CANCD"=>" "
+                ,":UR_CANCD"=>" "
+                );
+
+                $INSERT_BSOR=DB_INSERT($conn,$sFm,$arr_IN_BSOR);
+
+                if ($INSERT_BSOR->result=="false"){
                     $result['result']="false";
-                    $result['message']=$INSERT_TUPT->message;
+                    $result['message']=$INSERT_BSOR->message;
+                    return json_encode($result,JSON_UNESCAPED_UNICODE);
+                }
+            }
+            else{
+                //insert  NSTUPG
+                $ID_REGION=$value->ID_REGION;
+
+                $arr_IN_TUPG=array(
+                    ":DATESEQANCE"=>$DATESEQ,
+                    ":FORMSEQANCE"=>$FORMSEQ_BS,
+                    ":ID_PATIENT"=>$IdPt,
+                    ":ID_INPATIENT"=>$IdinPt,
+                    ":NO_OPDSEQ"=>'0',
+                    ":DT_REGISTER"=>' ',
+                    ":NO_PROBLEM"=>$NO_BEDSORE,
+                    ":ID_ORGAN"=>$ID_REGION,//部位代碼
+                    ":NM_ORGAN"=>$NM_ORGAN,
+                    ":IT_TOP"=>$IT_TOP,
+                    ":IT_LEFT"=>$IT_LEFT,
+                    ":IT_WIDTH"=>$IT_WIDTH,
+                    ":IT_HEIGTH"=>$IT_HEIGTH,
+                    ":IS_CANCD"=>'N',
+                    ":ID_BED"=>$ID_BED,
+                    ":JID_NSRANK"=>$JID_NSRANK,
+                    ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
+                    ":DM_PROCESS"=>$System_DT,
+                    ":UR_PROCESS"=>$sUr
+                );
+
+                $INSERT_TUPG=DB_INSERT($conn,'TUPG',$arr_IN_TUPG);
+                if ($INSERT_TUPG->result=="false"){
+                    $result['result']="false";
+                    $result['message']=$INSERT_TUPG->message;
                     return json_encode($result,JSON_UNESCAPED_UNICODE);
                 }
 
             }
 
         }
+    }
 
 
 
 
 
+    if ($sFm=="BSOR" || $sFm=="CUTS"){
 
-   // return json_encode($result,JSON_UNESCAPED_UNICODE);
+        $DTEND=array_filter($obj_B,function ($val)use($sDt,$sUr){
+
+            if ($val->TB_DATA->ED_TYPE->VALUE!=""){
+                $val->TB_DATA->ED_DATE->VALUE=$sDt;
+                $val->TB_DATA->ED_PRO->VALUE=$sUr;
+            }
+            return  $val->TB_DATA->ED_TYPE->VALUE!="";});
+
+
+
+        if (count($DTEND)>0){
+            //結案狀態不是空值UPDATE BSOR 結案日期 sDt
+            foreach ($DTEND as $value){
+                $ED_TYPE="";
+                $FORMSEQ_BS=$value->FORMSEQ;
+                $CID_BEDSORE=substr($sFm,0,1);
+
+
+                foreach ($value->TB_DATA as $key=>$item){
+                    if ($item->ID =="BSOR000036" || $item->ID="BSOR000045"){
+                        $ED_TYPE=$item->VALUE; //結案狀態
+                    }
+                }
+
+                $UPDATE_DTEND=UpDateToDTEND($conn,$IdPt,$IdinPt,$CID_BEDSORE,$FORMSEQ_BS,$sDt,$ED_TYPE);
+                if ($UPDATE_DTEND->result=="false"){
+                    $result['result']="false";
+                    $result['message']=$UPDATE_DTEND->message;
+                    return json_encode($result,JSON_UNESCAPED_UNICODE);
+                }
+            }
+        }
+        //TI TB 必新增
+
+        foreach ($DTSEQ_SFMSEQ as $key=>$value){
+
+            $DATESEQANCE_FL=json_decode($value)->DTSEQ;
+            $FORMSEQANCE_BS=json_decode($value)->FMSEQ;
+
+
+            $arr_IN_TBBS=array(
+                ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
+                ":FORMSEQANCE_BS"=>$FORMSEQANCE_BS,
+                ":DT_EXCUTE"=>$sDt,
+                ":TM_EXCUTE"=>$sTm,
+                ":ID_BED"=>$ID_BED,
+                ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
+                ":DM_PROCESS"=>$System_DT,
+                ":UR_PROCESS"=>$sUr,
+                ":DM_CANCD"=>" ",
+                ":UR_CANCD"=>" ",
+                ":JID_NSRANK"=>$JID_NSRANK);
+
+            $INSERT_TBBS= DB_INSERT($conn,'TBBS',$arr_IN_TBBS);
+            if ($INSERT_TBBS->result=="false"){
+                //return error msg
+                $result['result']="false";
+                $result['message']=$INSERT_TBBS->message;
+                return json_encode($result,JSON_UNESCAPED_UNICODE);
+            }
+
+
+            //取表單對應的obj
+            $TIBS_Obj=array_filter($obj_B,function ($value) use ($FORMSEQANCE_BS){return $value->FORMSEQ!="" &&  $value->FORMSEQ==$FORMSEQANCE_BS;});
+
+            $INSERT_TIBS=InsertTIBS($conn,$TIBS_Obj,$sFm,$sUr,$DATESEQANCE_FL,$FORMSEQANCE_BS);
+
+            if ($INSERT_TIBS->result=="false"){
+                //return error msg
+
+                $result['result']="false";
+                $result['message']=$INSERT_TIBS->message;
+                return json_encode($result,JSON_UNESCAPED_UNICODE);
+            }
+
+        }
+    }
+    else{
+        //PT PI 必新增
+        $DATA_DiffArr=obj_diff('B',$obj_B,$obj_D);//比對資料
+        /*print_r($DATA_DiffArr->OLD_DATA);*/
+        if (count($DATA_DiffArr->OLD_DATA)>0){
+            foreach ($DATA_DiffArr->OLD_DATA as $key=>$value) {
+                $arr_UP_TUPT = array(
+                    ":DM_ENDING" => $System_DT,
+                    ":UR_ENDING" => $sUr,
+                    ":DATESEQANCE_FL" => $value->DATESEQ,
+                    ":FORMSEQANCE" => $value->FORMSEQ
+                );
+                $arr_UP_TUPI = array(
+                    ":DM_ENDING" => $System_DT,
+                    ":UR_ENDING" => $sUr,
+                    ":DATESEQANCE_FL" => $value->DATESEQ);
+
+                $UPDATE_TUPT= DB_Cancel($conn, 'TUPT', $arr_UP_TUPT);
+                if ($UPDATE_TUPT->result=="false"){
+                    $result['result']="false";
+                    $result['message']=$UPDATE_TUPT->message;
+                    return json_encode($result,JSON_UNESCAPED_UNICODE);
+                }
+
+                $UPDATE_TUPI= DB_Cancel($conn, 'TUPI', $arr_UP_TUPI);
+                if ($UPDATE_TUPI->result=="false"){
+                    $result['result']="false";
+                    $result['message']=$UPDATE_TUPI->message;
+                    return json_encode($result,JSON_UNESCAPED_UNICODE);
+                }
+
+            }
+        }
+
+
+        foreach ($DTSEQ_SFMSEQ as $value){
+            $obj=json_decode($value);
+            $DATESEQANCE_FL=$obj->DTSEQ;
+            //$FORMSEQANCE_BS=$obj->FMSEQ;
+            $Num=$obj->NUM;
+
+            foreach($DATA_DiffArr->NEW_DATA as $item){
+                if ($item->TB_DATA->NO_NUM->VALUE==$Num){
+                    $item->DATESEQ=$DATESEQANCE_FL;
+                   // $item->FORMSEQ=$FORMSEQANCE_BS;
+                }
+            }
+        }
+
+        foreach($DATA_DiffArr->NEW_DATA as $key=>$value) {
+            $DATESEQANCE_FL=$value->DATESEQ;
+            $FORMSEQANCE_BS=$value->FORMSEQ;
+
+            $DT_EXECUTE=$value->TB_DATA->sDT_EXE->VALUE;//置入日
+            $DT_ENDING=$value->TB_DATA->sDT_END->VALUE;//預計拔管日
+            $ST_DEPTH=$value->TB_DATA->DEPTH->VALUE;//深度
+            $ID_TUBE=$value->TB_DATA->ID_TUBE->VALUE;//管路ID
+            $ST_TUBE=$value->TB_DATA->sST_TUBE->VALUE; //型號
+            $IT_TERMDAYS=$value->TB_DATA->IT_TERMDAYS->VALUE; //預計換管日期
+            $CD_STATUS=$value->TB_DATA->CD_STATUS->VALUE;//入院帶入
+            $NM_TUBE=$value->TB_DATA->sNM_TUBE->VALUE;//管路名稱
+            $MB_RAND=$value->TB_DATA->MB_RAND->VALUE;//入院帶入
+
+            $arr_IN_TUPI=array(
+                ":DATESEQANCE"=>GetDataSEQ($conn),
+                ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
+                ":DT_EXECUTE"=>$DT_EXECUTE,
+                ":TM_EXECUTE"=>$sTm,//當下時間
+                ":DT_ENDING"=>trim($DT_ENDING)==""?" ":$DT_ENDING,
+                ":TM_ENDING"=>trim($DT_ENDING)==""?" ":$sTm,//當下時間
+                ":IS_FIRST"=>"Y",
+                ":IS_DRAWOUT"=>"N",
+                ":IS_CANCD"=>"N",
+                ":ID_BED"=>$ID_BED,
+                ":JID_NSRANK"=>$JID_NSRANK,
+                ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
+                ":DM_PROCESS"=>$System_DT,
+                ":UR_PROCESS"=>$sUr,
+                ":DM_ENDING"=>" ",
+                ":UR_ENDING"=>" ",
+                ":ST_DEPTH"=>trim($ST_DEPTH)==""?" ":$ST_DEPTH
+            );
+            $arr_IN_TUPT=array(
+                ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
+                ":FORMSEQANCE"=>$FORMSEQANCE_BS,
+                ":DT_EXECUTE"=>$DT_EXECUTE,
+                ":TM_EXECUTE"=>$sTm,
+                ":ID_TUBE"=>$ID_TUBE,
+                ":ST_TUBE"=>trim($ST_TUBE)==""?" ":$ST_TUBE,
+                ":IT_TERMDAYS"=>$IT_TERMDAYS,
+                ":DT_ENDING"=>" ",
+                ":TM_ENDING"=>" ",
+                ":IS_CANCD"=>"N",
+                ":ID_BED"=>$ID_BED,
+                ":JID_NSRANK"=>$JID_NSRANK,
+                ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
+                ":DM_PROCESS"=>$System_DT,
+                ":UR_PROCESS"=>$sUr,
+                ":DM_ENDING"=>" ",
+                ":UR_ENDING"=>" ",
+                ":CD_STATUS"=>$CD_STATUS,
+                ":NM_TUBE"=>$NM_TUBE,
+                ":NM_BRAND"=>trim($MB_RAND)==""?" ":$MB_RAND
+            );
+            $INSERT_TUPI=DB_INSERT($conn,'TUPI',$arr_IN_TUPI);
+            if ($INSERT_TUPI->result=="false"){
+                $result['result']="false";
+                $result['message']=$INSERT_TUPI->message;
+                return json_encode($result,JSON_UNESCAPED_UNICODE);
+            }
+
+            $INSERT_TUPT=DB_INSERT($conn,'TUPT',$arr_IN_TUPT);
+            if ($INSERT_TUPT->result=="false")
+            {
+                $result['result']="false";
+                $result['message']=$INSERT_TUPT->message;
+                return json_encode($result,JSON_UNESCAPED_UNICODE);
+            }
+
+        }
+    }
+
+
+    return json_encode($result,JSON_UNESCAPED_UNICODE);
 }
 
 function GetBSORJson($conn,$sFm,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
@@ -696,7 +791,7 @@ function PosBSORCancel($conn,$sFm,$sPg,$Num,$sTraID,$sUr){
               return [];
             });
 
-         $FORMSEQANCE_BS=$map_Num[0]->FORMSEQ;
+           $FORMSEQANCE_BS=$map_Num[0]->FORMSEQ;
            $DATESEQANCE_FL=$map_Num[0]->DATESEQ;
 
            $bid_BSOR=array(
@@ -905,7 +1000,6 @@ function ChangeChr($conn){
 
 /*有效時間取得的部位*/
 function GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$Parameter){
-
     $obj_A=json_decode($ST_DATAA);
     $obj_B=json_decode($ST_DATAB);
 
@@ -914,25 +1008,21 @@ function GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$Parameter){
 
     if ($sFm=="TUPT"){
 
-        $SQL="SELECT PG.FORMSEQANCE,PG.NO_PROBLEM,PG.ID_ORGAN,PG.NM_ORGAN, PT.DT_EXECUTE ,
-                PG.IT_TOP,PG.IT_LEFT,PG.IT_WIDTH,PG.IT_HEIGTH,
-                PT.NM_TUBE,PT.CD_STATUS
-                FROM  NSTUPG PG, NSTUPT PT
-                WHERE  PG.FORMSEQANCE=PT.FORMSEQANCE
+        $SQL="SELECT DISTINCT PT.DATESEQANCE_FL,PG.FORMSEQANCE,PG.NO_PROBLEM,PG.ID_ORGAN,
+                PG.NM_ORGAN,PI.DT_EXECUTE,PI.DT_ENDING,
+                PG.IT_TOP,PG.IT_LEFT,PG.IT_WIDTH,PG.IT_HEIGTH,PT.IT_TERMDAYS,
+                PT.ST_TUBE,PT.NM_BRAND,PI.ST_DEPTH,
+                PT.ID_TUBE,PT.NM_TUBE,PT.CD_STATUS
+                FROM  NSTUPG PG, NSTUPT PT,NSTUPI PI
+                WHERE 
+                PG.FORMSEQANCE=PT.FORMSEQANCE
                 AND PG.ID_PATIENT=:ID_PATIENT
                 AND PG.ID_INPATIENT=:ID_INPATIENT
-                AND PT.DT_EXECUTE||PT.TM_EXECUTE = 
-                (
-                  
-                    SELECT MAX(T.DT_EXECUTE || T.TM_EXECUTE) AS LAST_DTTM 
-                    FROM  NSTUPG G,NSTUPT T
-                    WHERE G.FORMSEQANCE=T.FORMSEQANCE
-                    AND G.ID_PATIENT=:ID_PATIENT
-                    AND G.ID_INPATIENT=:ID_INPATIENT
-                    AND G.DM_ENDING=' ' AND T.DM_ENDING=' '
-                )
-                AND PG.DM_ENDING=' ' AND PT.DM_ENDING=' '
-                ORDER BY PG.NO_PROBLEM DESC
+                AND PI.IS_DRAWOUT ='N' 
+                AND PT.DATESEQANCE_FL=PI.DATESEQANCE_FL
+                AND PG.IS_CANCD='N' AND PT.IS_CANCD='N' AND PI.IS_CANCD='N' 
+                AND PG.DM_ENDING=' ' AND PT.DM_ENDING=' ' AND PI.DM_ENDING=' '
+               ORDER BY PG.NO_PROBLEM DESC
             ";
 
     }
@@ -958,8 +1048,6 @@ function GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$Parameter){
             ";
     }
 
-
-
     $stid=oci_parse($conn,$SQL);
     foreach ($Parameter as $key=>$value){
         oci_bind_by_name($stid,$key,$Parameter[$key]);
@@ -984,14 +1072,21 @@ function GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$Parameter){
             $tmp_A->H_TH=$H_TH;
 
             if ($sFm=="TUPT"){
+
+                $DATESEQANCE_FL=oci_result($stid,'DATESEQANCE_FL');
                 $FORMSEQANCE=oci_result($stid,'FORMSEQANCE');//表單編號
                 $NO_PROBLEM=oci_result($stid,'NO_PROBLEM');//部位編號
                 $NM_ORGAN=oci_result($stid,'NM_ORGAN');//部位名稱
                 $ID_ORGAN=oci_result($stid,'ID_ORGAN');//部位代碼
-                $NM_TUBE=oci_result($stid,'NM_TUBE');//管路id
-
+                $NM_TUBE=oci_result($stid,'NM_TUBE');//管路名稱
+                $ID_TUBE=oci_result($stid,'ID_TUBE');//管路ID
+                $IT_TERMDAYS=oci_result($stid,'IT_TERMDAYS');//預計拔管天數
+                $ST_TUBE=oci_result($stid,'ST_TUBE');//型號
+                $NM_BRAND=oci_result($stid,'NM_BRAND');//廠商
+                $ST_DEPTH=oci_result($stid,'ST_DEPTH');//深度
                 $CD_STATUS=oci_result($stid,'CD_STATUS');//入院帶入
                 $DT_EXECUTE=oci_result($stid,'DT_EXECUTE');//置入日期
+                $DT_ENDING=oci_result($stid,'DT_ENDING');//換管日期
 
                 $tmp_A->NUM=$NO_PROBLEM;
                 $tmp_A->FORMSEQ=$FORMSEQANCE;
@@ -999,12 +1094,21 @@ function GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$Parameter){
                 $tmp_A->ID_REGION=$ID_ORGAN;
 
 
+                $tmp_B->DATESEQ=$DATESEQANCE_FL;
+                $tmp_B->FORMSEQ=$FORMSEQANCE;
                 $tmp_B->TB_DATA->NO_NUM->VALUE=$NO_PROBLEM;
                 $tmp_B->TB_DATA->NM_ORGAN->VALUE=$NM_ORGAN;
                 $tmp_B->TB_DATA->sNM_TUBE->VALUE=$NM_TUBE;
+                $tmp_B->TB_DATA->ID_TUBE->VALUE=$ID_TUBE;
                 $tmp_B->TB_DATA->sDT_EXE->VALUE=$DT_EXECUTE;
                 $tmp_B->TB_DATA->CD_STATUS->VALUE=$CD_STATUS;
-                $tmp_B->FORMSEQ=$FORMSEQANCE;
+                $tmp_B->TB_DATA->IT_TERMDAYS->VALUE=$IT_TERMDAYS;
+                $tmp_B->TB_DATA->sST_TUBE->VALUE=$ST_TUBE;
+                $tmp_B->TB_DATA->DEPTH->VALUE=$ST_DEPTH;
+                $tmp_B->TB_DATA->MB_RAND->VALUE=$NM_BRAND;
+                $tmp_B->TB_DATA->sDT_END->VALUE=$DT_ENDING;
+
+
 
             }
             else{
@@ -1049,10 +1153,10 @@ function InsertTP($conn,$sfm,$sTraID,$data,$Idpt,$INPt,$sDT,$sTm,$ID_BED,$DM_PRO
                                ID_BED,DM_PROCESS,UR_PROCESS,JID_NSRANK,FORMSEQANCE_WT) 
                                  VALUES (
                                 :ID_TABFORM,:sTraID,:Idpt,:INPt,:DT_EXCUTE,:TM_EXCUTE,
-                                EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),' ',' ',' ',' ',' ',
+                                EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),EMPTY_CLOB(),' ',' ',' ',' ',
                                :BED,:DM_P,:UR_P,:NSRANK,:FormSeq)
-                               RETURNING  ST_DATAA,ST_DATAB,ST_DATAC
-                                INTO :ST_DATAA,:ST_DATAB,:ST_DATAC";
+                               RETURNING  ST_DATAA,ST_DATAB,ST_DATAC,ST_DATAD
+                                INTO :ST_DATAA,:ST_DATAB,:ST_DATAC,:ST_DATAD";
     $TP_Stid = oci_parse($conn, $SQL);
     if(!$TP_Stid){
         $e=oci_error($conn);
@@ -1061,11 +1165,12 @@ function InsertTP($conn,$sfm,$sTraID,$data,$Idpt,$INPt,$sDT,$sTm,$ID_BED,$DM_PRO
     $clobA=oci_new_descriptor($conn,OCI_D_LOB);
     $clobB=oci_new_descriptor($conn,OCI_D_LOB);
     $clobC=oci_new_descriptor($conn,OCI_D_LOB);
+    $clobD=oci_new_descriptor($conn,OCI_D_LOB);
 
     oci_bind_by_name($TP_Stid,":ST_DATAA",$clobA,-1,OCI_B_CLOB);
     oci_bind_by_name($TP_Stid,":ST_DATAB",$clobB,-1,OCI_B_CLOB);
     oci_bind_by_name($TP_Stid,":ST_DATAC",$clobC,-1,OCI_B_CLOB);
-
+    oci_bind_by_name($TP_Stid,":ST_DATAD",$clobD,-1,OCI_B_CLOB);
 
     oci_bind_by_name($TP_Stid,":ID_TABFORM",$sfm);
     oci_bind_by_name($TP_Stid,":sTraID",$sTraID);
@@ -1090,8 +1195,11 @@ function InsertTP($conn,$sfm,$sTraID,$data,$Idpt,$INPt,$sDT,$sTm,$ID_BED,$DM_PRO
 
 
     $clobA->save(json_encode($data['A'],JSON_UNESCAPED_UNICODE));
-    $clobB->save(json_encode($data['B'],JSON_UNESCAPED_UNICODE));
     $clobC->save(json_encode($data['A'],JSON_UNESCAPED_UNICODE));
+    $clobB->save(json_encode($data['B'],JSON_UNESCAPED_UNICODE));
+    $clobD->save(json_encode($data['B'],JSON_UNESCAPED_UNICODE));
+
+
     oci_free_statement($TP_Stid);
     oci_commit($conn);
     return true;
@@ -1168,11 +1276,13 @@ function DB_INSERT($conn,$Qry_Nm,$dataArr){
 
     }
     else if ($Qry_Nm=="TUPG"){
-        $SQL="INSERT INTO NSTUPG(DATESEQANCE,FORMSEQANCE,ID_PATIENT,ID_INPATIENT,NO_OPDSEQ,DT_REGISTER,NO_PROBLEM,ID_ORGAN,NM_ORGAN,
-                IT_TOP,IT_LEFT,IT_WIDTH,IT_HEIGTH,IS_CANCD,ID_BED,JID_NSRANK,FORMSEQANCE_WT,DM_PROCESS,UR_PROCESS,DM_ENDING,UR_ENDING)
+        $SQL="INSERT INTO NSTUPG(
+                                DATESEQANCE,FORMSEQANCE,ID_PATIENT,ID_INPATIENT,NO_OPDSEQ,DT_REGISTER,NO_PROBLEM,ID_ORGAN,NM_ORGAN,
+                                IT_TOP,IT_LEFT,IT_WIDTH,IT_HEIGTH,IS_CANCD,ID_BED,JID_NSRANK,
+                                FORMSEQANCE_WT,DM_PROCESS,UR_PROCESS,DM_ENDING,UR_ENDING)
                 VALUES(:DATESEQANCE,:FORMSEQANCE,:ID_PATIENT,:ID_INPATIENT,:NO_OPDSEQ,:DT_REGISTER,:NO_PROBLEM,:ID_ORGAN,:NM_ORGAN,
-                :IT_TOP,:IT_LEFT,:IT_WIDTH,:IT_HEIGTH,:IS_CANCD,:ID_BED,:JID_NSRANK,:FORMSEQANCE_WT,:DM_PROCESS,:UR_PROCESS,:DM_ENDING,:UR_ENDING)";
-
+                       :IT_TOP,:IT_LEFT,:IT_WIDTH,:IT_HEIGTH,:IS_CANCD,:ID_BED,:JID_NSRANK,
+                       :FORMSEQANCE_WT,:DM_PROCESS,:UR_PROCESS,' ',' ')";
     }
     else if ($Qry_Nm=="TUPI"){
         $SQL="INSERT INTO NSTUPI
@@ -1197,7 +1307,9 @@ function DB_INSERT($conn,$Qry_Nm,$dataArr){
     $Result=json_decode(json_encode(array("result"=>"true","message"=>""),JSON_UNESCAPED_UNICODE));
 
     $stid=oci_parse($conn,$SQL);
+
     foreach ($dataArr as $key=>$value){
+
         oci_bind_by_name($stid,$key,$dataArr[$key]);
     }
     if (!$stid){
@@ -1210,6 +1322,7 @@ function DB_INSERT($conn,$Qry_Nm,$dataArr){
 
     $result=oci_execute($stid,OCI_NO_AUTO_COMMIT);
     if (!$result){
+
         $Result->result="false";
         $Result->message=oci_error($stid)['message'];
         return $Result;
@@ -1221,7 +1334,8 @@ function DB_Cancel($conn,$Qry_Nm,$dataArr){
     $SQL="";
     $Result=json_decode(json_encode(array("result"=>"true","message"=>""),JSON_UNESCAPED_UNICODE));
     if ($Qry_Nm=="BSOR"){
-        $SQL="UPDATE NSBSOR
+        $SQL="
+          UPDATE NSBSOR
           SET DM_CANCD=:DM_CANCD,
               UR_CANCD=:UR_CANCD
           WHERE 
@@ -1232,20 +1346,48 @@ function DB_Cancel($conn,$Qry_Nm,$dataArr){
           AND DM_CANCD=' '";
     }
     else if ($Qry_Nm=="TBBS"){
-        $SQL="UPDATE  NSTBBS
-              SET DM_CANCD=:DM_CANCD,UR_CANCD=:UR_CANCD
+        $SQL="
+              UPDATE  NSTBBS
+              SET DM_CANCD=:DM_CANCD,
+                  UR_CANCD=:UR_CANCD
               WHERE FORMSEQANCE_BS=:FORMSEQANCE_BS
               AND ID_BED=:ID_BED
-              AND DM_CANCD=' '";
+              AND DM_CANCD=' '
+              ";
     }
 
     else if ($Qry_Nm=="TUPG"){
+        $SQL="UPDATE NSTUPG 
+              SET IS_CANCD='Y', 
+                  DM_ENDING=:DM_ENDING,
+                  UR_ENDING=:UR_ENDING   
+              WHERE FORMSEQANCE=:FORMSEQANCE
+              AND ID_PATIENT=:ID_PATIENT 
+              AND ID_INPATIENT=:ID_INPATIENT 
+              AND NO_PROBLEM=:NO_PROBLEM 
+              AND IS_CANCD='N';
+                ";
 
     }
     else if ($Qry_Nm=="TUPT"){
+        $SQL="UPDATE NSTUPT 
+              SET IS_CANCD='Y',
+                  DM_ENDING=:DM_ENDING,
+                  UR_ENDING=:UR_ENDING 
+              WHERE DATESEQANCE_FL=:DATESEQANCE_FL
+              AND FORMSEQANCE=:FORMSEQANCE
+              AND IS_CANCD='N'";
 
     }
+    else if ($Qry_Nm=="TUPI"){
+        $SQL="UPDATE NSTUPI 
+              SET IS_CANCD='Y',
+                  DM_ENDING=:DM_ENDING,
+                  UR_ENDING=:UR_ENDING 
+               WHERE DATESEQANCE_FL=:DATESEQANCE_FL 
+               AND IS_CANCD='N'";
 
+    }
     $stid=oci_parse($conn,$SQL);
     foreach ($dataArr as $key=>$value){
         oci_bind_by_name($stid,$key,$dataArr[$key]);
@@ -1263,35 +1405,6 @@ function DB_Cancel($conn,$Qry_Nm,$dataArr){
     }
     return $Result;
 }
-/*function InsertBSOR($conn,$sfm,$DATESEQANCE,$FORMSEQANCE_BS,$IdPt,$IdinPt,$NO_BEDSORE,$DT_START,$TID_SOURCE,$ID_STATION,$NM_ORGAN,$IT_TOP,$IT_LEFT,$IT_WIDTH,$IT_HEIGTH,$System_DT,$ID_BED,$JID_NSRANK,$FORMSEQANCE_WT,$sUr){
-    $CID_BEDSORE=substr($sfm,0,1);
-
-    $SQL="INSERT INTO NSBSOR
-                (DATESEQANCE_FL,FORMSEQANCE_BS,ID_PATIENT,ID_INPATIENT,DT_REGISTER,NO_OPDSEQ,NO_BEDSORE,CID_BEDSORE,DT_START,DT_END,
-                TID_SOURCE,ID_STATION,NM_ORGAN,TID_ENDSTATE,IT_TOP,IT_LEFT,IT_WIDTH,IT_HEIGTH,
-                ID_BED,JID_NSRANK,FORMSEQANCE_WT,DM_PROCESS,UR_PROCESS,DM_CANCD,UR_CANCD)
-                VALUES
-                ('$DATESEQANCE','$FORMSEQANCE_BS','$IdPt','$IdinPt',' ','0','$NO_BEDSORE','$CID_BEDSORE','$DT_START',' ',
-                '$TID_SOURCE','$ID_STATION','$NM_ORGAN',' ','$IT_TOP','$IT_LEFT','$IT_WIDTH','$IT_HEIGTH',
-                '$ID_BED','$JID_NSRANK','$FORMSEQANCE_WT','$System_DT','$sUr',' ',' '
-                )";
-
-   $Result=json_decode(json_encode(array("result"=>"true","message"=>""),JSON_UNESCAPED_UNICODE));
-
-    $stid=oci_parse($conn,$SQL);
-    if (!$stid){
-        $Result->result="false";
-        $Result->message=oci_error($conn)['message'];
-        return $Result;
-    }
-    $result=oci_execute($stid,OCI_NO_AUTO_COMMIT);
-    if (!$result){
-        $Result->result="false";
-        $Result->message=oci_error($stid)['message'];
-        return $Result;
-    }
-    return $Result;
-}*/
 
 /*TIBS存檔*/
 function InsertTIBS($conn,$obj,$sfm,$sUr,$DATESEQANCE_FL,$FORMSEQANCE_BS){
@@ -1429,7 +1542,7 @@ function MaxNumber($conn,$sfm,$Idpt,$INPt){
     return $MaxNo;
 }
 /*取有變化的obj*/
-function obj_diff($new_obj,$default_obj){
+function obj_diff($Page,$new_obj,$default_obj){
 
     $newOBJ=json_decode(json_encode($new_obj));//新資料
     $oldOBJ=json_decode(json_encode($default_obj)); //舊資料
@@ -1438,22 +1551,42 @@ function obj_diff($new_obj,$default_obj){
 
     $Common_Array=array_splice($newOBJ,0,count($oldOBJ));
 
-        $count=0;
-        foreach ($Common_Array as $value){
-          if ($value->NUM == $oldOBJ[$count]->NUM && trim($value->NUM)!=""){
-              if($value->LEFT !==$oldOBJ[$count]->LEFT ||
-                  $value->TOP !==$oldOBJ[$count]->TOP ||
-                  $value->NM_ORGAN!==$oldOBJ[$count]->NM_ORGAN ||
-                  $value->H_TH!==$oldOBJ[$count]->H_TH ||
-                  $value->W_TH!==$oldOBJ[$count]->W_TH
-              ){array_push($diff,$value);}
-          }
-          $count++;
+
+        foreach ($Common_Array as $index=>$value){
+            if ($Page=="A"){
+                if ($value->NUM == $oldOBJ[$index]->NUM && trim($value->NUM)!=""){
+                    if($value->LEFT !==$oldOBJ[$index]->LEFT ||
+                        $value->TOP !==$oldOBJ[$index]->TOP ||
+                        $value->NM_ORGAN!==$oldOBJ[$index]->NM_ORGAN ||
+                        $value->H_TH!==$oldOBJ[$index]->H_TH ||
+                        $value->W_TH!==$oldOBJ[$index]->W_TH
+                    ){
+                        array_push($diff,$value);
+                    }
+                }
+            }
+            else if ($Page=="B"){
+                $NEW_obj=$value->TB_DATA;
+                $Default_obj=$oldOBJ[$index]->TB_DATA;
+                if ($NEW_obj->NO_NUM->VALUE == $Default_obj->NO_NUM->VALUE && trim($NEW_obj->NO_NUM->VALUE)!="")
+                {
+                    foreach ($value->TB_DATA as $key=>$item){
+                        if ($NEW_obj->$key->VALUE !=$Default_obj->$key->VALUE){
+                            array_push($diff,$value);
+                            break;
+                        }
+                    }
+                }
+            }
+
       }
 
 
 
-        $result=array("OLD_DATA"=>$diff,"NEW_DATA"=>array_merge($diff,$newOBJ));
-        return json_decode(json_encode($result));
+       $result=array("OLD_DATA"=>$diff,"NEW_DATA"=>array_merge($diff,$newOBJ));
+       return json_decode(json_encode($result,JSON_UNESCAPED_UNICODE));
+
+}
+function obj_diff_TB_DATA($data){
 
 }
