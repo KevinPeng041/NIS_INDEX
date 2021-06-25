@@ -1,22 +1,21 @@
 <?php
 $sUr="00FUZZY";
-$sfm="TUPT";
+$sfm="CUTS";
 
 if ($sfm=="BSOR"){
     $shape="circle";
     $Title_NM="壓瘡評估作業";
 }
-if ($sfm=="TUPT"){
-    $shape="triangle";
-    $Title_NM="管路評估作業";
 
-}
 if ($sfm=="CUTS"){
     $shape="square";
     $Title_NM="傷口評估作業";
 
 }
-
+if ($sfm=="TUPT"){
+    $shape="triangle";
+    $Title_NM="管路評估作業";
+}
 
 
 ?>
@@ -37,13 +36,14 @@ if ($sfm=="CUTS"){
        $(document).ready(function () {
            (function () {
                NISPWSFMINI_Timer('ILSGA','A');
+               $("input[type=text]").attr('autocomplete','off');
                $(".Main,.MMDIV").hide();
-               $("#SubmitBtn,#DELBtn").prop('disabled',true);
+               $("#SubmitBtn").prop('disabled',true);
                $("#SubmitBtn").prop('disabled',true);
                if ("<?php echo $sfm?>"!=="TUPT"){
                    $(" .TPUT_div").hide();
                }else {
-                   $(" .Otimer").hide();
+                   $(" .Otimer,#DELBtn,#ReSetBtn").hide();
                }
            })();
 
@@ -126,14 +126,6 @@ if ($sfm=="CUTS"){
                    }
                    Data_obj.set('MAXNUM',obj.MAXNUM);
 
-                  /* if (Is_Change==="Y"){
-                       $("#T_Btn~label:first,h1").text(function () {
-                           let str=$(this)[0].innerText;
-                           let reg=/壓瘡/g;
-                           $(this)[0].innerText= str.replace(reg,'壓傷');
-                       });
-
-                   }*/
 
                },
                inTableTd:(sfm,Page,data)=>{
@@ -144,7 +136,21 @@ if ($sfm=="CUTS"){
                            let TOP=parseInt(val.TOP);
                            let Width=parseInt(val.W_TH);
                            let Height=parseInt(val.H_TH);
-                           AddShape(val.NUM,'<?php echo $shape?>',LEFT+Math.floor(Width/2),TOP-Math.floor(Height/2),Width,Height);
+
+                           if (sfm==="BSOR" || sfm==="BSOR"){
+                               if (Width!==15 && Height !==15){
+                                   LEFT=LEFT+Math.floor(Width/4);
+                                   TOP=TOP-Math.floor(Height/4);
+                               }else {
+                                   LEFT=LEFT+Math.floor(Width/2);
+                                   TOP=TOP-Math.floor(Height/2);
+                               }
+
+                           }
+
+
+                           AddShape(val.NUM,'<?php echo $shape?>',LEFT,TOP,Width,Height);
+                        //   AddShape(val.NUM,'<?php echo $shape?>',LEFT+Math.floor(Width/2),TOP-Math.floor(Height/2),Width,Height);
 
                        });
 
@@ -298,16 +304,21 @@ if ($sfm=="CUTS"){
                           )
                       }
                   }
-                  $.each(txtInput,function (index,val) {
-                      $(".txtInput").append(
-                          `
+
+
+
+                    if ($(".txtInput").children().length===0){
+                        $.each(txtInput,function (index,val) {
+                            $(".txtInput").append(
+                                `
                             <div class="input-group-prepend">
                                 <span class="input-group-text">${val.TB_NM}</span>
                             </div>
                             <input type="text" class="form-control " readonly>
                           `
-                      );
-                  });
+                            );
+                        });
+                    }
 
 
 
@@ -326,8 +337,9 @@ if ($sfm=="CUTS"){
                    },
                    stop:function (event, ui) {
                        let Num=$(this).attr('id').split("").filter((value)=>{return !isNaN(parseInt(value));}).join("");
-                       let TOP=(Math.round(ui.position.top)).toString();
-                       let LEFT=(Math.round(ui.position.left)).toString();
+
+
+
                        let DataObj=Data_obj.get('IMG');
                        let ItemIndex ="";
                        $.each(DataObj,function (index,val) {
@@ -344,12 +356,16 @@ if ($sfm=="CUTS"){
                            return parseInt(value.split("px")[0])
                        })[0].offsetHeight;
 
+                       let TOP=(Math.round(ui.position.top)).toString();
+                       let LEFT=(Math.round(ui.position.left)).toString();
 
                        let middelTop=Math.floor(ui.position.top+Height/2);
                        let middelLeft=Math.floor(ui.position.left+Width/2);
                        let Region= GetPIXELRegion("<?php echo $sfm?>",middelLeft,middelTop);
                        Data_obj.get('IMG')[ItemIndex].TOP=TOP;
                        Data_obj.get('IMG')[ItemIndex].LEFT=LEFT;
+
+
 
                        if ("<?php echo $sfm?>"==="TUPT"){
                            Data_obj.get('IMG')[ItemIndex].NM_ORGAN=Region.NM_REG;
@@ -363,8 +379,22 @@ if ($sfm=="CUTS"){
                    }
                };
            var Get_AJson,Get_BJson=false;
+           const getDateTime=function(){
+               let TimeNow=new Date();
+               let Y=TimeNow.toLocaleDateString().slice(0,4);
+               let M=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
+               let D=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
+               let h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
+               let m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
+               let obj={};
+               obj.Year=(Y-1911).toString();
+               obj.Month=M;
+               obj.Day=D;
+               obj.Hour=h;
+               obj.Min=m;
+               return obj;
 
-
+           };
            $(".drop-area").on("click",function (e) {
                let is_Add=$("#AddSign").val() === "0";
                if (is_Add){
@@ -416,7 +446,6 @@ if ($sfm=="CUTS"){
                 // 迭代新增部位名稱
                 for (let [key, value] of Data_obj){
                     if (key==="IMG" ){
-
                         value.filter((val)=>{return val.NUM===add_Num.toString()})
                             .forEach((val)=>{
                                 if ("<?php echo $sfm?>"==="TUPT"){
@@ -446,6 +475,8 @@ if ($sfm=="CUTS"){
               const sDt=$("#sDate").val();
               const sTm=$("#sTime").val();
               const Num=$("#NO_NUM").val();
+
+
               switch (btn_id) {
                   case "sbed":
                       if (!checkBEDwindow()){
@@ -496,14 +527,31 @@ if ($sfm=="CUTS"){
                       },[]);
 
 
-                      if (error_msg.length>0)
+                     if (error_msg.length>0)
                       {
                             alert(error_msg.join('\n'));
                             return false;
                       }
-                        console.log(Json_obj);
-                      DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
+                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
+                      break;
+                  case "DELBtn":
+                      let DelConfirm_Str="";
 
+                      if (Page==="A"){
+                          if (Num.trim()===""){
+                              alert('請選擇要作廢的編號');
+                              return  false;
+                          }
+                          DelConfirm_Str="確定要作廢編號["+Num+"]的所有資料嗎?(所有此編號的紀錄將一併刪除)";
+                      }
+                      else {
+                          DelConfirm_Str="是否確定要作廢["+sDt+" "+sTm+"]的資料嗎?";
+                      }
+
+
+                      $(".modal-body>p").empty();
+                      $(".modal-body>p").text(DelConfirm_Str);
+                      $("#DelModal").modal('show');
                       break;
                   case "SearchBtn":
                       if (!checkSerchwindow())
@@ -526,23 +574,6 @@ if ($sfm=="CUTS"){
                       }
                       Serchwindow.Serchcallback=Serchcallback;
                       break;
-                  case "DELBtn":
-                      let DelConfirm_Str="";
-
-                      if (Page==="A"){
-                          if (Num.trim()===""){
-                              alert('請選擇要作廢的編號');
-                              return  false;
-                          }
-                          DelConfirm_Str="確定要作廢編號["+Num+"]的所有資料嗎?(所有此編號的紀錄將一併刪除)";
-                      }else {
-                          DelConfirm_Str="是否確定要作廢["+sDt+" "+sTm+"]的資料嗎?";
-                      }
-
-                      $(".modal-body>p").empty();
-                      $(".modal-body>p").text(DelConfirm_Str);
-                      $("#DelModal").modal('show');
-                      break;
                   case "DelConfirm_Btn":
                       let Update_result=DB_DEL(sTraID,Page,'<?php echo $sUr?>');
 
@@ -551,15 +582,14 @@ if ($sfm=="CUTS"){
                           console.log('作廢失敗:'+Update_result.message);
                       }
                       else {
-                          alert('作廢成功');
-                          window.location.reload(true);
-                        /*  Data_obj.clear();
-                          GetINIJson('$sfm',IdPt,InPt);
-                          $("#DELBtn").prop('disabled',true);
-                          $("#sDate,#sTime,#NO_NUM,#NO_REG").val("");
-                          $("#ISTM>label").children('input').prop('disabled',false);
+                          Data_obj.clear();
                           $(".draggable").remove();
-                          $(".Main,.B,.MMDIV").hide();//pageA,pageB,pageMM*/
+                          $("input[type=radio]").prop('disabled',false);
+                          $("input[type=radio]").prop('checked',false);
+                          $("#DELBtn").prop('disabled',true);
+                          $("#DrawOutModal").modal('hide');
+                          GetINIJson("<?php echo $sfm?>",IdPt,InPt);
+                          console.log(Data_obj);
                       }
                       $("#DelModal").modal('hide');
                       break;
@@ -648,20 +678,75 @@ if ($sfm=="CUTS"){
                   }else {
                       $("#sNMTUBE_"+Index+"_"+Num).val(NM_TUBE);
                   }
-                  console.log(FilterNumData);
                   $("#sNMTUBEModal").modal('hide');
               }
+              else if (btn_class==="DrawOut_Confirm_btn"){
+                  let Num_Obj=Data_obj.get('DATA').filter((value)=>{return value.TB_DATA.NO_NUM.VALUE===Num})[0];
+                  let DrawOut_Flag="";
+                  if(btn_id==='DrawOut_Del'){
+                      let Del_result=DB_DEL(sTraID,Page,'<?php echo $sUr?>');
+                      if (Del_result.result==="false"){
+                          alert('作廢失敗:'+Del_result.message);
+                          console.log('作廢失敗:'+Del_result.message);
+                      }else {
 
+                          Data_obj.clear();
+                          $(".draggable").remove();
+                          $("#DrawOutModal").modal('hide');
+                          GetINIJson("<?php echo $sfm?>",IdPt,InPt);
+                          $(".Main,.B").hide();
+                      }
+                  }
+                  else {
+                      if (btn_id==="DrawOut_N")
+                      {
+                          //換管
+                          DrawOut_Flag="N";
+                          Num_Obj.TB_DATA.sDT_EXE.VALUE=$("#sDt").val();
+                          Num_Obj.TB_DATA.sDT_END.VALUE=$("#eDt").val();
+
+
+                      }
+                      else if (btn_id==="DrawOut_Y")
+                      {
+                          //拔管
+                          DrawOut_Flag="Y";
+                          Num_Obj.TB_DATA.TM_EXE.VALUE=$("#sDt").val();
+                          Num_Obj.TB_DATA.TM_END.VALUE=$("#eDt").val();
+
+                      }
+
+                      let Change_result=ChangeTUPTCOM(DrawOut_Flag,sTraID,JSON.stringify(Num_Obj));
+                      if(Change_result.result!=="true"){
+                          alert(Change_result.message);
+                          console.log(Change_result.message);
+                      }
+                      else {
+                          if (DrawOut_Flag==="Y"){
+                              $("."+Num).remove();
+                          }
+                          Data_obj.clear();
+                          GetINIJson("<?php echo $sfm?>",IdPt,InPt);
+                          $("#NO_NUM,#NO_REG,.DateTime").val("");
+                          $("#DrawOutModal").modal('hide');
+                          $(".Main,.B").hide();
+
+                      }
+                  }
+
+              }
            });
+
+           //修改圖形
            $(".sign").on('click',function () {
                //0=>add
                //1=>remove
                //2=>Tobig
                //3=>Tosmall
                const Sign_val=$(this).val();
-
                if (Sign_val==="1"){
                    let Num=$("#NO_NUM").val();
+
                    if(Num.trim()==="")
                    {
                        alert("請選擇要刪除的編號");
@@ -698,8 +783,6 @@ if ($sfm=="CUTS"){
                         GetPageJson('A',sTraID);
                         Get_AJson=true;
                     }
-
-
                    obj=Data_obj.get('DATA');
                    $(".area-table").hide();
                    $(".Main").show(500);
@@ -723,6 +806,97 @@ if ($sfm=="CUTS"){
                if(Get_AJson && Get_BJson){
                    DB_WSST(TransPage,sTraID,JSON.stringify(obj),'','','','','','false');
                }
+           });
+           $(".DrawOut_btn").on('click',function () {
+               let Index=$(this).index().toString();
+               let msgTitle="";
+               let NUM=$("#NO_NUM").val();
+
+               if (NUM.trim()===""){
+                   alert('請先點擊選擇編號');
+                   return ;
+               }
+
+               let Num_Obj=Data_obj.get('DATA').filter((value)=>{return value.TB_DATA.NO_NUM.VALUE===NUM})[0];
+               let NM_TUBE=Num_Obj.TB_DATA.sNM_TUBE.VALUE;
+               let ThisID_NM="";
+               $("#DrawOutModal>div>.modal-content>.modal-body>.container-fluid").children().remove();
+               switch (Index) {
+                   case "0":
+                       //換管
+
+                       let DT_EXE=Num_Obj.TB_DATA.sDT_EXE.VALUE,
+                           DT_END=Num_Obj.TB_DATA.sDT_END.VALUE,
+                           TERMDAYS=Num_Obj.TB_DATA.IT_TERMDAYS.VALUE,
+                           sDt=DT_END!==""?DT_END:DT_EXE,//置管日
+                           eDt=DT_END!==""?addDate(DT_END,parseInt(TERMDAYS)):"";//換管日
+
+                           msgTitle="換管提醒 ";
+
+                       $("#DrawOutModal>div>.modal-content>.modal-body>.container-fluid").append(
+                           `
+                            <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="inputGroup-sizing-sm">置入日:</span>
+                                </div>
+                                <input type="text" id="sDt" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="${sDt}" maxlength="7">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="inputGroup-sizing-sm">換管日:</span>
+                                </div>
+                                <input type="text" id="eDt"  class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="${eDt}" maxlength="7">
+
+                            </div>
+                           `
+                       );
+                       ThisID_NM="DrawOut_N";
+
+                       break;
+                   case "1":
+                       //拔管
+                       msgTitle="拔管管提醒 ";
+                       let Dt=getDateTime();
+
+                       $("#DrawOutModal>div>.modal-content>.modal-body>.container-fluid").append(
+                           `
+                           <div class="input-group input-group-sm mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="inputGroup-sizing-sm">拔管日:</span>
+                                </div>
+                                <input type="text" id="sDt" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm" value="${Dt.Year+Dt.Month+Dt.Day}"  maxlength="7">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text" id="inputGroup-sizing-sm">時間:</span>
+                                </div>
+                                <input type="text" id="eDt"  class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm"  value="${Dt.Hour+Dt.Min}" maxlength="4">
+
+                            </div>
+
+                           `
+                       );
+
+                       ThisID_NM="DrawOut_Y";
+
+
+
+                       break;
+                   case "2":
+                       //換管作廢
+                       msgTitle="作廢提醒 ";
+
+                       $("#DrawOutModal>div>.modal-content>.modal-body>.container-fluid").append(
+                           `
+                           <p>確定要作廢嗎?</p>
+                           `
+                       );
+                       ThisID_NM="DrawOut_Del";
+
+                       break;
+                   default:
+                       break;
+               }
+               $(".DrawOut_Confirm_btn").attr('id',ThisID_NM);
+               msgTitle+="編號:["+NUM+"]"+"換管名稱:["+NM_TUBE+"]";
+               $("#DrawOutModal>div>.modal-content>.modal-header>h4").text(msgTitle);
+               $("#DrawOutModal").modal('show');
            });
 
            $(document).on("click mousedown",".draggable",function (e) {
@@ -774,20 +948,16 @@ if ($sfm=="CUTS"){
                    }
 
                }
+               console.log(ThisData);
            });
            $(document).on('change','input[name=sRdoDateTime]',function () {
 
-               let TimeNow=new Date();
-               let yyyy=TimeNow.toLocaleDateString().slice(0,4);
-               let MM=(TimeNow.getMonth()+1<10?'0':'')+(TimeNow.getMonth()+1);
-               let dd=(TimeNow.getDate()<10?'0':'')+TimeNow.getDate();
-               let  h=(TimeNow.getHours()<10?'0':'')+TimeNow.getHours();
-               let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
+               let TimeNow=getDateTime();
                let Timeit=($(this).val()).split("");
 
                let timer=Timeit.filter(function (value) { return  value!==":"});
-               let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
-               $("#sDate").val(yyyy-1911+MM+dd);
+               let timerVal=$(this).attr('id')==="ISTM00000005"?TimeNow.Hour+TimeNow.Min:timer.join("");
+               $("#sDate").val(TimeNow.Year+TimeNow.Month+TimeNow.Day);
                $("#sTime").val(timerVal);
            });
 
@@ -899,7 +1069,8 @@ if ($sfm=="CUTS"){
                        "border-width": border_width.join(" ")
                    });
 
-               } else {
+               }
+               else {
 
                    $("#" + id).css({"height": h,"width": w});
 
@@ -931,11 +1102,11 @@ if ($sfm=="CUTS"){
                GetINIJson('<?php echo $sfm?>',idPt,INPt);
 
                 $(".Page").next('div').hide();
-                $(".area-table").hide();
+                $(".B,.MMDIV").hide();
                 $(".draggable").remove();
                 $(".DateTime").prop('readonly',false);
-
-               $("#SubmitBtn,#DELBtn").prop('disabled',true);
+                $(".DateTime ").val("");
+               $("#SubmitBtn").prop('disabled',true);
                $("#ISTM>label").children('input').prop('disabled',false);
                CancelNum.length=0;
            }
@@ -953,12 +1124,18 @@ if ($sfm=="CUTS"){
               }
 
 
+               $("input[name=sRdoDateTime]").each(function () {
+                  if( $(this).val().split(":").join("")===sTime){
+                      $(this).prop('checked',true);
+                  }
+               });
                $("#sTime").val(sTime);
                $("#sDate").val(sDate);
                $("#sTraID").val(sTraID);
+
                if ($(".table-edit").parent().length>0){
                    $(".table-edit").parent().remove();
-                   Data_obj.get('DATA').length=0;
+                   //Data_obj.get('DATA').length=0;
                }
                $(".draggable").remove();
 
@@ -966,7 +1143,7 @@ if ($sfm=="CUTS"){
                $(".DateTime").prop('readonly',true);
                $("#DELBtn").prop('disabled',false);
                $("#ISTM>label").children('input').prop('disabled',true);
-               $("button[id='A']").prop('disabled',true);
+               //$("button[id='A']").prop('disabled',true);
 
                Get_AJson=false; //GetPageJson false
                Get_BJson=false;
@@ -1013,9 +1190,9 @@ if ($sfm=="CUTS"){
                                Data_obj.set("DATA",Data_B);
                            }
 
-                         creatTable.inTableTd("<?php echo $sfm?>",Page,CreatDataTd);
-                       console.log(Data_obj.get('DATA'));
-
+                       creatTable.inTableTd("<?php echo $sfm?>",Page,CreatDataTd);
+                       console.log(Data_A);
+                       console.log(Data_B);
                    },error:function (XMLHttpResponse,textStatus,errorThrown) {
                        console.log(
                            "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
@@ -1026,16 +1203,17 @@ if ($sfm=="CUTS"){
                    }
                });
            }
-
            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+                    $.ajax({
+                        type: "POST",
+                        url:'/webservice/NISPWSSETDATA.php?str='+AESEnCode(
+                            'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+encodeURI(json)+
+                            '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
+                            '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')/*,
+                        data:{user: "tony",
+                              pwd: 123}*/
 
-
-               $.ajax('/webservice/NISPWSSETDATA.php?str='+AESEnCode(
-                   'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+encodeURI(json)+
-                   '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
-                   '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')
-               )
-                   .done(function (data) {
+                    }).done(function (data) {
                        let json=JSON.parse(AESDeCode(data));
 
                        if(InSertDB==="true" && json.result==="true"){
@@ -1077,7 +1255,26 @@ if ($sfm=="CUTS"){
                });
                return result;
            }
-
+           function ChangeTUPTCOM(CidFlag,sTraID,strJson) {
+               let result="";
+               $.ajax({
+                   url:"/webservice/NISBSORCOM.php?str="+AESEnCode("sFm="+'TUPT'+"&DRAWOUT="+CidFlag+"&sTraID="+sTraID+'&sData='+encodeURI(strJson)+"&sUr="+'<?php echo $sUr?>'),
+                   async:false
+               })
+                   .done(function (data) {
+                       let response=JSON.parse(AESDeCode(data));
+                       result=response;
+                        console.log(response);
+                   }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
+                   console.log(
+                       "1 返回失敗,XMLHttpResponse.readyState:"+XMLHttpResponse.readyState+XMLHttpResponse.responseText+
+                       "2 返回失敗,XMLHttpResponse.status:"+XMLHttpResponse.status+
+                       "3 返回失敗,textStatus:"+textStatus+
+                       "4 返回失敗,errorThrown:"+errorThrown
+                   );
+               });
+               return result;
+           }
 
            function NISPWSFMINI_Timer(sFm,Page) {
                $.ajax({
@@ -1131,25 +1328,24 @@ if ($sfm=="CUTS"){
                    );
                });
 
-               console.log(response);
                 return response;
            }
            function PasteRegion(Num,Region) {
-               $(".table-edit").each(function(index,value){
-                   $(value).attr('id')
-                       .split("_")
-                       .forEach((val,index,arr)=>{
-                           if (val==="tb1" || val==="sNM"  && arr[2]===Num.toString())
-                           {
-                                let ele=arr.join("_");
-                                $("#"+ele).val(Region);
-                           }
-                       });
+               $(".table-edit").each(function(index,ele){
+                  let nm_val=$(ele).attr('id').split("_");
+                  let classNm=nm_val[0];
+                 // let classIndex=nm_val[1];
+                  let classNum=nm_val[2];
+                  if (classNm==="tb1" || classNm==="sNM" )
+                  {
+                       if (classNum===Num.toString()){
+                            $(ele).val(Region);
+                       }
+                   }
+
                });
            }
-
            function addDate(day,AddDay) {
-
 
                const Dates=(parseInt(day.substring(0,3))+1911).toString()+"-"+day.substring(3,5)+"-"+day.substring(5,7);
 
@@ -1190,7 +1386,10 @@ if ($sfm=="CUTS"){
     </script>
 </head>
 <style>
-  /*  .Parametertable*/
+    .Parametertable{
+       /* display: none;*/
+    }
+
       .drop-area{
           width: 395px;
           height: 425px;
@@ -1384,9 +1583,9 @@ if ($sfm=="CUTS"){
             <span class="title">
                 <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
                 <button type="button" id="SearchBtn" class="btn btn-primary btn-md" >查詢</button>
-                <button type="button" id="DELBtn" class="btn btn-primary btn-md" >作廢</button>
-                <button type="button" id="ReSetBtn" class="btn btn-primary btn-md"  >清除</button>
-                <button type="button"  class="btn btn-warning btn-md"  id="sbed" >責任床位</button>
+                <button type="button" id="DELBtn"    class="btn btn-primary btn-md" >作廢</button>
+                <button type="button" id="ReSetBtn"  class="btn btn-primary btn-md"  >清除</button>
+                <button type="button" id="sbed"      class="btn btn-warning btn-md"   >責任床位</button>
             </span>
 
             <button type="button" class="btn btn-secondary btn-md" disabled style="display: none">回主畫面</button>
@@ -1406,8 +1605,8 @@ if ($sfm=="CUTS"){
             <div class="row">
                 <div class="input-group col-12">
                     <label for="sDate" >評估時間:</label>
-                    <input type="text" id="sDate" value="" class="DateTime form-control form-control-lg"  placeholder="YYYMMDD" maxlength="7" autocomplete="off">
-                    <input type="text" id="sTime" value="" class="DateTime form-control form-control-lg" placeholder="HHMM" maxlength="4" autocomplete="off">
+                    <input type="text" id="sDate" value="" class="DateTime form-control form-control-lg"  placeholder="YYYMMDD" maxlength="7" >
+                    <input type="text" id="sTime" value="" class="DateTime form-control form-control-lg" placeholder="HHMM" maxlength="4" >
                 </div>
 
 
@@ -1449,15 +1648,15 @@ if ($sfm=="CUTS"){
                             </div>
                             <input type="text" id="NO_REG" class="form-control" aria-label="Small" aria-describedby="inputGroup-sizing-sm">
                         </div>
-                        <button  class="sign btn btn-outline-primary" value="0">新增</button>
-                        <button  class="sign btn btn-outline-primary" value="1">刪除</button>
-                        <button  class="sign btn btn-outline-primary" value="2">+</button>
-                        <button  class="sign btn btn-outline-primary" value="3">-</button>
+                        <button  class="sign btn btn-outline-info" value="0">新增</button>
+                        <button  class="sign btn btn-outline-info" value="1">刪除</button>
+                        <button  class="sign btn btn-outline-info" value="2">+</button>
+                        <button  class="sign btn btn-outline-info" value="3">-</button>
                     </div>
                     <div class="TPUT_div col-12 mt-1">
-                        <button class="btn btn-info">換管</button>
-                        <button class="btn btn-info">拔管</button>
-                        <button class="btn btn-info">作廢</button>
+                        <button  class="DrawOut_btn btn btn-primary">換管</button>
+                        <button  class="DrawOut_btn btn btn-primary">拔管</button>
+                        <button  class="DrawOut_btn btn btn-primary">作廢</button>
                     </div>
                     <div class="col-12">
                         <div class="EDIT row">
@@ -1522,6 +1721,28 @@ if ($sfm=="CUTS"){
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="CancelBtn" class="btn btn-primary">確定</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="DrawOutModal" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div  class="modal-body">
+                    <div class="container-fluid">
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="" type="button" class="DrawOut_Confirm_btn btn btn-primary">確定</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
                 </div>
             </div>
