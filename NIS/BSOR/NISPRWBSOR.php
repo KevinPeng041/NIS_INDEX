@@ -1,6 +1,14 @@
 <?php
-$sUr="00FUZZY";
-$sfm="CUTS";
+include '../../NISPWSIFSCR.php';
+$str=$_GET['str'];
+$replaceSpace=str_replace(' ','+',$str);//空白先替換+
+parse_str(AESDeCode($replaceSpace),$output);
+
+/*$sUr=$output['sIdUser'];
+$sfm=$output['sFm'];*/
+$sUr='00FUZZY';
+$sfm='TUPT';
+
 
 if ($sfm=="BSOR"){
     $shape="circle";
@@ -40,17 +48,20 @@ if ($sfm=="TUPT"){
                $(".Main,.MMDIV").hide();
                $("#SubmitBtn").prop('disabled',true);
                $("#SubmitBtn").prop('disabled',true);
+
                if ("<?php echo $sfm?>"!=="TUPT"){
                    $(" .TPUT_div").hide();
                }else {
                    $(" .Otimer,#DELBtn,#ReSetBtn").hide();
                }
+                //$("#wrapper,#loading").hide();
            })();
 
            let imageLoaded = function() {
                let Canvas=$("#CanvasPad")[0];
                let ctx=Canvas.getContext('2d');
-               let img=$("img")[0];
+               let img=$("img:eq(0)")[0];
+               //let img=$("img:eq(1)")[0];
                ctx.drawImage(img,0,0,Canvas.width,Canvas.height);
            };
 
@@ -137,20 +148,17 @@ if ($sfm=="TUPT"){
                            let Width=parseInt(val.W_TH);
                            let Height=parseInt(val.H_TH);
 
-                           if (sfm==="BSOR" || sfm==="BSOR"){
+                           LEFT=LEFT+Math.floor(Width/2);
+                           TOP=TOP-Math.floor(Height/2);
+
+                           if (sfm==="BSOR" || sfm==="CUTS"){
                                if (Width!==15 && Height !==15){
                                    LEFT=LEFT+Math.floor(Width/4);
                                    TOP=TOP-Math.floor(Height/4);
-                               }else {
-                                   LEFT=LEFT+Math.floor(Width/2);
-                                   TOP=TOP-Math.floor(Height/2);
                                }
-
                            }
 
-
                            AddShape(val.NUM,'<?php echo $shape?>',LEFT,TOP,Width,Height);
-                        //   AddShape(val.NUM,'<?php echo $shape?>',LEFT+Math.floor(Width/2),TOP-Math.floor(Height/2),Width,Height);
 
                        });
 
@@ -365,8 +373,6 @@ if ($sfm=="TUPT"){
                        Data_obj.get('IMG')[ItemIndex].TOP=TOP;
                        Data_obj.get('IMG')[ItemIndex].LEFT=LEFT;
 
-
-
                        if ("<?php echo $sfm?>"==="TUPT"){
                            Data_obj.get('IMG')[ItemIndex].NM_ORGAN=Region.NM_REG;
                            Data_obj.get('IMG')[ItemIndex].ID_REGION=Region.ID_REG;
@@ -418,7 +424,7 @@ if ($sfm=="TUPT"){
              /******************************end**************************************************/
                   copyObj.TB_DATA.NO_NUM.VALUE=add_Num.toString();
 
-                  if ("<?php echo $sfm?>"!=="TUPT"){
+                  if ("<?php echo $sfm?>"==="BOSR" ||  "<?php echo $sfm?>"==="CUTS"){
                       let newTime=new Date();
                       let DT_Y=(newTime.toLocaleDateString().slice(0,4)-1911).toString();
                       let DT_M=(newTime.getMonth()+1<10?'0':'')+(newTime.getMonth()+1);
@@ -498,41 +504,61 @@ if ($sfm=="TUPT"){
                       let Json_obj=Page==="A"?Data_obj.get('IMG'): Data_obj.get('DATA');
 
                       let B_obj=Data_obj.get('DATA');
+                      let sfm='<?php echo  $sfm?>';
 
                       const error_msg=B_obj.map((val)=>{
                           let msg=[];
                           for (let key in val.TB_DATA){
                               let Num=(val.TB_DATA.NO_NUM.VALUE).trim();
-                              let Obj_Val=val.TB_DATA[key].VALUE;
-                              if (Num!=="" && Obj_Val.toString()===""){
+                              let Value=(val.TB_DATA[key].VALUE).toString();
+                              let TD_id=(val.TB_DATA[key].ID);
+                              let sfm_Nm=("<?php echo $Title_NM?>").substr(0,2) ;
 
-                                  if (val.TB_DATA[key].ID==="BSOR000001"){
-                                      msg.push('編號:'+Num+'提醒:發生來源禁止空值');
-                                  }
-                                  if (val.TB_DATA[key].ID==="BSOR000009"){
-                                      msg.push('編號:'+Num+'提醒:壓瘡等級禁止空值');
-                                  }
-                                  if (val.TB_DATA[key].ID==="BSOR000051"){
-                                      msg.push('編號:'+Num+'提醒:傷口等級禁止空值');
-                                  }
-                                  if (val.TB_DATA[key].ID==="sNMTUBE"){
-                                      msg.push('編號:'+Num+'提醒:管路名稱禁止空值');
-                                  }
-                              }
+                                if (Num!==""){
+                                    if(sfm==="BSOR" ||　sfm==="CUTS"){
+                                        if (Value.trim()===""){
+                                            if (TD_id==="BSOR000001"){
+                                                //BSOR000001 發生來源
+                                                msg.push('編號:'+Num+'提醒:發生來源禁止空值');
+                                            }
+                                            if (TD_id==="BSOR000009" ||　TD_id==="BSOR000051"){
+                                                //BSOR000051 傷口等級
+                                                //BSOR000009 壓瘡等級
+                                                msg.push('編號:'+Num+'提醒:'+sfm_Nm+'等級禁止空值');
+
+                                            }
+
+                                        }
+
+                                    }
+
+                                    else if (sfm==="TUPT"){
+                                        if (Value.trim()===""){
+                                            //sNMTUBE 管路名稱
+                                            if (TD_id==="sNMTUBE"){
+                                                msg.push('編號:'+Num+'提醒:管路名稱禁止空值');
+                                            }
+                                        }
+                                    }
+                                }
 
                           }
                             return msg;
-                      }).reduce((previousValue, currentValue, currentIndex, array)=>{
-                          return previousValue.concat(currentValue);
-                      },[]);
+                      })
+                          .reduce((previousValue, currentValue, currentIndex, array)=>{return previousValue.concat(currentValue);},[]);
 
+                      $("#wrapper,#loading").show();
 
-                     if (error_msg.length>0)
-                      {
-                            alert(error_msg.join('\n'));
-                            return false;
-                      }
-                     DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
+                      setTimeout(function () {
+                          if (error_msg.length>0)
+                          {
+                              alert(error_msg.join('\n'));
+                              $("#wrapper,#loading").hide();
+                              return false;
+                          }
+
+                          DB_WSST(Page,sTraID,JSON.stringify(Json_obj),sDt,sTm,'','',"<?php echo $sUr?>",'true');
+                      },100);
                       break;
                   case "DELBtn":
                       let DelConfirm_Str="";
@@ -575,21 +601,23 @@ if ($sfm=="TUPT"){
                       Serchwindow.Serchcallback=Serchcallback;
                       break;
                   case "DelConfirm_Btn":
-                      let Update_result=DB_DEL(sTraID,Page,'<?php echo $sUr?>');
 
+                      let Update_result=DB_DEL(sTraID,Page,'<?php echo $sUr?>');
                       if (Update_result.result==="false"){
                           alert('作廢失敗:'+Update_result.message);
                           console.log('作廢失敗:'+Update_result.message);
                       }
                       else {
-                          Data_obj.clear();
                           $(".draggable").remove();
+                          $(".DateTime").val("");
                           $("input[type=radio]").prop('disabled',false);
                           $("input[type=radio]").prop('checked',false);
                           $("#DELBtn").prop('disabled',true);
+                          $(".Main,.B,.MMDIV").hide();
                           $("#DrawOutModal").modal('hide');
                           GetINIJson("<?php echo $sfm?>",IdPt,InPt);
                           console.log(Data_obj);
+
                       }
                       $("#DelModal").modal('hide');
                       break;
@@ -621,63 +649,65 @@ if ($sfm=="TUPT"){
 
                   let Index=strOpenSNM_Val[0];//編號Index
                   let Num=strOpenSNM_Val[1];//編號
-                  let FormSeq=Data_obj.get('IMG').filter((val)=>{return val.NUM===Num})[0].FORMSEQ;
+                  // let FormSeq=Data_obj.get('IMG').filter((val)=>{return val.NUM===Num})[0].FORMSEQ;
                   let sDTEND="";
 
                   const FilterNumData=Data_obj.get('DATA').filter((val)=>{return val.TB_DATA.NO_NUM.VALUE===Num})[0];
 
 
-                  if (FormSeq.trim()===""){
-                      let tDate=new Date();
-                      let strDate=tDate.toLocaleDateString().slice(0,4)-1911+
-                                  (tDate.getMonth()+1<10?'0':'')+
-                                  (tDate.getMonth()+1)+(tDate.getDate()<10?'0':'')+tDate.getDate();
+                  // if (FormSeq.trim()===""){
+                  //
+                  // }
+                  // else {
+                  //     FilterNumData.TB_DATA.ID_TUBE.VALUE=ID_TUBE;
+                  //     FilterNumData.TB_DATA.sNM_TUBE.VALUE=NM_TUBE;
+                  // }
+                  let tDate=new Date();
+                  let strDate=tDate.toLocaleDateString().slice(0,4)-1911+
+                      (tDate.getMonth()+1<10?'0':'')+
+                      (tDate.getMonth()+1)+(tDate.getDate()<10?'0':'')+tDate.getDate();
 
-                      ['sDTEND_','sDTEXE_','sCDSTATUS_'].forEach((value => $("#"+value+Index+"_"+Num).val("")));
+                  ['sDTEND_','sDTEXE_','sCDSTATUS_'].forEach((value => $("#"+value+Index+"_"+Num).val("")));
 
-                      if (IT_TERMDAYS !==0){
-                          sDTEND=addDate(strDate,IT_TERMDAYS);
-                      }
-                      $("#sDTEXE_"+Index+"_"+Num).val(strDate);
-                      $("#sDTEND_"+Index+"_"+Num).val(sDTEND);
-                      $("#sCDSTATUS_"+Index+"_"+Num).val(IS_IO);
-
-                      for (let key in FilterNumData.TB_DATA){
-                          if (key==="ID_TUBE"){
-                              FilterNumData.TB_DATA[key].VALUE=ID_TUBE;
-                          }
-                          if (key==="sNM_TUBE"){
-                              FilterNumData.TB_DATA[key].VALUE=NM_TUBE;
-                          }
-                          if (key==="sDT_EXE"){
-                              FilterNumData.TB_DATA[key].VALUE=strDate;
-                          }
-                          if (key==="sDT_END"){
-                              FilterNumData.TB_DATA[key].VALUE=sDTEND;
-                          }
-                          if (key==="CD_STATUS"){
-                              FilterNumData.TB_DATA[key].VALUE=IS_IO;
-                          }
-
-                          if (key==="IT_TERMDAYS"){
-                              FilterNumData.TB_DATA[key].VALUE=IT_TERMDAYS;
-                          }
-
-
-                      }
+                  if (IT_TERMDAYS !==0){
+                      sDTEND=addDate(strDate,IT_TERMDAYS);
                   }
-                  else {
-                      FilterNumData.TB_DATA.ID_TUBE.VALUE=ID_TUBE;
-                      FilterNumData.TB_DATA.sNM_TUBE.VALUE=NM_TUBE;
+                  $("#sDTEXE_"+Index+"_"+Num).val(strDate);
+                  $("#sDTEND_"+Index+"_"+Num).val(sDTEND);
+                  $("#sCDSTATUS_"+Index+"_"+Num).val(IS_IO);
+
+                  for (let key in FilterNumData.TB_DATA){
+                      if (key==="ID_TUBE"){
+                          FilterNumData.TB_DATA[key].VALUE=ID_TUBE;
+                      }
+                      if (key==="sNM_TUBE"){
+                          FilterNumData.TB_DATA[key].VALUE=NM_TUBE;
+                      }
+                      if (key==="sDT_EXE"){
+                          FilterNumData.TB_DATA[key].VALUE=strDate;
+                      }
+                      if (key==="sDT_END"){
+                          FilterNumData.TB_DATA[key].VALUE=sDTEND;
+                      }
+                      if (key==="CD_STATUS"){
+                          FilterNumData.TB_DATA[key].VALUE=IS_IO;
+                      }
+
+                      if (key==="IT_TERMDAYS"){
+                          FilterNumData.TB_DATA[key].VALUE=IT_TERMDAYS;
+                      }
+
+
                   }
-
-
 
                   if (ID_TUBE==="XXX"){
-                      $("#sNMTUBE_"+Index+"_"+Num).val("");
-                  }else {
-                      $("#sNMTUBE_"+Index+"_"+Num).val(NM_TUBE);
+                      NM_TUBE="";
                   }
+
+                  Data_obj.get('IMG').filter((val)=>{return val.NUM===Num})[0].sNM_TUBE=NM_TUBE;
+
+                  DB_WSST('A',sTraID,JSON.stringify(Data_obj.get('IMG')),'','','','','','false');
+                  $("#sNMTUBE_"+Index+"_"+Num).val(NM_TUBE);
                   $("#sNMTUBEModal").modal('hide');
               }
               else if (btn_class==="DrawOut_Confirm_btn"){
@@ -689,8 +719,6 @@ if ($sfm=="TUPT"){
                           alert('作廢失敗:'+Del_result.message);
                           console.log('作廢失敗:'+Del_result.message);
                       }else {
-
-                          Data_obj.clear();
                           $(".draggable").remove();
                           $("#DrawOutModal").modal('hide');
                           GetINIJson("<?php echo $sfm?>",IdPt,InPt);
@@ -725,7 +753,6 @@ if ($sfm=="TUPT"){
                           if (DrawOut_Flag==="Y"){
                               $("."+Num).remove();
                           }
-                          Data_obj.clear();
                           GetINIJson("<?php echo $sfm?>",IdPt,InPt);
                           $("#NO_NUM,#NO_REG,.DateTime").val("");
                           $("#DrawOutModal").modal('hide');
@@ -807,6 +834,8 @@ if ($sfm=="TUPT"){
                    DB_WSST(TransPage,sTraID,JSON.stringify(obj),'','','','','','false');
                }
            });
+
+           //換(拔)管
            $(".DrawOut_btn").on('click',function () {
                let Index=$(this).index().toString();
                let msgTitle="";
@@ -915,6 +944,7 @@ if ($sfm=="TUPT"){
                }
 
            });
+
            //動態填值
            $(document).on("change",".table-edit",function () {
 
@@ -948,7 +978,6 @@ if ($sfm=="TUPT"){
                    }
 
                }
-               console.log(ThisData);
            });
            $(document).on('change','input[name=sRdoDateTime]',function () {
 
@@ -961,37 +990,37 @@ if ($sfm=="TUPT"){
                $("#sTime").val(timerVal);
            });
 
-           function AddShape(txt,shape,X,Y,W,H) {
+           function AddShape(Number,shape,X,Y,W,H) {
                let text_ele="";
                let shape_Nm="";
 
-               if (txt==="")return;
+               if (Number==="")return;
                if (shape==="triangle"){
-                   text_ele='<div>'+txt+'</div>';
+                   text_ele='<div>'+Number+'</div>';
                    shape_Nm="t";
                }
                if (shape==="square"){
-                   text_ele="<div>"+txt+"</div>";
+                   text_ele="<div>"+Number+"</div>";
                    shape_Nm="s";
                }
                if (shape==="circle"){
-                   text_ele="<p>"+txt+"</p>";
+                   text_ele="<p>"+Number+"</p>";
                    shape_Nm="c";
                }
 
-               if ($('#'+shape_Nm+txt).length >　0){
+               if ($('#'+shape_Nm+Number).length >　0){
                    return ;
                }
 
                $("#CanvasPad").before(
                    `
-                      <div class="${'draggable '+shape+' '+txt}" id="${shape_Nm+txt}" >
+                      <div class="${'draggable '+shape+' '+Number}" id="${shape_Nm+Number}" >
                            ${text_ele}
                       </div>
                    `
                );
 
-               $("#"+shape_Nm+txt).css({
+               $("#"+shape_Nm+Number).css({
                   "left" :X+"px",
                   "top" :Y+"px",
                   "width" :W+"px",
@@ -1000,19 +1029,20 @@ if ($sfm=="TUPT"){
 
 
               const isAdd= Data_obj.get('IMG').filter((value,index,arr)=>{
-                   return value.NUM===txt;
+                   return value.NUM===Number;
                });
 
                if (isAdd.length===0){
                     let newObj=JSON.parse(JSON.stringify(Data_obj.get('IMG')[0]));
                     //新增標記
-                    newObj.NUM=txt.toString();
+                    newObj.NUM=Number.toString();
                     newObj.LEFT=X.toString();
                     newObj.TOP=Y.toString();
                     newObj.W_TH=W.toString();
                     newObj.H_TH=H.toString();
                     newObj.FORMSEQ="";
                     newObj.DATESEQ="";
+
                     Data_obj.get('IMG').push(newObj);
                 }
 
@@ -1091,8 +1121,6 @@ if ($sfm=="TUPT"){
                let P_NM=dataObj.DataTxt;
                let ssTAT=dataObj.sSTAT;
 
-               Data_obj.clear();
-
                $("#DA_idpt").val(idPt);
                $("#DA_idinpt").val(INPt);
                $("#DA_sBed").val(sBed);
@@ -1101,12 +1129,13 @@ if ($sfm=="TUPT"){
 
                GetINIJson('<?php echo $sfm?>',idPt,INPt);
 
-                $(".Page").next('div').hide();
-                $(".B,.MMDIV").hide();
-                $(".draggable").remove();
-                $(".DateTime").prop('readonly',false);
-                $(".DateTime ").val("");
+               $(".Page").next('div').hide();
+               $(".B,.MMDIV").hide();
+               $(".draggable").remove();
+               $(".DateTime").prop('readonly',false);
+               $(".DateTime ").val("");
                $("#SubmitBtn").prop('disabled',true);
+               $("input[type=radio]").prop('checked',false);
                $("#ISTM>label").children('input').prop('disabled',false);
                CancelNum.length=0;
            }
@@ -1127,6 +1156,9 @@ if ($sfm=="TUPT"){
                $("input[name=sRdoDateTime]").each(function () {
                   if( $(this).val().split(":").join("")===sTime){
                       $(this).prop('checked',true);
+                  }else {
+                      $("#ISTM00000005").prop('checked',true);
+                      $("#ISTM00000005").prop('checked',true);
                   }
                });
                $("#sTime").val(sTime);
@@ -1135,15 +1167,17 @@ if ($sfm=="TUPT"){
 
                if ($(".table-edit").parent().length>0){
                    $(".table-edit").parent().remove();
-                   //Data_obj.get('DATA').length=0;
                }
+               //座標移除
                $(".draggable").remove();
+               Data_obj.delete('IMG');
+               Data_obj.delete('DATA');
+
 
                $(".Main,.B,.MMDIV").hide();//pageA,pageB,pageMM
                $(".DateTime").prop('readonly',true);
                $("#DELBtn").prop('disabled',false);
-               $("#ISTM>label").children('input').prop('disabled',true);
-               //$("button[id='A']").prop('disabled',true);
+               $("#ISTM > label").children('input').prop('disabled',true);
 
                Get_AJson=false; //GetPageJson false
                Get_BJson=false;
@@ -1154,7 +1188,9 @@ if ($sfm=="TUPT"){
                $.ajax("/webservice/NISPWSTRAINI.php?str="+AESEnCode('sFm=BSOR'+'&idPt='+idPt+'&INPt='+INPt+"&sUr="+'<?php echo $sUr?>'+"&TsFm="+'<?php echo $sfm?>'))
                    .done(function(data) {
                         let obj= JSON.parse(AESDeCode(data));
+                       Data_obj.clear();
                        creatTable.Default(obj);
+                       $("#NO_NUM,#NO_REG").val("");
                        $("#sTraID").val(obj.sTraID);
                        $("#sSave").val(obj.sSave);
                        Get_AJson=false;
@@ -1204,26 +1240,26 @@ if ($sfm=="TUPT"){
                });
            }
            function DB_WSST(Page,sTraID,json,sDt=null,sTm=null,Passed=null,Freq=null,sUr,InSertDB){
+
                     $.ajax({
                         type: "POST",
                         url:'/webservice/NISPWSSETDATA.php?str='+AESEnCode(
                             'sFm=BSOR&sTraID='+sTraID+'&sPg='+Page+'&sData='+encodeURI(json)+
                             '&sDt='+sDt+'&sTm='+sTm+'&Fseq='+Freq+'&PASSWD='+Passed+
-                            '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')/*,
-                        data:{user: "tony",
-                              pwd: 123}*/
+                            '&USER='+sUr+'&Indb='+InSertDB+"&TsFm="+'<?php echo $sfm?>')
 
                     }).done(function (data) {
+
                        let json=JSON.parse(AESDeCode(data));
-
-                       if(InSertDB==="true" && json.result==="true"){
-                           alert('存檔成功');
-                           window.location.replace(window.location.href);
-                       }
-                       if(InSertDB==="true" && json.result!=="true"){
-                           alert("儲存失敗,錯誤訊息:"+json.message);
-                       }
-
+                        if(InSertDB==="true"){
+                            if (json.result==="true"){
+                                alert('存檔成功');
+                                window.location.replace(window.location.href);
+                            }else {
+                                alert("儲存失敗,錯誤訊息:"+json.message);
+                            }
+                           // $("#wrapper,#loading").hide();
+                        }
 
                    }).fail(function (XMLHttpResponse,textStatus,errorThrown) {
                    console.log(
@@ -1386,8 +1422,9 @@ if ($sfm=="TUPT"){
     </script>
 </head>
 <style>
+
     .Parametertable{
-       /* display: none;*/
+        display: none;
     }
 
       .drop-area{
@@ -1552,10 +1589,39 @@ if ($sfm=="TUPT"){
 .col-8{
     padding-top: 10px;
 }
+    #wrapper{
+        position: absolute;
+        width: 100%;
+        height: 250%;
+        background-color: black;
+        opacity: 0.5;
+        z-index: 9998;
+    }
+    #loading{
+        position: absolute;
+        z-index: 9999;
+        top: 50%;
+        left: 50%;
+        background-color: #FFFFFF;
+        color: #000000;
+        font-size: 5vmin;
+        width: 45vmin;
+        height: 12vmin;
+        padding-left:20px;
+        padding-top:10px;
+        border-radius: 5px;
+        margin: -15vmin 0 0 -30vmin;
 
+    }
+    #loading .loadimg{
+        width: 10vmin;
+        height:10vmin;
+    }
 
 </style>
 <body>
+<!--<div id="wrapper" ></div>
+<div id="loading" >請稍後<img class="loadimg" src="../../dotloading.gif"></div>-->
 <div class="container">
     <div class="Parametertable">
         <input id="DA_idpt"     value=""  type="text"  placeholder="病歷號">
@@ -1584,8 +1650,8 @@ if ($sfm=="TUPT"){
                 <button type="button" id="SubmitBtn" class="btn btn-primary btn-md" >儲存</button>
                 <button type="button" id="SearchBtn" class="btn btn-primary btn-md" >查詢</button>
                 <button type="button" id="DELBtn"    class="btn btn-primary btn-md" >作廢</button>
-                <button type="button" id="ReSetBtn"  class="btn btn-primary btn-md"  >清除</button>
-                <button type="button" id="sbed"      class="btn btn-warning btn-md"   >責任床位</button>
+                <button type="button" id="ReSetBtn"  class="btn btn-primary btn-md" >清除</button>
+                <button type="button" id="sbed"      class="btn btn-warning btn-md" >責任床位</button>
             </span>
 
             <button type="button" class="btn btn-secondary btn-md" disabled style="display: none">回主畫面</button>
