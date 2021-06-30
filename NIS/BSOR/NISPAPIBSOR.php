@@ -103,6 +103,14 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
     $System_DT= (string)$Y_TW .(string)$Date;
 
     $sTm=str_pad($sTm,6,"0",STR_PAD_RIGHT);
+
+    if ($sFm=="TUPT"){
+        $sTm=str_pad(substr($System_DT,7,4),6,"0",STR_PAD_RIGHT);
+    }
+
+
+
+
     $UPTMSQL="UPDATE HIS803.NISWSTP
               SET TM_EXCUTE=:TM,
                   DT_EXCUTE=:DT,
@@ -155,14 +163,13 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
     }
 
     $result=array("result"=>"","message"=>"");
-
-
         $DTSEQ_SFMSEQ=[];
-
         $obj_A=json_decode($ST_DATAA);
         $obj_B=array_filter(json_decode($ST_DATAB),function ($val){return $val->TB_DATA->NO_NUM->VALUE!="";});
         $obj_C=json_decode($ST_DATAC); //座標預設值
         $obj_D=json_decode($ST_DATAD); //資料預設值
+
+
 
         foreach ($obj_A as $key=>$value){
             $NUM=$value->NUM;
@@ -187,19 +194,30 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                 array_push($DTSEQ_SFMSEQ,json_encode($DTSEQandFSEQ));
             }
         }
+        sort($obj_B);
 
         $PIXCEL_DiffArr=obj_diff('A',$obj_A,$obj_C);//比對座標
+
         $TB_DATA=obj_diff('B',$obj_B,$obj_D);//比對TB_DATA
 
         $Cancel_PIXCEL_Data=$PIXCEL_DiffArr->OLD_DATA;//作廢座標
         $Insert_PIXCEL_Data=$PIXCEL_DiffArr->NEW_DATA;//新增座標
 
+
         $Cancel_TB_DATA=$TB_DATA->OLD_DATA;//作廢TB_DATA
         $Insert_TB_DATA=$TB_DATA->NEW_DATA;//新增TB_DATA
 
+//        print_r($Cancel_PIXCEL_Data);
+//        echo '<br>'.'<br>'.'<br>';
+//        print_r($Insert_PIXCEL_Data);
+//        echo '<br>'.'<br>'.'<br>';
+//        print_r($Cancel_TB_DATA);
+//        echo '<br>'.'<br>'.'<br>';
+//        print_r($Insert_TB_DATA);
+//        echo '<br>'.'<br>'.'<br>';
 
-      // 防呆無異 return 無須存檔
-      if (count($Cancel_PIXCEL_Data)==0    && count($Insert_PIXCEL_Data)==0 &&
+    // 防呆無異 return 無須存檔
+    if (count($Cancel_PIXCEL_Data)==0  && count($Insert_PIXCEL_Data)==0 &&
         count($Cancel_TB_DATA)==0 && count($Insert_TB_DATA)==0)
     {
         $result['result']="false";
@@ -207,16 +225,15 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
         return json_encode($result,JSON_UNESCAPED_UNICODE);
     }
 
-
-
-        //與座標預設值不同則需新增
-      if(count($Insert_PIXCEL_Data)>0){
+       //與座標預設值不同則需新增
+       if(count($Insert_PIXCEL_Data)>0){
 
             //已有紀錄先作廢
             if (count($Cancel_PIXCEL_Data)>0){
                 foreach ($Cancel_PIXCEL_Data as $value){
                     $FORMSEQ_BS=$value->FORMSEQ;
-                 if ($sFm=="BSOR" || $sFm=="CUTS"){
+                    if ($sFm=="BSOR" || $sFm=="CUTS"){
+
                         $arr_UP_BSOR=array(
                             ":ID_PATIENT"=>$IdPt,
                             ":ID_INPATIENT"=>$IdinPt,
@@ -226,13 +243,13 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                             ":UR_CANCD"=>$sUr,
                             ":UR_PROCESS"=>$sUr
                         );
+
                         $arr_UP_TBBS=array(
                             ':DM_CANCD'=>$System_DT,
                             ':UR_CANCD'=>$sUr,
                             ':FORMSEQANCE_BS'=>$FORMSEQ_BS,
                             ':ID_BED'=>$ID_BED
                         );
-
                         $UPDATE_BSOR=DB_Cancel($conn,'BSOR',$arr_UP_BSOR);
                         if ($UPDATE_BSOR->result=="false"){
                            $result['result']="false";
@@ -245,10 +262,41 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                             $result['message']=$UPDATE_TBBS->message;
                             return json_encode($result,JSON_UNESCAPED_UNICODE);
                         }
+
+                    }
+                    else{
+                        $NUM=$value->NUM;
+
+                        $GetFilter=array_filter($obj_B,function ($val)use($NUM){return $val->TB_DATA->NO_NUM->VALUE==$NUM;});
+                        sort($GetFilter);
+                        $DATESEQANCE_FL=$GetFilter[0]->DATESEQ;
+                        $TUPG_DATA=array(":DM_ENDING"=>$System_DT,":UR_ENDING"=>$sUr,":FORMSEQANCE"=>$FORMSEQ_BS,
+                            ":ID_PATIENT"=>$IdPt,":ID_INPATIENT"=>$IdinPt,":NO_PROBLEM"=>$NUM);
+
+                        $TUPT_DATA = array(":DM_ENDING" => $System_DT, ":UR_ENDING" => $sUr, ":FORMSEQANCE" => $FORMSEQ_BS,
+                            ":DATESEQANCE_FL" => $DATESEQANCE_FL);
+
+                        $UPDATE_TUPG=DB_Cancel($conn,'TUPG',$TUPG_DATA);
+                        if ($UPDATE_TUPG->result=="false"){
+                            $result['result']="false";
+                            $result['message']=$UPDATE_TUPG->message;
+                            return json_encode($result,JSON_UNESCAPED_UNICODE);
+                        }
+
+                        $UPDATE_TUPT = DB_Cancel($conn, 'TUPT', $TUPT_DATA);
+                        if ($UPDATE_TUPT->result == "false") {
+                            $result['result'] = "false";
+                            $result['message'] = $UPDATE_TUPT->message;
+                            return json_encode($result, JSON_UNESCAPED_UNICODE);
+                        }
+
+
+
+
+
                     }
                 }
             }
-
 
              //存檔座標
              foreach ($Insert_PIXCEL_Data as $value){
@@ -257,9 +305,7 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                  $GetThisDTSEQ= array_filter($DTSEQ_SFMSEQ,function ($value)use ($FORMSEQ_BS,$NO_BEDSORE){
                      return json_decode($value)->FMSEQ==$FORMSEQ_BS && json_decode($value)->NUM==$NO_BEDSORE;
                  });
-
                  $DATESEQ=json_decode(join($GetThisDTSEQ))->DTSEQ;
-
 
                  $IT_LEFT=$value->LEFT;
                  $IT_TOP=$value->TOP;
@@ -277,32 +323,32 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
 
                  if ($sFm=="BSOR" || $sFm=="CUTS"){
                            $arr_IN_BSOR=array(
-                         ":DATESEQANCE_FL"=>$DATESEQ
-                         ,":FORMSEQANCE_BS"=>$FORMSEQ_BS
-                         ,":ID_PATIENT"=>$IdPt
-                         ,":ID_INPATIENT"=>$IdinPt
-                         ,":DT_REGISTER"=>" "
-                         ,":NO_OPDSEQ"=>"0"
-                         ,":NO_BEDSORE"=>$NO_BEDSORE
-                         ,":CID_BEDSORE"=>substr($sFm,0,1)
-                         ,":DT_START"=>$DT_START
-                         ,":DT_END"=>" "
-                         ,":TID_SOURCE"=>$TID_SOURCE
-                         ,":ID_STATION"=>$ID_STATION
-                         ,":NM_ORGAN"=>$NM_ORGAN
-                         ,":TID_ENDSTATE"=>" "
-                         ,":IT_TOP"=>$IT_TOP
-                         ,":IT_LEFT"=>$IT_LEFT
-                         ,":IT_WIDTH"=>$IT_WIDTH
-                         ,":IT_HEIGTH"=>$IT_HEIGTH
-                         ,":ID_BED"=>$ID_BED
-                         ,":JID_NSRANK"=>$JID_NSRANK
-                         ,":FORMSEQANCE_WT"=>$FORMSEQANCE_WT
-                         ,":DM_PROCESS"=>$System_DT
-                         ,":UR_PROCESS"=>$sUr
-                         ,":DM_CANCD"=>" "
-                         ,":UR_CANCD"=>" "
-                     );
+                             ":DATESEQANCE_FL"=>$DATESEQ
+                             ,":FORMSEQANCE_BS"=>$FORMSEQ_BS
+                             ,":ID_PATIENT"=>$IdPt
+                             ,":ID_INPATIENT"=>$IdinPt
+                             ,":DT_REGISTER"=>" "
+                             ,":NO_OPDSEQ"=>"0"
+                             ,":NO_BEDSORE"=>$NO_BEDSORE
+                             ,":CID_BEDSORE"=>substr($sFm,0,1)
+                             ,":DT_START"=>$DT_START
+                             ,":DT_END"=>" "
+                             ,":TID_SOURCE"=>$TID_SOURCE
+                             ,":ID_STATION"=>$ID_STATION
+                             ,":NM_ORGAN"=>$NM_ORGAN
+                             ,":TID_ENDSTATE"=>" "
+                             ,":IT_TOP"=>$IT_TOP
+                             ,":IT_LEFT"=>$IT_LEFT
+                             ,":IT_WIDTH"=>$IT_WIDTH
+                             ,":IT_HEIGTH"=>$IT_HEIGTH
+                             ,":ID_BED"=>$ID_BED
+                             ,":JID_NSRANK"=>$JID_NSRANK
+                             ,":FORMSEQANCE_WT"=>$FORMSEQANCE_WT
+                             ,":DM_PROCESS"=>$System_DT
+                             ,":UR_PROCESS"=>$sUr
+                             ,":DM_CANCD"=>" "
+                             ,":UR_CANCD"=>" "
+                         );
 
                            $INSERT_BSOR=DB_INSERT($conn,'BSOR',$arr_IN_BSOR);
 
@@ -312,36 +358,40 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                                return json_encode($result,JSON_UNESCAPED_UNICODE);
                            }
                  }
-                 else{
-                     //insert  NSTUPG
-                     $ID_REGION=$value->ID_REGION;
+                 else {
 
-                     $arr_IN_TUPG=array(
-                         ":DATESEQANCE"=>$DATESEQ,
-                         ":FORMSEQANCE"=>$FORMSEQ_BS,
-                         ":ID_PATIENT"=>$IdPt,
-                         ":ID_INPATIENT"=>$IdinPt,
-                         ":NO_OPDSEQ"=>'0',
-                         ":DT_REGISTER"=>' ',
-                         ":NO_PROBLEM"=>$NO_BEDSORE,
-                         ":ID_ORGAN"=>$ID_REGION,//部位代碼
-                         ":NM_ORGAN"=>$NM_ORGAN,
-                         ":IT_TOP"=>$IT_TOP,
-                         ":IT_LEFT"=>$IT_LEFT,
-                         ":IT_WIDTH"=>$IT_WIDTH,
-                         ":IT_HEIGTH"=>$IT_HEIGTH,
-                         ":IS_CANCD"=>'N',
-                         ":ID_BED"=>$ID_BED,
-                         ":JID_NSRANK"=>$JID_NSRANK,
-                         ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
-                         ":DM_PROCESS"=>$System_DT,
-                         ":UR_PROCESS"=>$sUr
+                     //insert  NSTUPG
+                     $ID_REGION = $value->ID_REGION;
+
+                     $arr_IN_TUPG = array(
+                         ":DATESEQANCE" => $DATESEQ,
+                         ":FORMSEQANCE" => $FORMSEQ_BS,
+                         ":ID_PATIENT" => $IdPt,
+                         ":ID_INPATIENT" => $IdinPt,
+                         ":NO_OPDSEQ" => '0',
+                         ":DT_REGISTER" => ' ',
+                         ":NO_PROBLEM" => $NO_BEDSORE,
+                         ":ID_ORGAN" => $ID_REGION,//部位代碼
+                         ":NM_ORGAN" => $NM_ORGAN,
+                         ":IT_TOP" => $IT_TOP,
+                         ":IT_LEFT" => $IT_LEFT,
+                         ":IT_WIDTH" => $IT_WIDTH,
+                         ":IT_HEIGTH" => $IT_HEIGTH,
+                         ":IS_CANCD" => 'N',
+                         ":ID_BED" => $ID_BED,
+                         ":JID_NSRANK" => $JID_NSRANK,
+                         ":FORMSEQANCE_WT" => $FORMSEQANCE_WT,
+                         ":DM_PROCESS" => $System_DT,
+                         ":UR_PROCESS" => $sUr
                      );
-                     $INSERT_TUPG=DB_INSERT($conn,'TUPG',$arr_IN_TUPG);
-                     if ($INSERT_TUPG->result=="false"){
-                         $result['result']="false";
-                         $result['message']=$INSERT_TUPG->message;
-                         return json_encode($result,JSON_UNESCAPED_UNICODE);
+
+
+
+                     $INSERT_TUPG = DB_INSERT($conn, 'TUPG', $arr_IN_TUPG);
+                     if ($INSERT_TUPG->result == "false") {
+                         $result['result'] = "false";
+                         $result['message'] = $INSERT_TUPG->message;
+                         return json_encode($result, JSON_UNESCAPED_UNICODE);
                      }
 
                  }
@@ -350,12 +400,13 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
         }
 
 
-        //TB_DATA
+       //TB_DATA
        if ($sFm=="BSOR" || $sFm=="CUTS"){
 
+           //TI TB 必新增
 
            //是否結案
-           $DTEND=array_filter($obj_B,function ($val) use($sDt,$sUr){
+           $DTEND=array_filter($Insert_TB_DATA,function ($val) use($sDt,$sUr){
 
                  if (trim($val->TB_DATA->ED_TYPE->VALUE)!=""){
                      $val->TB_DATA->ED_DATE->VALUE=$sDt;
@@ -364,8 +415,9 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                  }
 
              });
+           //結案狀態
            if (count($DTEND)>0){
-               //結案狀態 update
+
                foreach ($DTEND as $value){
                    $ED_TYPE="";
                    $FORMSEQ_BS=$value->FORMSEQ;
@@ -385,9 +437,6 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                }
            }
 
-
-
-             //TI TB 必新增
              foreach ($DTSEQ_SFMSEQ as $key=>$value){
                  $DATESEQANCE_FL=json_decode($value)->DTSEQ;
                  $FORMSEQANCE_BS=json_decode($value)->FMSEQ;
@@ -405,22 +454,20 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                      ":UR_CANCD"=>" ",
                      ":JID_NSRANK"=>$JID_NSRANK);
 
-                     $INSERT_TBBS= DB_INSERT($conn,'TBBS',$arr_IN_TBBS);
+                 $INSERT_TBBS= DB_INSERT($conn,'TBBS',$arr_IN_TBBS);
 
-                    if ($INSERT_TBBS->result=="false"){
-                         //return error msg
+                 if ($INSERT_TBBS->result=="false")
+                  {
                          $result['result']="false";
                          $result['message']=$INSERT_TBBS->message;
                          return json_encode($result,JSON_UNESCAPED_UNICODE);
-                     }
+                  }
 
                     //取表單對應的obj
-                    $TIBS_Obj=array_filter($obj_B,function ($value) use ($FORMSEQANCE_BS){return $value->FORMSEQ!="" &&  $value->FORMSEQ==$FORMSEQANCE_BS;});
-
-                    $INSERT_TIBS=InsertTIBS($conn,$TIBS_Obj,$sFm,$sUr,$DATESEQANCE_FL,$FORMSEQANCE_BS);
-
-                    if ($INSERT_TIBS->result=="false"){
-                        //return error msg
+                   $TIBS_Obj=array_filter($Insert_TB_DATA,function ($value) use ($FORMSEQANCE_BS){return $value->FORMSEQ!="" &&  $value->FORMSEQ==$FORMSEQANCE_BS;});
+                   $INSERT_TIBS=InsertTIBS($conn,$TIBS_Obj,$sFm,$sUr,$DATESEQANCE_FL,$FORMSEQANCE_BS);
+                   if ($INSERT_TIBS->result=="false")
+                   {
                         $result['result']="false";
                         $result['message']=$INSERT_TIBS->message;
                         return json_encode($result,JSON_UNESCAPED_UNICODE);
@@ -428,85 +475,53 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
 
                 }
             }
-       else{
-                if (count($TB_DATA->OLD_DATA)>0){
-                    foreach ($TB_DATA->OLD_DATA as $key=>$value) {
-                        $arr_UP_TUPT = array(
-                            ":DM_ENDING" => $System_DT,
-                            ":UR_ENDING" => $sUr,
-                            ":DATESEQANCE_FL" => $value->DATESEQ,
-                            ":FORMSEQANCE" => $value->FORMSEQ
-                        );
-                        $arr_UP_TUPI = array(
-                            ":DM_ENDING" => $System_DT,
-                            ":UR_ENDING" => $sUr,
-                            ":DATESEQANCE_FL" => $value->DATESEQ);
+       else {
 
-                        $UPDATE_TUPT= DB_Cancel($conn, 'TUPT', $arr_UP_TUPT);
-                        if ($UPDATE_TUPT->result=="false"){
-                            $result['result']="false";
-                            $result['message']=$UPDATE_TUPT->message;
-                            return json_encode($result,JSON_UNESCAPED_UNICODE);
-                        }
+           $Insert_NUM=array_map(function ($val){return $val->NUM;},$Insert_PIXCEL_Data);
 
-                        $UPDATE_TUPI= DB_Cancel($conn, 'TUPI', $arr_UP_TUPI);
-                        if ($UPDATE_TUPI->result=="false"){
-                            $result['result']="false";
-                            $result['message']=$UPDATE_TUPI->message;
-                            return json_encode($result,JSON_UNESCAPED_UNICODE);
-                        }
+           foreach ($Insert_NUM as $NO_NUM){
+               $DATA=array_filter($Insert_TB_DATA,function ($val)use($NO_NUM){return $val->TB_DATA->NO_NUM->VALUE==$NO_NUM;});
 
-                    }
-                }
+               $get_DTSEQ=array_filter($DTSEQ_SFMSEQ,function ($val)use($NO_NUM){return json_decode($val)->NUM==$NO_NUM;});
+               sort($get_DTSEQ);
+               $DTSEQ_obj=json_decode($get_DTSEQ[0]);
+
+               $DATESEQANCE_FL=$DTSEQ_obj->DTSEQ;
+               $FORMSEQANCE_BS=$DTSEQ_obj->FMSEQ;
+               foreach ($DATA as $DATUM){
+
+                   $DT_EXECUTE = $DATUM->TB_DATA->sDT_EXE->VALUE;//置入日
+                   $DT_ENDING = $DATUM->TB_DATA->sDT_END->VALUE;//預計拔管日
+                   $ST_DEPTH = $DATUM->TB_DATA->DEPTH->VALUE;//深度
+                   $ID_TUBE = $DATUM->TB_DATA->ID_TUBE->VALUE;//管路ID
+                   $ST_TUBE = $DATUM->TB_DATA->sST_TUBE->VALUE; //型號
+                   $IT_TERMDAYS = $DATUM->TB_DATA->IT_TERMDAYS->VALUE; //預計換管日期
+                   $CD_STATUS = $DATUM->TB_DATA->CD_STATUS->VALUE;//入院帶入
+                   $NM_TUBE = $DATUM->TB_DATA->sNM_TUBE->VALUE;//管路名稱
+                   $MB_RAND = $DATUM->TB_DATA->MB_RAND->VALUE;//入院帶入
 
 
-                foreach ($DTSEQ_SFMSEQ as $value){
-                    $obj=json_decode($value);
-                    $DATESEQANCE_FL=$obj->DTSEQ;
-                    //$FORMSEQANCE_BS=$obj->FMSEQ;
+                   $arr_IN_TUPI = array(
+                       ":DATESEQANCE" => GetDataSEQ($conn),
+                       ":DATESEQANCE_FL" => $DATESEQANCE_FL,
+                       ":DT_EXECUTE" => $DT_EXECUTE,
+                       ":TM_EXECUTE" => $sTm,//當下時間
+                       ":DT_ENDING" => trim($DT_ENDING) == "" ? " " : trim($DT_ENDING),
+                       ":TM_ENDING" => trim($DT_ENDING) == "" ? " " : $sTm,//當下時間
+                       ":IS_FIRST" => "Y",
+                       ":IS_DRAWOUT" => "N",
+                       ":IS_CANCD" => "N",
+                       ":ID_BED" => $ID_BED,
+                       ":JID_NSRANK" => $JID_NSRANK,
+                       ":FORMSEQANCE_WT" => $FORMSEQANCE_WT,
+                       ":DM_PROCESS" => $System_DT,
+                       ":UR_PROCESS" => $sUr,
+                       ":DM_ENDING" => " ",
+                       ":UR_ENDING" => " ",
+                       ":ST_DEPTH" => trim($ST_DEPTH) == "" ? " " : $ST_DEPTH
+                   );
 
-                    $Num=$obj->NUM;
-                    foreach($TB_DATA->NEW_DATA as $item){
-                        if ($item->TB_DATA->NO_NUM->VALUE==$Num){
-                            $item->DATESEQ=$DATESEQANCE_FL;
-                           // $item->FORMSEQ=$FORMSEQANCE_BS;
-                        }
-                    }
-                }
-                foreach($TB_DATA->NEW_DATA as $key=>$value) {
-                    $DATESEQANCE_FL=$value->DATESEQ;
-                    $FORMSEQANCE_BS=$value->FORMSEQ;
-
-                    $DT_EXECUTE=$value->TB_DATA->sDT_EXE->VALUE;//置入日
-                    $DT_ENDING=$value->TB_DATA->sDT_END->VALUE;//預計拔管日
-                    $ST_DEPTH=$value->TB_DATA->DEPTH->VALUE;//深度
-                    $ID_TUBE=$value->TB_DATA->ID_TUBE->VALUE;//管路ID
-                    $ST_TUBE=$value->TB_DATA->sST_TUBE->VALUE; //型號
-                    $IT_TERMDAYS=$value->TB_DATA->IT_TERMDAYS->VALUE; //預計換管日期
-                    $CD_STATUS=$value->TB_DATA->CD_STATUS->VALUE;//入院帶入
-                    $NM_TUBE=$value->TB_DATA->sNM_TUBE->VALUE;//管路名稱
-                    $MB_RAND=$value->TB_DATA->MB_RAND->VALUE;//入院帶入
-
-                    $arr_IN_TUPI=array(
-                        ":DATESEQANCE"=>GetDataSEQ($conn),
-                        ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
-                        ":DT_EXECUTE"=>$DT_EXECUTE,
-                        ":TM_EXECUTE"=>$sTm,//當下時間
-                        ":DT_ENDING"=>trim($DT_ENDING)==""?" ":trim($DT_ENDING),
-                        ":TM_ENDING"=>trim($DT_ENDING)==""?" ":$sTm,//當下時間
-                        ":IS_FIRST"=>"Y",
-                        ":IS_DRAWOUT"=>"N",
-                        ":IS_CANCD"=>"N",
-                        ":ID_BED"=>$ID_BED,
-                        ":JID_NSRANK"=>$JID_NSRANK,
-                        ":FORMSEQANCE_WT"=>$FORMSEQANCE_WT,
-                        ":DM_PROCESS"=>$System_DT,
-                        ":UR_PROCESS"=>$sUr,
-                        ":DM_ENDING"=>" ",
-                        ":UR_ENDING"=>" ",
-                        ":ST_DEPTH"=>trim($ST_DEPTH)==""?" ":$ST_DEPTH
-                    );
-                    $arr_IN_TUPT=array(
+                   $arr_IN_TUPT=array(
                         ":DATESEQANCE_FL"=>$DATESEQANCE_FL,
                         ":FORMSEQANCE"=>$FORMSEQANCE_BS,
                         ":DT_EXECUTE"=>trim($DT_EXECUTE),
@@ -529,7 +544,6 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                         ":NM_BRAND"=>trim($MB_RAND)==""?" ":$MB_RAND
                     );
 
-
                     $INSERT_TUPI=DB_INSERT($conn,'TUPI',$arr_IN_TUPI);
                     if ($INSERT_TUPI->result=="false"){
                         $result['result']="false";
@@ -544,15 +558,17 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                         return json_encode($result,JSON_UNESCAPED_UNICODE);
                     }
 
+               }
 
-                }
-            }
+           }
+
+       }
 
 
       return json_encode($result,JSON_UNESCAPED_UNICODE);
    }
 
-   function GetBSORJson($conn,$sFm,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
+function GetBSORJson($conn,$sFm,$idPt,$INPt,$sUr,$sDt,$sTm,$sPg,$sFSq){
 
        $SQL="SELECT ST_DATAA,ST_DATAB,ST_DATAC FROM NISWSIT WHERE ID_TABFORM='$sFm'";
        $stid=oci_parse($conn,$SQL);
@@ -695,8 +711,7 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
        return json_encode($result,JSON_UNESCAPED_UNICODE);
    }
 
-   function PosBSORCancel($conn,$sFm,$sPg,$Num,$sTraID,$sUr){
-
+function PosBSORCancel($conn,$sFm,$sPg,$Num,$sTraID,$sUr){
        $DateTime = date("YmdHis");
        $Y_VID = substr($DateTime, 0, 4);
        $Date = substr($DateTime, -10, 10);
@@ -832,9 +847,12 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
        else{
            $map_Num=array_filter($obj,function ($value)use ($Num){
                return $value->TB_DATA->NO_NUM->VALUE==$Num;
-           })[0];
-           $DATESEQ_FL=$map_Num->DATESEQ;
-           $FORMSEQ=$map_Num->FORMSEQ;
+           });
+           sort($map_Num);
+
+           $DATESEQ_FL=$map_Num[0]->DATESEQ;
+           $FORMSEQ=$map_Num[0]->FORMSEQ;
+
           // $tB_DATA=$map_Num->TB_DATA;
 
 
@@ -863,6 +881,10 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
                return json_encode($respon,JSON_UNESCAPED_UNICODE);
            }
 
+
+
+
+
            $TUPI_result=DB_Cancel($conn,'TUPI',$TUPI_DATA);
            if ($TUPI_result->result=="false"){
                $respon->result="false";
@@ -876,8 +898,7 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
        oci_commit($conn);
        return json_encode($respon,JSON_UNESCAPED_UNICODE);
    }
-
-   function UpDateToDTEND($conn,$IdPt,$IdInPt,$CID_BEDSORE,$FORMSEQ_BS,$sDt,$ED_TYPE){
+function UpDateToDTEND($conn,$IdPt,$IdInPt,$CID_BEDSORE,$FORMSEQ_BS,$sDt,$ED_TYPE){
        $SQL=" UPDATE  NSBSOR  
                SET   DT_END=:DT_END , TID_ENDSTATE=:TID_ENDSTATE
                WHERE ID_PATIENT= :ID_PATIENT
@@ -913,18 +934,6 @@ function PosBSORSave($conn,$sTraID,$sFm,$sDt,$sTm,$sUr){
        }
        return $response;
    }
-   /*取該編號對應之值*/
-function GetNumData($Arr,$Num){
-    $result="";
-    foreach ($Arr as $item){
-        if ($item->TB_DATA->NO_NUM->VALUE==$Num){
-            $result= $item;
-            break;
-        }
-    }
-    print_r($result);
-    return $result;
-}
 
 /*改變瘡=>傷*/
 function ChangeChr($conn){
@@ -1033,6 +1042,7 @@ function GetNoRegion($conn,$sFm,$ST_DATAA,$ST_DATAB,$Parameter){
                 $tmp_A->FORMSEQ=$FORMSEQANCE;
                 $tmp_A->NM_ORGAN=$NM_ORGAN;
                 $tmp_A->ID_REGION=$ID_ORGAN;
+                $tmp_A->sNM_TUBE=$NM_TUBE;
 
 
                 $tmp_B->DATESEQ=$DATESEQANCE_FL;
@@ -1582,148 +1592,152 @@ function MaxNumber($conn,$sfm,$Idpt,$INPt){
 }
 /*取有變化的obj*/
 function obj_diff($Page,$new_obj,$default_obj){
-    $oldOBJ=json_decode(json_encode($default_obj)); //舊資料
-    $newOBJ=json_decode(json_encode($new_obj));//新資料
+    $default_Data=json_decode(json_encode($default_obj)); //舊資料
+    $new_Data=json_decode(json_encode($new_obj));//新資料
+
     $result=array("OLD_DATA"=>[],"NEW_DATA"=>[]);
+    $diff_Data=[];
+    $New_Data=[];
     if ($Page=="A"){
-        $oldOBJ=array_filter($oldOBJ,function ($value){return $value->NUM!="";});
-        $newOBJ=array_filter($new_obj,function ($value){return $value->NUM!="";});
-
-        if (count($oldOBJ)==0){
-            sort($newOBJ);
-            $result['NEW_DATA']=$newOBJ;
-        }else{
-            $diff=[];
-            $newArr=[];
-
-            foreach ($newOBJ as $value){
-                // $value->NUM
-                $new_obj_Num=$value->NUM;
-
-                $oldItem=array_filter($oldOBJ,function ($val)use($new_obj_Num){
-                    return $val->NUM==$new_obj_Num;
-                });
-
-                if (count($oldItem)>0){
-
-                    sort($oldItem);
-                    $old_OBJ=$oldItem[0];
-                    if ($old_OBJ->NM_ORGAN != $value->NM_ORGAN ||
-                        $old_OBJ->LEFT != $value->LEFT ||
-                        $old_OBJ->TOP != $value->TOP ||
-                        $old_OBJ->W_TH != $value->W_TH ||
-                        $old_OBJ->H_TH != $value->H_TH){
+        //比對座標 圖形大小是否有異
+        //預設值num="" , NEW_DATA=$newOBJ;
 
 
-                        array_push($diff,$old_OBJ);
-                        array_push($newArr,$value);
-
-                    }else{
-                        array_push($newArr,$value);
-                    }
-
-
-                }else{
-                    //新增
-                    array_push($newArr,$value);
-                }
-
-           /*     foreach ($oldOBJ as $item){
-                    if ($new_obj_Num == $item->NUM){
-                        if ($value->NM_ORGAN != $item->NM_ORGAN ||
-                            $value->LEFT != $item->LEFT ||
-                            $value->TOP != $item->TOP ||
-                            $value->W_TH != $item->W_TH ||
-                            $value->H_TH != $item->H_TH
-                          ){
-                            //名稱,座標位置,大小被修改
-                            array_push($diff,$item);
-                            array_push($newArr,$value);
-
-                           }else{
-                            array_push($newArr,$value);
-                        }
-                    }
-                }*/
-            }
-
-            $result['OLD_DATA']=$diff;
-            $result['NEW_DATA']=$newArr;
-        }
-
-    }
-    else if ($Page=="B"){
-        $oldOBJ=array_filter($oldOBJ,function ($value){return $value->TB_DATA->NO_NUM->VALUE!="";});
-        $newOBJ=array_filter($new_obj,function ($value){return $value->TB_DATA->NO_NUM->VALUE!="";});
+        $oldOBJ=array_filter($default_Data,function ($value){return $value->NUM!="";});
+        $newOBJ=array_filter($new_Data,function ($value){return $value->NUM!="";});
 
         if (count($oldOBJ)==0){
             sort($newOBJ);
             $result['NEW_DATA']=$newOBJ;
         }
         else{
-               //$newOBJ
-              //  $oldOBJ
-            $newOBJ=array_map(function ($value){return $value->TB_DATA;},$newOBJ);
-            $oldOBJ=array_map(function ($value){return $value->TB_DATA;},$oldOBJ);
-            $diff=[];
-            $newArr=[];
-
-
-
-
-
             foreach ($newOBJ as $value){
-                $new_Num=$value->NO_NUM->VALUE;
-                $filter_oldObj=array_filter($oldOBJ,function ($val) use ($new_Num){return $val->NO_NUM->VALUE==$new_Num;});
+                $new_obj_Num=$value->NUM; //取新物件的編號比對舊物件編號
+                $new_NM_ORGAN=$value->NM_ORGAN;
+                $new_LEFT=$value->LEFT;
+                $new_TOP=$value->TOP;
+                $new_W_TH=$value->W_TH;
+                $new_H_TH=$value->H_TH;
+                $new_sNM_TUBE=$value->sNM_TUBE;
 
-                if (count($filter_oldObj)>0){
-                    foreach ($filter_oldObj[0] as $key=>$item){
-                        if ($item->VALUE !=$value->$key->VALUE){
-                            array_push($diff,$filter_oldObj[0]);
-                            array_push($newArr,$value);
+                //取與相同新編號的舊物件物件
+                $oldItem=array_filter($oldOBJ,function ($val)use($new_obj_Num){
+                 return $val->NUM==$new_obj_Num;
+                });
+
+                if (count($oldItem) > 0){
+                    //有相同編號=>判斷新編號的物件與舊資料的座標大小是否有異
+
+                   $FilterPixel_result=array_filter($oldItem,function ($Val)use($new_NM_ORGAN,$new_LEFT,$new_TOP,$new_W_TH,$new_H_TH,$new_sNM_TUBE){
+
+
+                        return $Val->NM_ORGAN!=$new_NM_ORGAN ||
+                               $Val->LEFT!=$new_LEFT ||
+                               $Val->TOP!=$new_TOP ||
+                               $Val->W_TH!=$new_W_TH ||
+                               $Val->H_TH!=$new_H_TH ||
+                               $Val->sNM_TUBE!=$new_sNM_TUBE;
+                    });
+                   if (count($FilterPixel_result)>0){
+                       //有異
+                       sort($FilterPixel_result);
+                       array_push($diff_Data,$FilterPixel_result[0]);//需作廢的舊值
+                       array_push($New_Data,$value);//修改後的值
+                   }
+                   /* else
+                    { //無異
+
+                        array_push($newArr,$value);
+                    }*/
+
+                }
+                else{
+                    //沒有相同的編號=>新增新編號
+                    array_push($New_Data,$value);
+                }
+
+            }
+            $result['OLD_DATA']=$diff_Data;
+            $result['NEW_DATA']=$New_Data;
+        }
+
+    }
+    else if ($Page=="B"){
+        $oldOBJ=array_filter($default_Data,function ($value){return $value->TB_DATA->NO_NUM->VALUE!="";});
+        $newOBJ=array_filter($new_Data,function ($value){return $value->TB_DATA->NO_NUM->VALUE!="";});
+        $New_DATA=[];
+        $Default_DATA=[];
+
+        if (count($oldOBJ)==0){
+            sort($newOBJ);
+            $result['NEW_DATA']=$newOBJ;
+        }
+        else{
+            $New_TB=array_map(function ($value){return $value->TB_DATA;},$newOBJ);
+            $Default_TB=array_map(function ($value){return $value->TB_DATA;},$oldOBJ);
+
+            foreach ($New_TB as $value){
+                $new_Num=$value->NO_NUM->VALUE;
+                //比對是否內含新資料
+                $filter_oldObj=array_filter($Default_TB,function ($val) use ($new_Num){return $val->NO_NUM->VALUE==$new_Num;});
+
+                if (count($filter_oldObj)>0)
+                {
+                    //否=>Filter data(比較是否有異動)
+                    sort($filter_oldObj);//sort key to 0
+
+                    foreach ($filter_oldObj[0] as $key=>$item)
+                    {
+
+                        if ($item->VALUE!=$value->$key->VALUE)
+                        {
+                            array_push($Default_DATA,$filter_oldObj[0]);//需作廢的舊值
+                            array_push($New_DATA,$value);//修改後的值
                             break;
                         }
 
                     }
 
-                }else{
-                    //新編號=>新增
-                    array_push($newArr,$value);
+
+                }
+                else
+                {
+                    //是=>PUSH
+                    array_push($New_DATA,$value);//新增的值
                 }
 
+
             }
-            // 依照編號回壓dtseq forseq
-            //$diff   --old TB_DATA
-            //$newArr --new TB_DATA
-            $OLD_DATA=[];
-            $NEW_DATA=[];
-          if (count($diff)>0){
-             $OLD_DATA=array_map(function ($value) use ($diff){
-                    foreach ($diff as $item){
-                        if ($item->NO_NUM->VALUE==$value->TB_DATA->NO_NUM->VALUE){
-                            $value->TB_DATA=$item;
+
+            if (count($New_DATA)>0){
+                $new_DATA=array_filter($newOBJ,function ($val)use($New_DATA){
+                    foreach ($New_DATA as $datum){
+                        if ( $val->TB_DATA->NO_NUM->VALUE==$datum->NO_NUM->VALUE){
+                            $val->TB_DATA=$datum;
                         }
                     }
-                    return $value;
-                },$default_obj);
-          }
+                    return $val;
+                });
+                $result['NEW_DATA']=$new_DATA;
+            }
 
-          if (count($newArr)>0){
-              $NEW_DATA=array_map(function ($value) use ($newArr){
-                  foreach ($newArr as $item){
-                      if ($item->NO_NUM->VALUE==$value->TB_DATA->NO_NUM->VALUE){
-                          $value->TB_DATA=$item;
-                      }
-                  }
-                  return $value;
-              },$new_obj);
-          }
+            if (count($diff_Data)>0){
+               $old_DATA=array_filter($oldOBJ,function ($val)use($diff_Data){
+                   foreach ($diff_Data as $datum){
+                       if ( $val->TB_DATA->NO_NUM->VALUE==$datum->NO_NUM->VALUE){
+                           $val->TB_DATA=$datum;
+                       }
+                   }
+                   return $val;
+               });
+               $result['OLD_DATA']=$old_DATA;
+            }
 
-         $result['OLD_DATA']=$OLD_DATA;
-         $result['NEW_DATA']=$NEW_DATA;
         }
+
     }
- return json_decode(json_encode($result,JSON_UNESCAPED_UNICODE));
+
+return json_decode(json_encode($result,JSON_UNESCAPED_UNICODE));
 
 
 }
