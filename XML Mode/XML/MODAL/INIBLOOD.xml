@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<?xml-stylesheet type="text/xsl" href="../XSLT/usetest01.xsl"?>
+<EMR>
+  <DocumentInfo>
+    <HospitalName><![CDATA[悅晟資訊]]></HospitalName>
+    <SheetName><![CDATA[檢驗報告單]]></SheetName>
+    <FormSquence><![CDATA[11006303001]]></FormSquence>
+    <PrinterDate><![CDATA[110/07/08 - 08:58]]></PrinterDate>
+  </DocumentInfo>
+  <Patient>
+    <name><![CDATA[]]></name>
+    <part><![CDATA[]]></part>
+    <IdType><![CDATA[]]></IdType>
+    <OrderDate><![CDATA[]]></OrderDate>
+    <bed><![CDATA[]]></bed>
+    <gender><![CDATA[]]></gender>
+    <Diagnosis><![CDATA[]]></Diagnosis>
+    <ScBloodDateTime><![CDATA[]]></ScBloodDateTime>
+    <chartNo><![CDATA[]]></chartNo>
+    <age><![CDATA[]]></age>
+    <ClinicalDiagnosis><![CDATA[]]></ClinicalDiagnosis>
+    <state><![CDATA[]]></state>
+    <PatientID><![CDATA[]]></PatientID>
+    <DoctorName><![CDATA[]]></DoctorName>
+    <BloodCauses><![CDATA[]]></BloodCauses>
+    <BloodType><![CDATA[]]></BloodType>
+    <BloodType><![CDATA[]]></BloodType>
+    <SampleNo><![CDATA[]]></SampleNo>
+  </Patient>
+  <BloodData>
+
+  </BloodData>
+  <AntiData>
+    <AntiFilter><![CDATA[]]></AntiFilter>
+    <AntiS1><![CDATA[]]></AntiS1>
+    <AntiS2><![CDATA[]]></AntiS2>
+    <AntiS3><![CDATA[]]></AntiS3>
+    <AntiAuto><![CDATA[]]></AntiAuto>
+    <AntiEval><![CDATA[]]></AntiEval>
+    <BloodEval><![CDATA[]]></BloodEval>
+  </AntiData>
+  <ReactData>
+    <AntiA><![CDATA[]]></AntiA>
+    <AntiB><![CDATA[]]></AntiB>
+    <AntiAB><![CDATA[]]></AntiAB>
+    <AntiD><![CDATA[]]></AntiD>
+    <BloodType1><![CDATA[]]></BloodType1>
+    <Acell><![CDATA[]]></Acell>
+    <Bcell><![CDATA[]]></Bcell>
+    <Compare><![CDATA[]]></Compare>
+    <BloodType2><![CDATA[]]></BloodType2>
+  </ReactData>
+  <OrderType>
+    <N_Normal><![CDATA[□]]></N_Normal>
+    <A_Immediate><![CDATA[□]]></A_Immediate>
+    <E_Emergency><![CDATA[□]]></E_Emergency>
+    <Y_VeryEmergency><![CDATA[□]]></Y_VeryEmergency>
+    <TestDocName><![CDATA[]]></TestDocName>
+  </OrderType>
+</EMR>
+
