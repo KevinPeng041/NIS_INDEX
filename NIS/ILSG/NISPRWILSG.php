@@ -48,7 +48,7 @@ $Account="00FUZZY";
                 let  m=(TimeNow.getMinutes()<10?'0':'')+TimeNow.getMinutes();
                 let Timetxt=($(this).val()).split("");
 
-                let timer=Timetxt.filter(function (value, index, array) { return  value!==":"});
+                let timer=Timetxt.filter(function (value) { return  value!==":"});
                 let timerVal=$(this).attr('id')==="ISTM00000005"?h+m:timer.join("");
                 let time_ID=$(this).attr('id');
                 $("#IDTM").val(time_ID);
